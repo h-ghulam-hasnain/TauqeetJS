@@ -5,3 +5,5 @@ dist
 .gemini
 .env
 tests/*.test.ts
+.vscode/
+Prayer_testing.html
