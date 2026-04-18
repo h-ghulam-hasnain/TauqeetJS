@@ -1,0 +1,43 @@
+{
+  "name": "tauqeet-js",
+  "version": "1.0.0",
+  "description": "Tauqeet.js: A high-precision Islamic prayer times and astronomical library based on Jean Meeus algorithms. Robust, low-code, and sub-second accurate.",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts --clean",
+    "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "tsc --noEmit"
+  },
+  "keywords": [
+    "prayer-times",
+    "astronomy",
+    "meeus",
+    "precision",
+    "solar",
+    "lunar",
+    "qibla",
+    "islamic"
+  ],
+  "author": "Ghulam Hasnain",
+  "license": "MIT",
+  "devDependencies": {
+    "tsup": "^8.4.0",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.4"
+  }
+}
