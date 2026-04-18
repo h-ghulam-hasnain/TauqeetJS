@@ -35,6 +35,14 @@
   ],
   "author": "Ghulam Hasnain",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/h-ghulam-hasnain/TauqeetJS.git"
+  },
+  "bugs": {
+    "url": "https://github.com/h-ghulam-hasnain/TauqeetJS/issues"
+  },
+  "homepage": "https://github.com/h-ghulam-hasnain/TauqeetJS#readme",
   "devDependencies": {
     "tsup": "^8.4.0",
     "typescript": "^6.0.3",
