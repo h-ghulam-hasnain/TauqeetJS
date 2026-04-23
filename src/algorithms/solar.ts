@@ -13,6 +13,7 @@ export interface SolarResult {
   HP: number;
   EOT: number;
   distance: number;
+  lambdaApp: number;
 }
 
 export function calculateSolar(jd: number, deltaPsi: number, eps: number, TE: number, Tau: number, T: number): SolarResult {
@@ -265,5 +266,5 @@ export function calculateSolar(jd: number, deltaPsi: number, eps: number, TE: nu
   if (EOT > 20) EOT -= 1440;
   if (EOT < -20) EOT += 1440;
   
-  return { RA, DEC, GHA, SHA, SD, HP, EOT, distance: R };
+  return { RA, DEC, GHA, SHA, SD, HP, EOT, distance: R, lambdaApp: lambda };
 }

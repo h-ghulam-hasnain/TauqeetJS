@@ -7,16 +7,24 @@
 export * from './core/math.js';
 export * from './core/time.js';
 
-// High-level Modules
-export * as Astronomy from './astronomy/index.js';
-export * as PrayerTimes from './prayer/index.js';
-export * as Qibla from './qibla/index.js';
+// Qibla
+export * from './qibla/index.js';
 
-// Re-export specific common types and classes for convenience
-export { Coordinates, CalculationMethod, PrayerTimesResult, PRESETS } from './prayer/types.js';
-export { PrayerEngine, getPrayerTimes, PrayerConfig } from './prayer/index.js';
-export { Astronomy as AstronomyClass } from './astronomy/index.js';
-export { calculateQibla } from './qibla/index.js';
+// Prayer
+export * from './prayer/index.js';
 
-// Ultimate Low-Code Alias
-export { getPrayerTimes as calculate } from './prayer/index.js';
+// High-level Modules Namespace
+import * as Astronomy from './astronomy/index.js';
+import * as PrayerTimes from './prayer/index.js';
+import * as QiblaModule from './qibla/index.js';
+import * as Moon from './moon/index.js';
+
+export { Astronomy, PrayerTimes, QiblaModule as Qibla, Moon };
+
+// Low-Code Alias
+import { getPrayerTimes } from './prayer/calculate.js';
+import { getMoonTimes } from './moon/index.js';
+export { getPrayerTimes as calculate, getMoonTimes };
+
+// UI Renderer
+export { renderPrayerChart } from './ui/render.js';
