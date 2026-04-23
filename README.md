@@ -8,7 +8,8 @@
 ## ✨ Why Tauqeet.js?
 In Urdu and Arabic, *Tauqeet* refers to the science of timekeeping, specifically for religious purposes. This library is designed to bring that ancient precision to the modern web with a focus on:
 - **Sub-Second Precision:** Uses Successive Approximation loops for perfect convergence.
-- **Topocentric Accuracy:** Accounts for refraction, solar semidiameter, parallax, and **Altitude (Elevation)**.
+- **Topocentric Accuracy:** Accounts for refraction (**Bennett Formula**), solar semidiameter, parallax, and **Altitude (Elevation)**.
+- **Scientific Asr:** Refined shadow-counting logic using apparent visual horizons.
 - **Low-Code API:** Get results in one line of code.
 - **Robust:** Hardened against division-by-zero errors at poles and extreme latitudes.
 
@@ -43,24 +44,38 @@ const schedule = getPrayerTimes({
 });
 ```
 
-### 3. High-Precision Astronomy
+### 2. Scientific Asr Accuracy
+New in v1.0.1: Accounts for **Solar Semi-Diameter** and **Atmospheric Refraction** at both Noon (Dhuhr) and Asr for bit-perfect alignment with visual shadow observations.
+
+### 3. Atmospheric Refraction (Bennett Formula)
+Specify your local weather conditions to refine refraction using the high-precision **Bennett's Formula (1982)**.
+```javascript
+const times = getPrayerTimes({
+  location: { latitude: 31.4, longitude: 73.0 },
+  temperature: 25,     // 25°C
+  pressure: 1013,      // 1013 mbar
+  pressureUnit: 'mbar' // 'kPa' or 'mbar'
+});
+```
+
+### 4. High-Precision Astronomy
 Access coordinates for the Sun, Moon (including phases), and Polaris.
 ```javascript
-import { AstronomyClass } from 'tauqeet-js';
+import { Astronomy } from 'tauqeet-js';
 
-const astro = new AstronomyClass();
+const astro = new Astronomy();
 console.log(astro.moon.illumination); // Current moon phase %
 console.log(astro.sun.GHA);           // Sun Greenwich Hour Angle
 ```
 
-### 4. Qibla Direction
-Calculates Great Circle bearing and Distance to Makkah.
+### 5. Qibla & Sun Alignment
+Calculates the Great Circle bearing, distance, and even **Sun Alignment** times (when the sun points exactly towards Qibla).
 ```javascript
-import { calculateQibla } from 'tauqeet-js';
+import { calculateQibla, calculateSunAtQibla } from 'tauqeet-js';
 
 const qibla = calculateQibla({ latitude: 31.4, longitude: 73.0 });
-console.log(qibla.bearing);  // Bearing from North
-console.log(qibla.distance); // KM to Kaaba
+const sunTimes = calculateSunAtQibla(31.4, 73.0); 
+// sunTimes.qibla -> Time the sun is at the Qibla bearing
 ```
 
 ## 📐 Accuracy Benchmark
