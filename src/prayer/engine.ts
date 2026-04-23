@@ -2,7 +2,8 @@
  * Core Prayer Time Engine.
  * Following strictly defined Successive Approximation Algorithmic Workflow.
  */
-import { acosd, norm24, sind, cosd, tand, asind, atan2d } from '../core/math.js';
+import { acosd, sind, cosd, tand, atan2d } from '../core/math.js';
+import { getRefraction } from '../astronomy/refraction.js';
 import { getJulianDate } from '../core/time.js';
 import { calculateNutation } from '../algorithms/nutation.js';
 import { calculateSolar, SolarResult } from '../algorithms/solar.js';
@@ -14,24 +15,23 @@ export class PrayerEngine {
     private method: CalculationMethod = 'Karachi'
   ) { }
 
-  public calculate(date: Date, asrFactor: number = 2): PrayerTimesResult {
-    console.log(`--- ENGINE DEBUG: ${date.toDateString()} ---`);
-    console.log(`Coords: ${this.coords.latitude}, ${this.coords.longitude}`);
+  public calculate(date: Date, asrFactor: number = 2, temperature: number = 10, pressureMbar: number = 1010.0): PrayerTimesResult {
+
 
     // 1. Initial Transit (High-precision Solar Noon)
     const dhuhr = this.calculateTransit(date);
-    console.log(`Solar Noon (Dhuhr): ${dhuhr.toISOString()} (${dhuhr.toString()})`);
+
 
     // 2. Convergence-based iterative solving
     const params = PRESETS[this.method];
 
     // Fajr
     const fajr = this.solveIteratively(date, params.fajrAngle, 'morning');
-    console.log(`Fajr: ${isNaN(fajr.getTime()) ? 'No Occurrence' : fajr.toISOString()}`);
+
 
     // Sunrise
     const sunrise = this.solvePhenomenonIteratively(date, 'morning');
-    console.log(`Sunrise: ${isNaN(sunrise.getTime()) ? 'No Occurrence' : sunrise.toISOString()}`);
+
 
     // Maghrib
     const maghrib = params.maghribInterval
@@ -39,21 +39,21 @@ export class PrayerEngine {
       : params.maghribAngle
         ? this.solveIteratively(date, params.maghribAngle, 'evening')
         : this.solvePhenomenonIteratively(date, 'evening');
-    console.log(`Maghrib: ${isNaN(maghrib.getTime()) ? 'No Occurrence' : maghrib.toISOString()}`);
+
 
     // Isha
     const isha = params.ishaInterval
       ? new Date(maghrib.getTime() + params.ishaInterval * 60000)
       : this.solveIteratively(date, params.ishaAngle || 18, 'evening');
-    console.log(`Isha: ${isNaN(isha.getTime()) ? 'No Occurrence' : isha.toISOString()}`);
 
-    // Asr
-    const asr = this.solveAsrIteratively(date, asrFactor);
-    console.log(`Asr: ${isNaN(asr.getTime()) ? 'No Occurrence' : asr.toISOString()}`);
+
+    // Asr (Refined Scientific Calculation)
+    const asr = this.solveAsrIteratively(date, asrFactor, dhuhr, temperature, pressureMbar);
+
 
     // Dhahwa Kubra
     const dhahwaKubra = new Date((fajr.getTime() + maghrib.getTime()) / 2);
-    console.log(`Dhahwa Kubra: ${isNaN(dhahwaKubra.getTime()) ? 'No Occurrence' : dhahwaKubra.toISOString()}`);
+
 
     return {
       fajr,
@@ -77,7 +77,7 @@ export class PrayerEngine {
     const solar = calculateSolar(jd, nut.deltaPsi, nut.eps, te, tau, t);
     
     // Detailed log to match script.js
-    console.log(`[jd=${jd.toFixed(6)}] GHA=${solar.GHA.toFixed(4)}, DEC=${solar.DEC.toFixed(4)}, EOT=${solar.EOT.toFixed(4)}`);
+
     
     return { solar, jd };
   }
@@ -175,7 +175,19 @@ export class PrayerEngine {
     return this.toDate(date, currentUtcTime);
   }
 
-  private solveAsrIteratively(date: Date, factor: number): Date {
+  /**
+   * Accounts for Solar Semi-Diameter and Refraction at both Noon and Asr.
+   */
+  private solveAsrIteratively(date: Date, factor: number, dhuhr: Date, temperature: number = 10, pressureMbar: number = 1010.0): Date {
+    // 1. True Zenith at Zuhr
+    const { solar: solarZuhr } = this.getSolarAt(dhuhr);
+    const zZuhr = Math.abs(this.coords.latitude - solarZuhr.DEC);
+
+    // 2. Apparent Visual Start (Upper-limb position)
+    const sdZuhr = solarZuhr.SD / 3600;
+    const refrZuhr = getRefraction(90 - zZuhr, temperature, pressureMbar) / 60;
+    const zZuhrVisual = zZuhr - refrZuhr - sdZuhr;
+
     let prevTime = 15;
     let currentUtcTime = prevTime;
 
@@ -183,16 +195,22 @@ export class PrayerEngine {
       const checkDate = this.toDate(date, currentUtcTime);
       const { solar } = this.getSolarAt(checkDate);
 
-      const alt = factor + tand(Math.abs(this.coords.latitude - solar.DEC));
-      const h = atan2d(1, alt);
+      // 3. Asr Shadow Addition (Visual)
+      const zAsrVisual = atan2d(tand(zZuhrVisual) + factor, 1);
 
+      // 4. True Geometric Asr (Center of sun)
+      const refrAsr = getRefraction(90 - zAsrVisual, temperature, pressureMbar) / 60;
+      const sdAsr = solar.SD / 3600;
+      const targetZenith = zAsrVisual + refrAsr + sdAsr;
+
+      // 5. Final Output using Spherical Trigonometry
       const denominator = cosd(this.coords.latitude) * cosd(solar.DEC);
       
       if (Math.abs(denominator) < 1e-10) {
         return new Date(NaN);
       }
 
-      const cosH = (sind(h) - sind(this.coords.latitude) * sind(solar.DEC)) / denominator;
+      const cosH = (cosd(targetZenith) - sind(this.coords.latitude) * sind(solar.DEC)) / denominator;
 
       if (cosH > 1 || cosH < -1) return new Date(NaN);
 
@@ -208,7 +226,6 @@ export class PrayerEngine {
   }
 
   private toDate(baseDate: Date, utcHours: number): Date {
-    // IMPORTANT: Removing norm24 to allow day-shifts (negative utcHours or > 24)
     const d = new Date(Date.UTC(baseDate.getUTCFullYear(), baseDate.getUTCMonth(), baseDate.getUTCDate(), 0, 0, 0));
     const totalSeconds = Math.round(utcHours * 3600);
     d.setUTCSeconds(totalSeconds);

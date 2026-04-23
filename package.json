@@ -1,6 +1,6 @@
 {
   "name": "tauqeet-js",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Tauqeet.js: A high-precision Islamic prayer times and astronomical library based on Jean Meeus algorithms. Robust, low-code, and sub-second accurate.",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -8,9 +8,9 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
-      "require": "./dist/index.cjs",
-      "types": "./dist/index.d.ts"
+      "require": "./dist/index.cjs"
     }
   },
   "files": [

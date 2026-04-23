@@ -8,7 +8,7 @@ export interface Coordinates {
   elevation?: number; // In meters
 }
 
-export type CalculationMethod = 
+export type CalculationMethod =
   | 'MWL'         // Muslim World League (Fajr 18, Isha 17)
   | 'ISNA'        // ISNA (Fajr 15, Isha 15)
   | 'Egypt'       // Egyptian General Authority of Survey (Fajr 19.5, Isha 17.5)
@@ -43,4 +43,20 @@ export interface PrayerTimesResult {
   asr: Date;
   maghrib: Date;
   isha: Date;
+}
+
+export interface MonthlyPrayerRow extends PrayerTimesResult {
+  date: string;
+  day: number;
+  weekday: string;
+}
+
+export interface RamadanScheduleEntry {
+  date: string;
+  day: number;
+  weekday: string;
+  fajr: Date;
+  maghrib: Date;
+  sahurEndsAt: Date;
+  iftarAt: Date;
 }

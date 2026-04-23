@@ -1,19 +1,13 @@
 import { atan2d, cosd, sind, tand } from '../core/math.js';
 import { Coordinates } from '../prayer/types.js';
 
-const MAKKAH_LAT = 21.4225;
-const MAKKAH_LNG = 39.8262;
-
-export interface QiblaResult {
-  bearing: number; // Great Circle bearing
-  rhumbLine: number; // Rhumb Line bearing (for map reference)
-  distance: number; // Distance in KM
-}
+const MAKKAH_LAT = 21.42248700;
+const MAKKAH_LNG = 39.82620600;
 
 /**
  * Calculates the direction to the Kaaba (Qibla) from a given coordinate.
  */
-export function calculateQibla(coords: Coordinates): QiblaResult {
+export function calculateQibla(coords: Coordinates) {
   const phi = coords.latitude;
   const lambda = coords.longitude;
 
@@ -22,7 +16,7 @@ export function calculateQibla(coords: Coordinates): QiblaResult {
 
   let qibla = atan2d(y, x);
   if (qibla < 0) qibla += 360;
-  
+
   // Rhumb Line calculation (loxodromic)
   const dPhi = Math.log(tand(MAKKAH_LAT / 2 + 45) / tand(phi / 2 + 45));
   const dLon = (MAKKAH_LNG - lambda) * Math.PI / 180;
@@ -43,3 +37,7 @@ export function calculateQibla(coords: Coordinates): QiblaResult {
     distance: distance
   };
 }
+
+export * from './sun-qibla.js';
+
+
