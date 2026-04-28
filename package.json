@@ -1,0 +1,41 @@
+{
+  "name": "tauqeet-js",
+  "version": "1.0.2",
+  "description": "Next generation of Tauqeet.js - Modular, Private, and High-Precision.",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js",
+    "./ui": "./dist/ui/render.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "tsc --noEmit"
+  },
+  "keywords": [
+    "prayer-times",
+    "astronomy",
+    "meeus",
+    "precision",
+    "solar",
+    "lunar",
+    "qibla",
+    "islamic"
+  ],
+  "author": "Ghulam Hasnain",
+  "license": "MIT",
+  "sideEffects": false,
+  "devDependencies": {
+    "tsup": "^8.4.0",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.4"
+  }
+}
