@@ -1,10 +1,7 @@
 /**
- * Time and Calendar utilities for astronomical calculations.
+ * Time and calendar utilities for astronomical calculations (internal).
  */
 
-/**
- * Calculates the Julian Date for a given Gregorian date and time.
- */
 export const getJulianDate = (date: Date): number => {
   let year = date.getUTCFullYear();
   let month = date.getUTCMonth() + 1;
@@ -34,23 +31,14 @@ export const getJulianDate = (date: Date): number => {
   );
 };
 
-/**
- * Julian centuries since J2000.0.
- */
 export const getJulianCenturies = (jd: number): number => {
   return (jd - 2451545.0) / 36525.0;
 };
 
-/**
- * Julian millennia since J2000.0.
- */
 export const getJulianMillennia = (jc: number): number => {
   return 0.1 * jc;
 };
 
-/**
- * Approximate Delta T (TT - UT) in seconds.
- */
 export const getDeltaT = (year: number): number => {
   if (year < -500) {
     const u = (year - 1820) / 100;
@@ -113,7 +101,6 @@ export const getDeltaT = (year: number): number => {
   if (year < 2150) {
     return -20 + 32 * Math.pow(((year - 1820) / 100), 2) - 0.5628 * (2150 - year);
   }
-  // Simplified for far future
   const u = (year - 1820) / 100;
   return -20 + 32 * u * u;
 };

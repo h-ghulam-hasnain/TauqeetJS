@@ -1,4 +1,6 @@
-export { calculateSolar } from './solar.js';
-export { calculateMoon } from './moon.js';
-export { calculateNutation } from './nutation.js';
-export { getRefraction } from './refraction.js';
+/**
+ * Public astronomy sub-path placeholder.
+ * Low-level ephemeris (solar, lunar, nutation, refraction) and math/time helpers live under `src/internal/`
+ * and are not re-exported from the package surface.
+ */
+export {};

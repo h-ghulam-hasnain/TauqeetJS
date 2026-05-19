@@ -1,14 +1,42 @@
 {
   "name": "tauqeet-js",
-  "version": "1.0.2",
-  "description": "Next generation of Tauqeet.js - Modular, Private, and High-Precision.",
+  "version": "1.0.3",
+  "description": "Next generation of Tauqeet.js - Modular, Private, High-Precision, and Headless.",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./dist/index.js",
-    "./ui": "./dist/ui/render.js"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./prayer": {
+      "types": "./dist/prayer/index.d.ts",
+      "import": "./dist/prayer/index.js",
+      "require": "./dist/prayer/index.cjs"
+    },
+    "./qibla": {
+      "types": "./dist/qibla/index.d.ts",
+      "import": "./dist/qibla/index.js",
+      "require": "./dist/qibla/index.cjs"
+    },
+    "./moon": {
+      "types": "./dist/moon-visibility/index.d.ts",
+      "import": "./dist/moon-visibility/index.js",
+      "require": "./dist/moon-visibility/index.cjs"
+    },
+    "./astronomy": {
+      "types": "./dist/astronomy/index.d.ts",
+      "import": "./dist/astronomy/index.js",
+      "require": "./dist/astronomy/index.cjs"
+    },
+    "./factory": {
+      "types": "./dist/factory/index.d.ts",
+      "import": "./dist/factory/index.js",
+      "require": "./dist/factory/index.cjs"
+    }
   },
   "files": [
     "dist"

@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { getPrayerTimes } from '../../src/prayer/calculate.js';
+import { ErrorCode } from '../../src/core/result.js';
 
 describe('Extended Test: High Latitude & Midnight Sun', () => {
   it('should gracefully handle Tromsø (Norway) during Summer Solstice', () => {
@@ -14,7 +15,7 @@ describe('Extended Test: High Latitude & Midnight Sun', () => {
     expect(result.success).toBe(false);
     
     if (!result.success) {
-      expect(result.error).toContain('could not be calculated');
+      expect(result.error).toBe(ErrorCode.EXTREME_LATITUDE);
     }
   });
 

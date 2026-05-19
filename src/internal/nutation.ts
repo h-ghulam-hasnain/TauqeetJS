@@ -2,7 +2,7 @@
  * IAU 1980 Nutation Theory.
  * Perfectly synchronized with Henning Umland's Almanac.html logic.
  */
-import { norm360, DTR } from '../core/math.js';
+import { norm360, DTR } from './math.js';
 
 // Optimized numerical representation of the nutation table to reduce bundle size and parsing overhead.
 const NUT_DATA = [

@@ -1,4 +1,4 @@
-import { atan2d, cosd, sind, tand } from '../core/math.js';
+import { atan2d, cosd, sind, tand } from '../internal/math.js';
 import { Coordinates } from '../prayer/types/index.js';
 import { Result, validateInputs, Success } from '../core/result.js';
 

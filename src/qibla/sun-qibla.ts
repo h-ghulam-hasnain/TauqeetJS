@@ -1,8 +1,8 @@
-import { sind, cosd, acosd, atan2d, norm360 } from '../core/math.js';
-import { calculateSolar } from '../astronomy/solar.js';
-import { calculateNutation } from '../astronomy/nutation.js';
-import { getJulianDate } from '../core/time.js';
-import { createPrayerEngine } from '../prayer/engine/index.js';
+import { sind, cosd, acosd, atan2d, norm360 } from '../internal/math.js';
+import { calculateSolar } from '../internal/solar.js';
+import { calculateNutation } from '../internal/nutation.js';
+import { getJulianDate } from '../internal/time.js';
+import { createPrayerEngine } from '../prayer/engine.js';
 import { calculateQibla } from './index.js';
 import { Result, Success, Failure, validateInputs } from '../core/result.js';
 

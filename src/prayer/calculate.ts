@@ -54,25 +54,18 @@ export interface PrayerConfig {
   pressure?: number;
   /**
    * Manual minute adjustments for each prayer time.
-   * Useful for matching local mosque timings or applying safety margins.
    */
-  adjustments?: Partial<Record<Exclude<keyof PrayerTimesResult, 'format'>, number>>;
+  adjustments?: Partial<Record<Exclude<keyof PrayerTimesResult, 'format' | 'metadata'>, number>>;
+  /**
+   * Whether to include metadata (astronomical values) in the result.
+   */
+  withMetadata?: boolean;
 }
 
 /**
  * High-level API for calculating prayer times with smart defaults.
- * Follows the Result Pattern to ensure host stability.
- * 
- * @example
- * const result = getPrayerTimes({ location: { latitude: 24.86, longitude: 67.01 } });
- * if (result.success) {
- *   console.log(result.data.fajr);
- * } else {
- *   console.error(result.error);
- * }
  */
 export const getPrayerTimes = (config: PrayerConfig): Result<PrayerTimesResult> => {
-  // Apply smart defaults
   const {
     location,
     date = new Date(),
@@ -81,36 +74,30 @@ export const getPrayerTimes = (config: PrayerConfig): Result<PrayerTimesResult> 
     elevation = config.location?.elevation ?? 0,
     temperature = 10,
     pressure = 1013.25,
-    adjustments = {}
+    adjustments = {},
+    withMetadata = false
   } = config;
 
   if (!location) return Failure('Location is required');
 
-  // Input Validation: Returns Failure instead of throwing
   const validation = validateInputs(location.latitude, location.longitude, date);
   if (!validation.success) return validation as any;
 
-  // Internal Logic Conversions
   const asrFactor = madhab === 'Hanafi' ? 2 : 1;
-  const ishaAngle = madhab === 'Hanafi' ? 18 : 12;
 
-  try {
-    const engine = createPrayerEngine({ ...location, elevation }, method);
-    const result = engine.calculate(date, asrFactor, temperature, pressure, ishaAngle);
-    
-    if (result.success && Object.keys(adjustments).length > 0) {
-      const times = result.data;
-      const keys = ['fajr', 'sunrise', 'dhahwaKubra', 'dhuhr', 'asr', 'maghrib', 'isha'] as const;
-      
-      for (const key of keys) {
-        if (adjustments[key] && !isNaN(times[key].getTime())) {
-          times[key] = new Date(times[key].getTime() + adjustments[key]! * 60000);
-        }
+  const engine = createPrayerEngine({ ...location, elevation }, method);
+  const result = engine.calculate(date, asrFactor, temperature, pressure, undefined, withMetadata);
+
+  if (result.success && Object.keys(adjustments).length > 0) {
+    const times = result.data;
+    const keys = ['fajr', 'sunrise', 'dhahwaKubra', 'dhuhr', 'asr', 'maghrib', 'isha'] as const;
+
+    for (const key of keys) {
+      if (adjustments[key] && !isNaN(times[key].getTime())) {
+        times[key] = new Date(times[key].getTime() + adjustments[key]! * 60000);
       }
     }
-    
-    return result;
-  } catch (e) {
-    return Failure(e instanceof Error ? e.message : 'Unknown error during calculation');
   }
+
+  return result;
 };

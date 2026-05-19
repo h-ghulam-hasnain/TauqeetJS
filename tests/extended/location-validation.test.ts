@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { getPrayerTimes } from '../../src/prayer/calculate.js';
+import { ErrorCode } from '../../src/core/result.js';
 
 describe('Extended Test: Location Validation', () => {
   const date = new Date(Date.UTC(2024, 3, 27));
@@ -36,7 +37,7 @@ describe('Extended Test: Location Validation', () => {
     expect(result2.success).toBe(false);
     expect(result3.success).toBe(false);
 
-    if (!result1.success) expect(result1.error).toContain('Invalid latitude');
-    if (!result2.success) expect(result2.error).toContain('Invalid longitude');
+    if (!result1.success) expect(result1.error).toBe(ErrorCode.INVALID_LATITUDE);
+    if (!result2.success) expect(result2.error).toBe(ErrorCode.INVALID_LONGITUDE);
   });
 });

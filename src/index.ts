@@ -1,31 +1,30 @@
 /**
  * Tauqeet.js - High-precision Islamic prayer times and astronomical library.
- * Modern, Modular, and Private.
- * Headless-first entry point.
+ * Modular, tree-shakable public surface; ephemeris core is internal-only.
  */
 
-// Core Result and Validation
-export { Success, Failure, validateInputs } from './core/result.js';
-export type { Result } from './core/result.js';
+export { Success, Failure, validateInputs, ErrorCode, ValidationError, Result } from './core/result.js';
+export type { Result as ResultType } from './core/result.js';
 
-// Prayer API
-export { 
-  getPrayerTimes, 
+export {
+  getPrayerTimes,
   getPrayerTimes as calculate,
   getMonthlyPrayerTimes,
-  getRamadanSchedule 
+  getRamadanSchedule
 } from './prayer/index.js';
 export type { PrayerConfig } from './prayer/index.js';
 export * from './prayer/types/index.js';
 
-// Qibla API
 export { calculateQibla, calculateSunAtQibla } from './qibla/index.js';
 
-// Moon API
-export { getMoonTimes, createMoonEngine } from './moon/index.js';
+export {
+  getMoonVisibility,
+  getMoonVisibility as getMoonTimes,
+  calculateMoonPosition,
+  calculateMoonDiskAnalytics,
+  calculateMoonAlmanac
+} from './moon-visibility/index.js';
+export type { MoonVisibilityResult, MoonInput, DateTimeDetails } from './moon-visibility/types.js';
 
-// Factory pattern exposure for engines
-export { createPrayerEngine } from './prayer/engine.js';
+export { createPrayerEngine, type PrayerEngineApi, createMoonEngine, type MoonEngineApi } from './factory/index.js';
 
-// Astronomy API
-export * from './astronomy/index.js';
