@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { getPrayerTimes } from '../src/prayer/calculate.js';
 import { createPrayerEngine } from '../src/prayer/engine.js';
+import { ErrorCode } from '../src/core/result.js';
 
 describe('TauqeetJS Technical Specification & Engine Validation', () => {
   const coords = { latitude: 24.8607, longitude: 67.0011 }; // Karachi
@@ -21,7 +22,7 @@ describe('TauqeetJS Technical Specification & Engine Validation', () => {
       const result = getPrayerTimes({ location: { latitude: 100, longitude: 67 } });
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error).toContain('Invalid latitude');
+        expect(result.error).toBe(ErrorCode.INVALID_LATITUDE);
       }
     });
   });
@@ -80,7 +81,7 @@ describe('TauqeetJS Technical Specification & Engine Validation', () => {
       // Should fail gracefully due to astronomical impossibility of some points
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error).toContain('could not be calculated');
+        expect(result.error).toBe(ErrorCode.EXTREME_LATITUDE);
       }
     });
   });

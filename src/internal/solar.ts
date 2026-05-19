@@ -2,7 +2,7 @@
  * High-precision Solar Ephemeris calculations.
  * Bit-perfect synchronization with Henning Umland's Almanac.html.
  */
-import { atan2d, cosd, norm360, sind, tand, asind } from '../core/math.js';
+import { atan2d, cosd, norm360, sind, tand, asind } from './math.js';
 
 export interface SolarResult {
   RA: number;

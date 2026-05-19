@@ -1,101 +1,94 @@
 # TauqeetJS
 
-**TauqeetJS** is a high-performance, modular, and headless-first TypeScript library for calculating Islamic prayer times and astronomical data. Designed for professional engineers, it prioritizes precision, type safety, and minimal bundle size.
+**TauqeetJS** is a high-performance, modular, and headless-first TypeScript library for calculating Islamic prayer times, Qibla direction, and moon data. Designed for professional applications, it prioritizes precision, tree-shakability, and robust error handling.
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-![Bundle Size](https://img.shields.io/bundlephobia/minzip/tauqeetjs)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+![Bundle Size](https://img.shields.io/bundlephobia/minzip/tauqeet-js)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)
 
 ---
 
-## Key Features
+## 🚀 Key Features
 
-- **Headless-First**: Import only the logic you need. No forced UI dependencies.
-- **Type-Safe**: Written in TypeScript with exhaustive definitions.
+- **Modular & Tree-Shakable**: Import only what you need (e.g., just Qibla logic) to keep your bundles lean.
+- **Headless-First**: 100% logic-based. No DOM dependencies or CSS injections.
+- **High Precision**: Built on rigorous astronomical algorithms (Meeus) with atmospheric corrections and iteration convergence.
 - **Robust Error Handling**: Uses the `Result<T, E>` pattern—no silent failures or unexpected exceptions.
-- **Environmentally Aware**: High-precision atmospheric refraction adjustments (elevation, temperature, pressure).
-- **Small Footprint**: Zero external dependencies in the core engine.
+- **Deep Metadata**: Access internal astronomical values (DEC, EOT, SD, HP) used in calculations via the metadata flag.
 
 ---
 
-## Quick Start
-
-Install via your preferred package manager:
+## 📦 Installation
 
 ```bash
 npm install tauqeet-js
-# or
-yarn add tauqeet-js
 ```
 
-### Basic Usage (Low-Code)
+---
 
-Get prayer times for a specific location using smart defaults (Karachi method, Hanafi madhab).
+## 💡 Quick Start
 
+### Basic Prayer Times
 ```typescript
 import { getPrayerTimes } from 'tauqeet-js';
 
 const result = getPrayerTimes({
-  location: { latitude: 24.8607, longitude: 67.0011 }
+  location: { latitude: 24.8607, longitude: 67.0011 },
+  withMetadata: true // Optional: returns astronomical primitives
 });
 
 if (result.success) {
   const { fajr, dhuhr, asr, maghrib, isha } = result.data;
-  console.log(`Fajr: ${fajr.toLocaleTimeString()}`);
-} else {
-  console.error(`Calculation failed: ${result.error}`);
+  console.log(`Fajr: ${fajr.toISOString()}`);
 }
+```
+
+### Modular Imports (Better Tree-Shaking)
+If you only need specific logic, import from sub-paths:
+
+```typescript
+import { calculateQibla } from 'tauqeet-js/qibla';
+import { getMoonVisibility } from 'tauqeet-js/moon-visibility';
 ```
 
 ---
 
-## Core Concepts
+## 🌍 TimeZone Handling Guide
 
-### Headless-First Architecture
+TauqeetJS follows a **Strict UTC Internal Pattern** to maintain astronomical precision. 
 
-To keep your production bundle small, TauqeetJS is designed to be imported modularly. If you only need the prayer calculation engine without Qibla or Moon logic:
+### 1. Internal Pattern
+All internal calculations (Julian Dates, Ephemeris Time, and Solvers) are performed in **UTC/TDT**. The library does not "know" about local time during the calculation phase.
 
+### 2. Input Dates
+When passing a `Date` object to the library, it is treated as a UTC reference point for the calculation day.
 ```typescript
-import { getPrayerTimes } from 'tauqeetjs/prayer';
+const date = new Date(); // Current system time, but used as a UTC reference
 ```
 
-### The Result Pattern
-
-Unlike libraries that throw errors or return `null`, TauqeetJS returns a `Result<T, E>` object. This ensures your application remains stable even with invalid inputs.
+### 3. Local Conversion (Output Layer)
+The transformation to local time happens **only at the final formatting/output layer**. The `format()` method on the result object should be used with an IANA timezone string.
 
 ```typescript
 const result = getPrayerTimes(config);
 
-if (!result.success) {
-  // result.error contains a descriptive string
-  handleError(result.error);
-} else {
-  // result.data is fully typed
-  renderUI(result.data);
+if (result.success) {
+  // Format to a specific IANA TimeZone
+  const times = result.data.format('24h', 'Asia/Karachi');
+  console.log(times.fajr); // "04:15:22"
 }
 ```
 
----
-
-## Advanced Configuration
-
-Fine-tune calculations for specific environmental conditions or local preferences.
-
-```typescript
-const config = {
-  location: { latitude: 24.86, longitude: 67.01, elevation: 20 },
-  method: 'MWL',
-  madhab: 'Hanafi',
-  temperature: 25, // Celsius
-  pressure: 1010,   // hPa/mbar
-  adjustments: {
-    fajr: 2, // Add 2 minutes
-    maghrib: 1 // Add 1 minute (safety margin)
-  }
-};
-```
+### 4. Handling DST and Offsets
+Since the library utilizes the browser/Node.js `Intl.DateTimeFormat` engine, it automatically handles **Daylight Saving Time (DST)** transitions based on the IANA timezone provided.
+- **Avoid Manual Offsets**: It is recommended to use IANA names (e.g., `Europe/London`) rather than manual UTC offsets to ensure DST transitions are handled correctly by the underlying platform.
 
 ---
 
-## Documentation
+## 📖 Documentation
 
-For a full breakdown of the API, configuration options, and astronomical parameters, see [API.md](./API.md).
+Detailed API documentation and metadata strict mapping can be found in [API.md](./API.md).
+
+## 📄 License
+MIT © [Ghulam Hasnain](https://github.com/h-ghulam-hasnain)
+

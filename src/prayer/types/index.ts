@@ -25,6 +25,15 @@ export interface MethodParams {
   maghribInterval?: number;
 }
 
+export interface PrayerMetadata {
+  fajr?: { DEC: number; EOT: number; angle: number; iterations: number };
+  sunrise?: { DEC: number; EOT: number; HP: number; SD: number; iterations: number };
+  dhuhr?: { DEC: number; EOT: number; SD: number; iterations: number };
+  asr?: { DEC: number; EOT: number; HP: number; SD: number; asrAngle: number; iterations: number };
+  maghrib?: { DEC: number; EOT: number; HP: number; SD: number; iterations: number };
+  isha?: { DEC: number; EOT: number; angle: number; iterations: number };
+}
+
 export interface PrayerTimesResult {
   fajr: Date;
   sunrise: Date;
@@ -33,12 +42,13 @@ export interface PrayerTimesResult {
   asr: Date;
   maghrib: Date;
   isha: Date;
+  metadata?: PrayerMetadata;
   /**
    * Formats all prayer times into the specified format.
    * @param type The desired format.
    * @param timeZone Optional IANA time zone (e.g., 'America/New_York').
    */
-  format?: (type: 'iso8601' | 'unix' | '12h' | '24h', timeZone?: string) => Record<Exclude<keyof PrayerTimesResult, 'format'>, string | number>;
+  format?: (type: 'iso8601' | 'unix' | '12h' | '24h', timeZone?: string) => Record<Exclude<keyof PrayerTimesResult, 'format' | 'metadata'>, string | number>;
 }
 
 export interface MonthlyPrayerRow extends PrayerTimesResult {

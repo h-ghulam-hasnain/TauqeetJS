@@ -2,7 +2,7 @@
  * High-precision Lunar Ephemeris calculations.
  * Based on Meeus, Astronomical Algorithms.
  */
-import { atan2d, cosd, norm360, sind, tand, asind } from '../core/math.js';
+import { atan2d, cosd, norm360, sind, tand, asind } from './math.js';
 
 export interface MoonResult {
   RA: number;
