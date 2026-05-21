@@ -1,9 +1,11 @@
 import { norm360, sind, cosd } from '../internal/math.js';
 import { calculateMoonEphemeris, calculateMoonSlope, calculateMoonAltitude } from './ephemeris.js';
-import { getDeltaT } from '../internal/time.js';
+import { calculateSolar } from '../internal/solar.js';
+import { calculateNutation } from '../internal/nutation.js';
 
 /**
  * Solves for Moon Transit using iterative approach.
+ * Returns UT hours relative to jdMidnight.
  */
 export function solveMoonTransit(jdMidnight: number, initialUT: number, deltaT: number, lon: number): number {
   let ut = initialUT;
@@ -20,7 +22,8 @@ export function solveMoonTransit(jdMidnight: number, initialUT: number, deltaT: 
 }
 
 /**
- * Solves for Moon Rise or Set using Bisection Method around transit.
+ * Solves for Moon Rise or Set.
+ * Returns the fractional Julian Day of the event, or null if it never rises/sets (polar regions).
  */
 export function solveMoonRiseSet(
   jdMidnight: number, 
@@ -31,9 +34,10 @@ export function solveMoonRiseSet(
   type: 'rise' | 'set'
 ): number | null {
   const isPolar = Math.abs(lat) >= 65;
+  const jdT = jdMidnight + transitUT / 24.0;
 
   // Let's first evaluate the endpoints to check for polar cases
-  const mTransit = calculateMoonEphemeris(jdMidnight + transitUT / 24.0, deltaT);
+  const mTransit = calculateMoonEphemeris(jdT, deltaT);
   const hTransit = calculateMoonAltitude(mTransit.GHA, mTransit.DEC, lat, lon);
   const hRefTransit = 0.7275 * mTransit.HP - 0.5667;
 
@@ -44,9 +48,9 @@ export function solveMoonRiseSet(
     }
   }
 
-  // Let's also check the anti-transit (minimum) point
-  const antiTransitUT = type === 'rise' ? transitUT - 12.5 : transitUT + 12.5;
-  const mMin = calculateMoonEphemeris(jdMidnight + antiTransitUT / 24.0, deltaT);
+  // Check the anti-transit (minimum) point
+  const jdMin = type === 'rise' ? jdT - 12.5 / 24.0 : jdT + 12.5 / 24.0;
+  const mMin = calculateMoonEphemeris(jdMin, deltaT);
   const hMin = calculateMoonAltitude(mMin.GHA, mMin.DEC, lat, lon);
   const hRefMin = 0.7275 * mMin.HP - 0.5667;
 
@@ -58,38 +62,38 @@ export function solveMoonRiseSet(
   }
 
   // Stage 1: Standard Search Window (transitUT +/- 12.5 hours)
-  let ut0 = type === 'rise' ? transitUT - 12.5 : transitUT;
-  let ut1 = type === 'rise' ? transitUT : transitUT + 12.5;
-  let resolvedUT = runBisection(ut0, ut1);
-  if (resolvedUT !== null) {
-    return resolvedUT;
+  let jd0 = type === 'rise' ? jdT - 12.5 / 24.0 : jdT;
+  let jd1 = type === 'rise' ? jdT : jdT + 12.5 / 24.0;
+  let resolvedJD = runBisection(jd0, jd1);
+  if (resolvedJD !== null) {
+    return resolvedJD;
   }
 
   // Stage 2: Expanded Search Window for non-polar recovery
   if (!isPolar) {
-    let expandedUt0 = type === 'rise' ? transitUT - 14.5 : transitUT - 2;
-    let expandedUt1 = type === 'rise' ? transitUT + 2 : transitUT + 14.5;
-    resolvedUT = runBisection(expandedUt0, expandedUt1);
-    if (resolvedUT !== null) {
-      return resolvedUT;
+    let expandedJd0 = type === 'rise' ? jdT - 14.5 / 24.0 : jdT - 2.0 / 24.0;
+    let expandedJd1 = type === 'rise' ? jdT + 2.0 / 24.0 : jdT + 14.5 / 24.0;
+    resolvedJD = runBisection(expandedJd0, expandedJd1);
+    if (resolvedJD !== null) {
+      return resolvedJD;
     }
 
     // Stage 3: Absolute astronomical fallback for non-polar regions (transit +/- 6 hours)
-    return type === 'rise' ? transitUT - 6.0 : transitUT + 6.0;
+    return type === 'rise' ? jdT - 6.0 / 24.0 : jdT + 6.0 / 24.0;
   }
 
   return null;
 
-  // Helper bisection function
-  function runBisection(startUT: number, endUT: number): number | null {
-    let low = startUT;
-    let high = endUT;
+  // Helper bisection function using absolute Julian Dates
+  function runBisection(startJD: number, endJD: number): number | null {
+    let low = startJD;
+    let high = endJD;
 
-    const mLow = calculateMoonEphemeris(jdMidnight + low / 24.0, deltaT);
+    const mLow = calculateMoonEphemeris(low, deltaT);
     const hLow = calculateMoonAltitude(mLow.GHA, mLow.DEC, lat, lon);
     const hRefLow = 0.7275 * mLow.HP - 0.5667;
 
-    const mHigh = calculateMoonEphemeris(jdMidnight + high / 24.0, deltaT);
+    const mHigh = calculateMoonEphemeris(high, deltaT);
     const hHigh = calculateMoonAltitude(mHigh.GHA, mHigh.DEC, lat, lon);
     const hRefHigh = 0.7275 * mHigh.HP - 0.5667;
 
@@ -97,19 +101,18 @@ export function solveMoonRiseSet(
     const signHigh = hHigh - hRefHigh;
 
     if (signLow * signHigh > 0) {
-      // No root (or even number of roots) in this range
       return null;
     }
 
     for (let i = 0; i < 60; i++) {
       const mid = (low + high) / 2;
-      const m = calculateMoonEphemeris(jdMidnight + mid / 24.0, deltaT);
+      const m = calculateMoonEphemeris(mid, deltaT);
       const h = calculateMoonAltitude(m.GHA, m.DEC, lat, lon);
       const hRef = 0.7275 * m.HP - 0.5667;
 
       const signMid = h - hRef;
 
-      if (Math.abs(high - low) * 3600 < 0.1) {
+      if (Math.abs(high - low) * 86400 < 0.1) {
         return mid;
       }
 
@@ -123,9 +126,6 @@ export function solveMoonRiseSet(
   }
 }
 
-import { calculateSolar } from '../internal/solar.js';
-import { calculateNutation } from '../internal/nutation.js';
-
 /**
  * Finds the date/time of a specific lunar phase using Bisection.
  * @param jd0 Starting search Julian Date
@@ -136,38 +136,67 @@ import { calculateNutation } from '../internal/nutation.js';
 export function findMoonPhase(jd0: number, jd1: number, targetDiff: number, deltaT: number): number {
   let low = jd0;
   let high = jd1;
-  
+  let signChanged = false;
+
+  let prevVal = getPhaseVal(jd0, targetDiff, deltaT);
+  let bracketLow = jd0;
+  let bracketHigh = jd1;
+
+  for (let jd = jd0 + 0.5; jd <= jd1; jd += 0.5) {
+    let val = getPhaseVal(jd, targetDiff, deltaT);
+    if (prevVal * val <= 0 && Math.abs(val - prevVal) < 180) {
+      bracketLow = jd - 0.5;
+      bracketHigh = jd;
+      signChanged = true;
+      break;
+    }
+    prevVal = val;
+  }
+
+  if (!signChanged) {
+    let val = getPhaseVal(jd1, targetDiff, deltaT);
+    if (prevVal * val <= 0 && Math.abs(val - prevVal) < 180) {
+      bracketLow = jd1 - 0.5;
+      bracketHigh = jd1;
+      signChanged = true;
+    }
+  }
+
+  if (signChanged) {
+    low = bracketLow;
+    high = bracketHigh;
+  }
+
   for (let i = 0; i < 60; i++) {
     const jdMean = (low + high) / 2;
-    const moon = calculateMoonEphemeris(jdMean, deltaT);
-    
-    const T = (jdMean - 2451545.0) / 36525.0;
-    const TE = T + deltaT / (36525.0 * 86400.0);
-    const nut = calculateNutation(TE);
-    const solar = calculateSolar(jdMean, nut.deltaPsi, nut.eps, TE, 0.1 * TE, T);
-    
-    let diff = solar.lambdaApp - moon.L;
-    diff = norm360(diff);
-    
-    const sinDiff = sind(diff);
-    
-    if (targetDiff === 180) {
-      // Full Moon: bisection target is 180
-      if (sinDiff > 0) {
-        high = jdMean;
-      } else {
-        low = jdMean;
-      }
+    const val = getPhaseVal(jdMean, targetDiff, deltaT);
+
+    // val goes from positive to negative, so if val > 0, the target is in the future.
+    if (val > 0) {
+      low = jdMean;
     } else {
-      // New Moon: bisection target is 0 / 360
-      if (sinDiff < 0) {
-        high = jdMean;
-      } else {
-        low = jdMean;
-      }
+      high = jdMean;
     }
 
     if (Math.abs(high - low) < 1e-7) break;
   }
   return (low + high) / 2;
+}
+
+function getPhaseVal(jd: number, targetDiff: number, deltaT: number): number {
+  const moon = calculateMoonEphemeris(jd, deltaT);
+  const T = (jd - 2451545.0) / 36525.0;
+  const TE = T + deltaT / (36525.0 * 86400.0);
+  const nut = calculateNutation(TE);
+  const solar = calculateSolar(jd, nut.deltaPsi, nut.eps, TE, 0.1 * TE, T);
+
+  let diff = solar.lambdaApp - moon.L;
+  diff = norm360(diff);
+
+  let angle = diff - targetDiff;
+  // Normalize angle to [-180, 180]
+  let val = angle % 360;
+  if (val < -180) val += 360;
+  if (val > 180) val -= 360;
+  return val;
 }
