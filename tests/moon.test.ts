@@ -160,5 +160,33 @@ describe('Moon Visibility Engine & Architectural Specifications', () => {
         }
       }
     });
+
+    it('should compare precisely with script.js reference values', () => {
+      const res = getMoonVisibility({
+        latitude: 24.8607,
+        longitude: 67.0011,
+        date: new Date(Date.UTC(2026, 4, 18, 18, 45, 0)),
+        time: '18:45:00'
+      });
+      expect(res.success).toBe(true);
+      if (res.success) {
+        const p = res.data.position;
+        const a = res.data.analytics;
+        console.log('COMPARE DEC:', p.declination);
+        console.log('COMPARE SD (arcseconds):', p.sd * 3600);
+        console.log('COMPARE HP (arcseconds):', p.hp * 3600);
+        console.log('COMPARE ILLUM:', a.illumination);
+        console.log('COMPARE ELONGATION:', a.elongation);
+        
+        // Assertions based on script.js values
+        // Dec: script.js got N 28° 03' 11'' (~28.053)
+        expect(Math.abs(p.declination - 28.053)).toBeLessThan(0.005);
+        // SD: script.js got 997.4''
+        expect(Math.abs(p.sd * 3600 - 997.4)).toBeLessThan(2.0);
+        // HP: script.js got 3660.5''
+        expect(Math.abs(p.hp * 3600 - 3660.5)).toBeLessThan(5.0);
+      }
+    });
   });
 });
+

@@ -53,31 +53,23 @@ export function calculateMoonDiskAnalytics(date: Date): Result<MoonDiskAnalytics
  * Calculates predictive lunar almanac (Rise, Set, Phases).
  */
 export function calculateMoonAlmanac(date: Date, coords: Coordinates): Result<MoonAlmanac> {
-  const dMidnight = new Date(date);
-  dMidnight.setUTCHours(0, 0, 0, 0);
-  const jdMidnight = getJulianDate(dMidnight);
+  const dLocalMidnight = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const jdLocalMidnight = getJulianDate(dLocalMidnight);
   const deltaT = getDeltaT(date.getUTCFullYear());
   
-  const transitUT = solveMoonTransit(jdMidnight, 12, deltaT, coords.longitude);
-  const riseUT = solveMoonRiseSet(jdMidnight, transitUT, deltaT, coords.latitude, coords.longitude, 'rise');
-  const setUT = solveMoonRiseSet(jdMidnight, transitUT, deltaT, coords.latitude, coords.longitude, 'set');
+  const transitUT = solveMoonTransit(jdLocalMidnight, 12, deltaT, coords.longitude);
+  const riseUT = solveMoonRiseSet(jdLocalMidnight, transitUT, deltaT, coords.latitude, coords.longitude, 'rise');
+  const setUT = solveMoonRiseSet(jdLocalMidnight, transitUT, deltaT, coords.latitude, coords.longitude, 'set');
 
   // Phases
-  const nextNew = findMoonPhase(jdMidnight - 1, jdMidnight + 30, 0, deltaT);
-  const nextFull = findMoonPhase(jdMidnight - 1, jdMidnight + 30, 180, deltaT);
-  const prevNew = findMoonPhase(jdMidnight - 30, jdMidnight + 1, 0, deltaT);
-  const prevFull = findMoonPhase(jdMidnight - 30, jdMidnight + 1, 180, deltaT);
+  const nextNew = findMoonPhase(jdLocalMidnight - 1, jdLocalMidnight + 30, 0, deltaT);
+  const nextFull = findMoonPhase(jdLocalMidnight - 1, jdLocalMidnight + 30, 180, deltaT);
+  const prevNew = findMoonPhase(jdLocalMidnight - 30, jdLocalMidnight + 1, 0, deltaT);
+  const prevFull = findMoonPhase(jdLocalMidnight - 30, jdLocalMidnight + 1, 180, deltaT);
 
   const toDate = (jdTime: number) => {
     const d = new Date(Date.UTC(2000, 0, 1));
     d.setUTCMilliseconds((jdTime - 2451544.5) * 86400 * 1000);
-    return d;
-  };
-
-  const utToDate = (utHours: number | null) => {
-    if (utHours === null) return null;
-    const d = new Date(dMidnight);
-    d.setUTCMilliseconds(utHours * 3600 * 1000);
     return d;
   };
 
@@ -106,25 +98,25 @@ export function calculateMoonAlmanac(date: Date, coords: Coordinates): Result<Mo
     };
   };
 
-  const riseDate = utToDate(riseUT);
-  const setDate = utToDate(setUT);
-  const transitDate = utToDate(transitUT);
+  const riseDate = riseUT !== null ? toDate(riseUT) : null;
+  const setDate = setUT !== null ? toDate(setUT) : null;
+  const transitDate = toDate(jdLocalMidnight + transitUT / 24.0);
 
-  const mTransit = calculateMoonEphemeris(jdMidnight + transitUT / 24.0, deltaT);
+  const mTransit = calculateMoonEphemeris(jdLocalMidnight + transitUT / 24.0, deltaT);
   const hTransit = calculateMoonAltitude(mTransit.GHA, mTransit.DEC, coords.latitude, coords.longitude);
   const hRefTransit = 0.7275 * mTransit.HP - 0.5667;
   const isAlwaysBelow = hTransit < hRefTransit;
 
-  const riseVal = riseDate
-    ? getUTCDateTimeDetails(riseDate, jdMidnight + (riseUT ?? 0) / 24.0)
+  const riseVal = riseDate && riseUT !== null
+    ? getUTCDateTimeDetails(riseDate, riseUT)
     : 'Never Rises';
   
-  const setVal = setDate
-    ? getUTCDateTimeDetails(setDate, jdMidnight + (setUT ?? 0) / 24.0)
+  const setVal = setDate && setUT !== null
+    ? getUTCDateTimeDetails(setDate, setUT)
     : 'Never Sets';
 
   const transitVal = transitDate
-    ? getUTCDateTimeDetails(transitDate, jdMidnight + transitUT / 24.0)
+    ? getUTCDateTimeDetails(transitDate, jdLocalMidnight + transitUT / 24.0)
     : (isAlwaysBelow ? 'Never Rises' : 'Never Sets');
 
   const nextNewDate = toDate(nextNew);
@@ -239,4 +231,3 @@ export function getMoonVisibility(
 
   return Failure(ErrorCode.CALCULATION_FAILED);
 }
-
