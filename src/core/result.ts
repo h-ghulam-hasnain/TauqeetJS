@@ -12,7 +12,9 @@ export const enum ErrorCode {
   DATE_RANGE_EXCEEDED = 'DATE_RANGE_EXCEEDED',
   EXTREME_LATITUDE = 'EXTREME_LATITUDE',
   CALCULATION_FAILED = 'CALCULATION_FAILED',
-  UNKNOWN_ERROR = 'UNKNOWN_ERROR'
+  UNKNOWN_ERROR = 'UNKNOWN_ERROR',
+  POLAR_DAY = 'POLAR_DAY',
+  POLAR_NIGHT = 'POLAR_NIGHT'
 }
 
 export enum ValidationError {
@@ -35,10 +37,34 @@ export const Result = {
 /**
  * Validates coordinates and dates.
  */
-export const validateInputs = (lat: number, lng: number, date?: Date): Result<void> => {
-  if (lat < -90 || lat > 90) return Failure(ErrorCode.INVALID_LATITUDE);
-  if (lng < -180 || lng > 180) return Failure(ErrorCode.INVALID_LONGITUDE);
-  if (date && isNaN(date.getTime())) return Failure(ErrorCode.INVALID_DATE);
+export const validateInputs = (
+  lat?: number | null,
+  lng?: number | null,
+  date?: Date
+): Result<void> => {
+  if (
+    lat === undefined ||
+    lat === null ||
+    typeof lat !== 'number' ||
+    isNaN(lat) ||
+    lat < -90 ||
+    lat > 90
+  ) {
+    return Failure(ErrorCode.INVALID_LATITUDE);
+  }
+  if (
+    lng === undefined ||
+    lng === null ||
+    typeof lng !== 'number' ||
+    isNaN(lng) ||
+    lng < -180 ||
+    lng > 180
+  ) {
+    return Failure(ErrorCode.INVALID_LONGITUDE);
+  }
+  if (date && isNaN(date.getTime())) {
+    return Failure(ErrorCode.INVALID_DATE);
+  }
   return Success(undefined);
 };
 

@@ -77,7 +77,7 @@ export const solveIteratively = (
   let lastSolar: SolarResult | undefined;
   let iterations = 0;
 
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 10; i++) {
     iterations++;
     const checkDate = toDate(date, currentUtcTime);
     const { solar } = getSolarAt(checkDate);
@@ -117,7 +117,7 @@ export const solvePhenomenonIteratively = (
   let lastSolar: SolarResult | undefined;
   let iterations = 0;
 
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 10; i++) {
     iterations++;
     const checkDate = toDate(date, currentUtcTime);
     const { solar } = getSolarAt(checkDate);
@@ -175,7 +175,7 @@ export const solveAsrIteratively = (
   let lastAsrAngle = 0;
   let iterations = 0;
 
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 10; i++) {
     iterations++;
     const checkDate = toDate(date, currentUtcTime);
     const { solar } = getSolarAt(checkDate);

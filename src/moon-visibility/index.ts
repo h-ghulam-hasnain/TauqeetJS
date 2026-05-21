@@ -9,6 +9,8 @@ import { getJulianDate, getDeltaT } from '../internal/time.js';
 import { calculateMoonEphemeris, calculateMoonAltitude, calculateMoonAzimuth } from './ephemeris.js';
 import { calculateDiskAnalytics } from './analytics.js';
 import { solveMoonTransit, solveMoonRiseSet, findMoonPhase } from './solvers.js';
+import { calculateNutation } from '../internal/nutation.js';
+import { calculateSolar } from '../internal/solar.js';
 import { MoonVisibilityResult, MoonPosition, MoonDiskAnalytics, MoonAlmanac, MoonInput, DateTimeDetails } from './types.js';
 import { getPrayerTimes } from '../prayer/calculate.js';
 
@@ -43,8 +45,15 @@ export function calculateMoonDiskAnalytics(date: Date): Result<MoonDiskAnalytics
   const jd = getJulianDate(date);
   const deltaT = getDeltaT(date.getUTCFullYear());
   
+  const T = (jd - 2451545.0) / 36525.0;
+  const TE = T + deltaT / (36525.0 * 86400.0);
+  const Tau = 0.1 * TE;
+  
+  const nut = calculateNutation(TE);
+  const solar = calculateSolar(jd, nut.deltaPsi, nut.eps, TE, Tau, T);
+  
   const m = calculateMoonEphemeris(jd, deltaT);
-  const analytics = calculateDiskAnalytics(jd, m, deltaT);
+  const analytics = calculateDiskAnalytics(jd, m, deltaT, nut, solar);
 
   return Success(analytics);
 }

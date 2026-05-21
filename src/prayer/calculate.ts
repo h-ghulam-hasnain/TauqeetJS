@@ -1,5 +1,5 @@
 import { createPrayerEngine } from './engine.js';
-import { Coordinates, CalculationMethod, PrayerTimesResult } from './types/index.js';
+import { Coordinates, CalculationMethod, PrayerTimesResult, HighLatitudeMethod } from './types/index.js';
 import { Result, validateInputs, Failure } from '../core/result.js';
 
 /**
@@ -60,6 +60,10 @@ export interface PrayerConfig {
    * Whether to include metadata (astronomical values) in the result.
    */
   withMetadata?: boolean;
+  /**
+   * Method for high-latitude adjustments (e.g. Nisf al-Layl / Middle of the Night).
+   */
+  highLatitudeMethod?: HighLatitudeMethod;
 }
 
 /**
@@ -75,7 +79,8 @@ export const getPrayerTimes = (config: PrayerConfig): Result<PrayerTimesResult> 
     temperature = 10,
     pressure = 1013.25,
     adjustments = {},
-    withMetadata = false
+    withMetadata = false,
+    highLatitudeMethod
   } = config;
 
   if (!location) return Failure('Location is required');
@@ -86,15 +91,24 @@ export const getPrayerTimes = (config: PrayerConfig): Result<PrayerTimesResult> 
   const asrFactor = madhab === 'Hanafi' ? 2 : 1;
 
   const engine = createPrayerEngine({ ...location, elevation }, method);
-  const result = engine.calculate(date, asrFactor, temperature, pressure, undefined, withMetadata);
+  const result = engine.calculate(
+    date,
+    asrFactor,
+    temperature,
+    pressure,
+    undefined,
+    withMetadata,
+    highLatitudeMethod
+  );
 
   if (result.success && Object.keys(adjustments).length > 0) {
     const times = result.data;
     const keys = ['fajr', 'sunrise', 'dhahwaKubra', 'dhuhr', 'asr', 'maghrib', 'isha'] as const;
 
     for (const key of keys) {
-      if (adjustments[key] && !isNaN(times[key].getTime())) {
-        times[key] = new Date(times[key].getTime() + adjustments[key]! * 60000);
+      const val = times[key];
+      if (val !== null && adjustments[key] && !isNaN(val.getTime())) {
+        times[key] = new Date(val.getTime() + adjustments[key]! * 60000);
       }
     }
   }
