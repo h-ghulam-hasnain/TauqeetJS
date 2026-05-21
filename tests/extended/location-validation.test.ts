@@ -40,4 +40,21 @@ describe('Extended Test: Location Validation', () => {
     if (!result1.success) expect(result1.error).toBe(ErrorCode.INVALID_LATITUDE);
     if (!result2.success) expect(result2.error).toBe(ErrorCode.INVALID_LONGITUDE);
   });
+
+  it('should reject undefined, null, or NaN coordinates with Failure Result', () => {
+    const result1 = getPrayerTimes({ location: { latitude: undefined as any, longitude: 0 } });
+    const result2 = getPrayerTimes({ location: { latitude: 0, longitude: null as any } });
+    const result3 = getPrayerTimes({ location: { latitude: NaN, longitude: 0 } });
+    const result4 = getPrayerTimes({ location: { latitude: 0, longitude: NaN } });
+
+    expect(result1.success).toBe(false);
+    expect(result2.success).toBe(false);
+    expect(result3.success).toBe(false);
+    expect(result4.success).toBe(false);
+
+    if (!result1.success) expect(result1.error).toBe(ErrorCode.INVALID_LATITUDE);
+    if (!result2.success) expect(result2.error).toBe(ErrorCode.INVALID_LONGITUDE);
+    if (!result3.success) expect(result3.error).toBe(ErrorCode.INVALID_LATITUDE);
+    if (!result4.success) expect(result4.error).toBe(ErrorCode.INVALID_LONGITUDE);
+  });
 });

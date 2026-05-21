@@ -36,7 +36,7 @@ export function getRamadanSchedule(
       weekday: date.toLocaleDateString('en-US', { weekday: 'long' }),
       fajr: times.fajr,
       maghrib: times.maghrib,
-      sahurEndsAt: new Date(times.fajr.getTime() - sahurBuffer * 60000),
+      sahurEndsAt: times.fajr ? new Date(times.fajr.getTime() - sahurBuffer * 60000) : null,
       iftarAt: new Date(times.maghrib.getTime() + iftarBuffer * 60000)
     });
 

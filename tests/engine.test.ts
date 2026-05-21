@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { getPrayerTimes } from '../src/prayer/calculate.js';
 import { createPrayerEngine } from '../src/prayer/engine.js';
 import { ErrorCode } from '../src/core/result.js';
+import { formatPrayerTimes } from '../src/prayer/index.js';
 
 describe('TauqeetJS Technical Specification & Engine Validation', () => {
   const coords = { latitude: 24.8607, longitude: 67.0011 }; // Karachi
@@ -81,7 +82,7 @@ describe('TauqeetJS Technical Specification & Engine Validation', () => {
       // Should fail gracefully due to astronomical impossibility of some points
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error).toBe(ErrorCode.EXTREME_LATITUDE);
+        expect(result.error).toBe(ErrorCode.POLAR_DAY);
       }
     });
   });
@@ -91,6 +92,37 @@ describe('TauqeetJS Technical Specification & Engine Validation', () => {
       const result = getPrayerTimes({ location: coords, date });
       expect(result.success).toBe(true);
       // Logic checked via coverage - ensuring it doesn't crash with minimal config
+    });
+  });
+
+  describe('Standalone Presentation Formatting', () => {
+    it('should format all prayer times into ISO8601 strings', () => {
+      const result = getPrayerTimes({ location: coords, date });
+      expect(result.success).toBe(true);
+      if (result.success) {
+        const formatted = formatPrayerTimes(result.data, 'iso8601');
+        expect(formatted.fajr).toBeTypeOf('string');
+        expect(formatted.fajr).toContain('T');
+      }
+    });
+
+    it('should format all prayer times into Unix timestamps', () => {
+      const result = getPrayerTimes({ location: coords, date });
+      expect(result.success).toBe(true);
+      if (result.success) {
+        const formatted = formatPrayerTimes(result.data, 'unix');
+        expect(formatted.fajr).toBeTypeOf('number');
+        expect(formatted.fajr).toBeGreaterThan(0);
+      }
+    });
+
+    it('should throw a TypeError if an invalid format is passed', () => {
+      const result = getPrayerTimes({ location: coords, date });
+      expect(result.success).toBe(true);
+      if (result.success) {
+        // @ts-expect-error - testing invalid format at runtime
+        expect(() => formatPrayerTimes(result.data, 'invalid_format')).toThrow(TypeError);
+      }
     });
   });
 });

@@ -1,21 +1,17 @@
 import { norm360 } from '../internal/math.js';
 import { MoonEphemeris } from './ephemeris.js';
 import { MoonDiskAnalytics } from './types.js';
-import { calculateSolar } from '../internal/solar.js';
-import { calculateNutation } from '../internal/nutation.js';
 import { findMoonPhase } from './solvers.js';
+import { NutationResult } from '../internal/nutation.js';
+import { SolarResult } from '../internal/solar.js';
 
 export function calculateDiskAnalytics(
   jd: number,
   ephemeris: MoonEphemeris,
-  deltaT: number
+  deltaT: number,
+  nut: NutationResult,
+  solar: SolarResult
 ): MoonDiskAnalytics {
-  const T = (jd - 2451545.0) / 36525.0;
-  const TE = T + deltaT / (36525.0 * 86400.0);
-  const Tau = 0.1 * TE;
-  
-  const nut = calculateNutation(TE);
-  const solar = calculateSolar(jd, nut.deltaPsi, nut.eps, TE, Tau, T);
 
   let diff = ephemeris.L - solar.lambdaApp;
   diff = norm360(diff);

@@ -15,7 +15,7 @@ describe('Extended Test: High Latitude & Midnight Sun', () => {
     expect(result.success).toBe(false);
     
     if (!result.success) {
-      expect(result.error).toBe(ErrorCode.EXTREME_LATITUDE);
+      expect(result.error).toBe(ErrorCode.POLAR_DAY);
     }
   });
 

@@ -2,6 +2,10 @@
  * Types and interfaces for Islamic Prayer calculations.
  */
 
+export enum HighLatitudeMethod {
+  MIDDLE_OF_THE_NIGHT = 'MIDDLE_OF_THE_NIGHT'
+}
+
 export interface Coordinates {
   latitude: number;
   longitude: number;
@@ -35,20 +39,14 @@ export interface PrayerMetadata {
 }
 
 export interface PrayerTimesResult {
-  fajr: Date;
+  fajr: Date | null;
   sunrise: Date;
-  dhahwaKubra: Date;
+  dhahwaKubra: Date | null;
   dhuhr: Date;
   asr: Date;
   maghrib: Date;
-  isha: Date;
+  isha: Date | null;
   metadata?: PrayerMetadata;
-  /**
-   * Formats all prayer times into the specified format.
-   * @param type The desired format.
-   * @param timeZone Optional IANA time zone (e.g., 'America/New_York').
-   */
-  format?: (type: 'iso8601' | 'unix' | '12h' | '24h', timeZone?: string) => Record<Exclude<keyof PrayerTimesResult, 'format' | 'metadata'>, string | number>;
 }
 
 export interface MonthlyPrayerRow extends PrayerTimesResult {
@@ -61,8 +59,8 @@ export interface RamadanScheduleEntry {
   date: string;
   day: number;
   weekday: string;
-  fajr: Date;
+  fajr: Date | null;
   maghrib: Date;
-  sahurEndsAt: Date;
+  sahurEndsAt: Date | null;
   iftarAt: Date;
 }

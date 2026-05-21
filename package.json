@@ -22,15 +22,10 @@
       "import": "./dist/qibla/index.js",
       "require": "./dist/qibla/index.cjs"
     },
-    "./moon": {
+    "./moon-visibility": {
       "types": "./dist/moon-visibility/index.d.ts",
       "import": "./dist/moon-visibility/index.js",
       "require": "./dist/moon-visibility/index.cjs"
-    },
-    "./astronomy": {
-      "types": "./dist/astronomy/index.d.ts",
-      "import": "./dist/astronomy/index.js",
-      "require": "./dist/astronomy/index.cjs"
     },
     "./factory": {
       "types": "./dist/factory/index.d.ts",

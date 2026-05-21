@@ -9,7 +9,6 @@ export default defineConfig({
     'src/prayer/index.ts',
     'src/qibla/index.ts',
     'src/moon-visibility/index.ts',
-    'src/astronomy/index.ts',
     'src/factory/index.ts',
   ],
   format: ['cjs', 'esm'],
