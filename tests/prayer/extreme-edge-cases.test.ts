@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getPrayerTimes } from '../../src/prayer/calculate.js';
+import { getPrayerTimes } from '../../src/prayers/index.js';
 
 describe('Prayer Module: Extreme Edge Cases & Boundary Values', () => {
   const summerSolstice = new Date(Date.UTC(2026, 5, 21)); // June 21, 2026
@@ -46,9 +46,9 @@ describe('Prayer Module: Extreme Edge Cases & Boundary Values', () => {
 
   describe('Polar Astronomical Invariants (Midnight Sun and Polar Night)', () => {
     it('should return POLAR_DAY status during Summer Solstice in Tromsø, Norway', () => {
-      const tromso = { latitude: 69.6492, longitude: 18.9553 };
       const result = getPrayerTimes({
-        location: tromso,
+        lat: 69.6492,
+        long: 18.9553,
         date: summerSolstice
       });
 
@@ -63,9 +63,9 @@ describe('Prayer Module: Extreme Edge Cases & Boundary Values', () => {
     });
 
     it('should handle Polar Night during Winter Solstice in Tromsø, Norway gracefully', () => {
-      const tromso = { latitude: 69.6492, longitude: 18.9553 };
       const result = getPrayerTimes({
-        location: tromso,
+        lat: 69.6492,
+        long: 18.9553,
         date: winterSolstice
       });
 

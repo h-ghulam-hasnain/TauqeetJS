@@ -6,20 +6,30 @@
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "sideEffects": false,
+  "engines": {
+    "node": ">=18"
+  },
   "files": [
-    "dist"
+    "dist",
+    "README.md",
+    "LICENSE"
   ],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
     }
   },
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
-    "test": "vitest run"
+    "test": "vitest run",
+    "prepublishOnly": "npm run build && npm test"
   },
   "keywords": [
     "islam",
@@ -41,7 +51,7 @@
   "homepage": "https://tauqeet-js.web.app",
   "repository": {
     "type": "git",
-    "url": "https://github.com/h-ghulam-hasnain/tauqeet-js.git"
+    "url": "git+https://github.com/h-ghulam-hasnain/tauqeet-js.git"
   },
   "bugs": {
     "url": "https://github.com/h-ghulam-hasnain/tauqeet-js/issues"
