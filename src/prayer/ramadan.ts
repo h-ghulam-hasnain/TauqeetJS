@@ -1,6 +1,7 @@
 import { getPrayerTimes, PrayerConfig } from './index.js';
-import { RamadanScheduleEntry } from './types/index.js';
+import { RamadanScheduleEntry, TimeField } from './types/index.js';
 import { Result, Success, Failure } from '../core/result.js';
+import { resolveTimezoneSync } from './timezone.js';
 
 /**
  * Calculates Ramadan schedule (Sahar and Iftar times) for a date range.
@@ -20,6 +21,26 @@ export function getRamadanSchedule(
     return Failure('Date range cannot exceed 31 days.');
   }
 
+  const timeZone = resolveTimezoneSync(config.timeZone);
+
+  const offsetTimeField = (field: TimeField, bufferMinutes: number): TimeField => {
+    if (!field.utc || !field.timestamp) return field;
+    const newDate = new Date((field.timestamp + bufferMinutes * 60) * 1000);
+    let local = null;
+    try {
+      if (typeof timeZone === 'string') {
+        local = new Intl.DateTimeFormat('en-US', { hour: '2-digit', minute: '2-digit', timeZone }).format(newDate);
+      }
+    } catch(e) {}
+  
+    return {
+      utc: newDate.toISOString(),
+      local: local,
+      timestamp: Math.floor(newDate.getTime() / 1000),
+      status: field.status
+    };
+  };
+
   const current = new Date(startDate);
   while (current <= endDate) {
     const date = new Date(current);
@@ -30,14 +51,25 @@ export function getRamadanSchedule(
     }
 
     const times = timesResult.data;
+
+    let dateStr = date.toLocaleDateString();
+    let weekdayStr = date.toLocaleDateString('en-US', { weekday: 'long' });
+
+    try {
+      if (typeof timeZone === 'string') {
+        dateStr = new Intl.DateTimeFormat('en-US', { timeZone }).format(date);
+        weekdayStr = new Intl.DateTimeFormat('en-US', { weekday: 'long', timeZone }).format(date);
+      }
+    } catch(e) {}
+
     results.push({
-      date: date.toLocaleDateString(),
+      date: dateStr,
       day: date.getDate(),
-      weekday: date.toLocaleDateString('en-US', { weekday: 'long' }),
+      weekday: weekdayStr,
       fajr: times.fajr,
       maghrib: times.maghrib,
-      sahurEndsAt: times.fajr ? new Date(times.fajr.getTime() - sahurBuffer * 60000) : null,
-      iftarAt: new Date(times.maghrib.getTime() + iftarBuffer * 60000)
+      sahurEndsAt: offsetTimeField(times.fajr, -sahurBuffer),
+      iftarAt: offsetTimeField(times.maghrib, iftarBuffer)
     });
 
     current.setDate(current.getDate() + 1);

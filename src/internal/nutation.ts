@@ -1,6 +1,6 @@
 /**
  * IAU 1980 Nutation Theory.
- * Perfectly synchronized with Henning Umland's Almanac.html logic.
+ * Perfectly synchronized with Henning Umland's logic.
  */
 import { norm360, DTR } from './math.js';
 

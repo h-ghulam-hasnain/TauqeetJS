@@ -1,6 +1,7 @@
 import { getPrayerTimes, PrayerConfig } from './index.js';
-import { MonthlyPrayerRow, PrayerTimesResult } from './types/index.js';
+import { MonthlyPrayerRow } from './types/index.js';
 import { Result, Success, Failure } from '../core/result.js';
+import { resolveTimezoneSync } from './timezone.js';
 
 /**
  * Calculates prayer times for an entire month.
@@ -12,6 +13,7 @@ export function getMonthlyPrayerTimes(
 ): Result<MonthlyPrayerRow[]> {
   const results: MonthlyPrayerRow[] = [];
   const daysInMonth = new Date(year, month, 0).getDate();
+  const timeZone = resolveTimezoneSync(config.timeZone);
 
   for (let day = 1; day <= daysInMonth; day++) {
     const date = new Date(year, month - 1, day);
@@ -22,11 +24,22 @@ export function getMonthlyPrayerTimes(
     }
 
     const times = timesResult.data;
+
+    let dateStr = date.toLocaleDateString();
+    let weekdayStr = date.toLocaleDateString('en-US', { weekday: 'long' });
+
+    try {
+      if (typeof timeZone === 'string') {
+        dateStr = new Intl.DateTimeFormat('en-US', { timeZone }).format(date);
+        weekdayStr = new Intl.DateTimeFormat('en-US', { weekday: 'long', timeZone }).format(date);
+      }
+    } catch(e) {}
+
     results.push({
       ...times,
-      date: date.toLocaleDateString(),
+      date: dateStr,
       day,
-      weekday: date.toLocaleDateString('en-US', { weekday: 'long' })
+      weekday: weekdayStr
     });
   }
 

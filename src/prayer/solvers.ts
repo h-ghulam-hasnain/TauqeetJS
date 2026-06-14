@@ -1,5 +1,5 @@
 import { acosd, sind, cosd, tand, atan2d } from '../internal/math.js';
-import { getJulianDate } from '../internal/time.js';
+import { getJulianDate, getDeltaT } from '../internal/time.js';
 import { calculateNutation } from '../internal/nutation.js';
 import { calculateSolar, SolarResult } from '../internal/solar.js';
 import { getRefraction } from '../internal/refraction.js';
@@ -21,7 +21,7 @@ export const toDate = (baseDate: Date, utcHours: number): Date => {
  */
 export const getSolarAt = (date: Date): { solar: SolarResult, jd: number } => {
   const jd = getJulianDate(date);
-  const dt = 70; // Fixed ΔT as requested in original logic
+  const dt = getDeltaT(date.getUTCFullYear());
   const jde = jd + dt / 86400;
   const te = (jde - 2451545) / 36525;
   const t = (jd - 2451545) / 36525;
@@ -110,7 +110,9 @@ export const solveIteratively = (
 export const solvePhenomenonIteratively = (
   date: Date, 
   coords: Coordinates, 
-  side: 'morning' | 'evening'
+  side: 'morning' | 'evening',
+  temperature: number = 10,
+  pressureMbar: number = 1013.25
 ): { time: Date; DEC: number; EOT: number; HP: number; SD: number; iterations: number } => {
   let prevTime = side === 'morning' ? 6 : 18;
   let currentUtcTime = prevTime;
@@ -122,7 +124,7 @@ export const solvePhenomenonIteratively = (
     const checkDate = toDate(date, currentUtcTime);
     const { solar } = getSolarAt(checkDate);
     lastSolar = solar;
-    const refraction = 34 / 60;
+    const refraction = getRefraction(0, temperature, pressureMbar) / 60;
     const sd_deg = solar.SD / 3600;
     const hp_deg = solar.HP / 3600;
     const elevation = coords.elevation || 0;

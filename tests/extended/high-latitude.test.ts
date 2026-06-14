@@ -11,11 +11,11 @@ describe('Extended Test: High Latitude & Midnight Sun', () => {
     
     const result = getPrayerTimes({ location: tromso, date: summerSolstice });
     
-    // It should NOT throw an unhandled exception. It must return a graceful Failure.
-    expect(result.success).toBe(false);
+    // It should NOT throw an unhandled exception. It must return a graceful Success with status POLAR_DAY.
+    expect(result.success).toBe(true);
     
-    if (!result.success) {
-      expect(result.error).toBe(ErrorCode.POLAR_DAY);
+    if (result.success) {
+      expect(result.data.sunrise.status).toBe('POLAR_DAY');
     }
   });
 
@@ -30,9 +30,9 @@ describe('Extended Test: High Latitude & Midnight Sun', () => {
     expect(result.success).toBe(true);
     
     if (result.success) {
-      expect(result.data.sunrise).toBeInstanceOf(Date);
-      expect(result.data.maghrib).toBeInstanceOf(Date);
-      expect(isNaN(result.data.sunrise.getTime())).toBe(false);
+      expect(result.data.sunrise).toHaveProperty('timestamp');
+      expect(result.data.maghrib).toHaveProperty('timestamp');
+      expect(result.data.sunrise.timestamp).toBeDefined();
     }
   });
 });

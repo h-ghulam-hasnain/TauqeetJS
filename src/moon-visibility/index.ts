@@ -200,7 +200,7 @@ export function getMoonVisibility(
       const minutes = parseInt(timeMatch[2], 10);
       const seconds = timeMatch[3] ? parseInt(timeMatch[3], 10) : 0;
       const ms = timeMatch[4] ? parseInt(timeMatch[4], 10) : 0;
-      targetDate.setHours(hours, minutes, seconds, ms);
+      targetDate.setUTCHours(hours, minutes, seconds, ms);
     } else {
       const parsedTime = Date.parse(`1970-01-01T${timeStr}`);
       if (!isNaN(parsedTime)) {
@@ -215,7 +215,12 @@ export function getMoonVisibility(
       date: targetDate
     });
     if (prayerRes.success) {
-      targetDate = prayerRes.data.maghrib;
+      const maghribTs = prayerRes.data.maghrib.timestamp;
+      if (maghribTs !== null && maghribTs !== undefined) {
+        targetDate = new Date(maghribTs * 1000);
+      } else {
+        return Result.Failure(ErrorCode.CALCULATION_FAILED);
+      }
     } else {
       return Result.Failure(ErrorCode.CALCULATION_FAILED);
     }

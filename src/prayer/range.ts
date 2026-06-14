@@ -1,6 +1,7 @@
 import { getPrayerTimes, PrayerConfig } from './calculate.js';
 import { MonthlyPrayerRow } from './types/index.js';
 import { Result, Success, Failure, ErrorCode } from '../core/result.js';
+import { resolveTimezoneSync } from './timezone.js';
 
 /**
  * Calculates prayer times for a specific date range (max 31 days).
@@ -18,6 +19,8 @@ export function getPrayerTimesRange(
     return Failure(ErrorCode.DATE_RANGE_EXCEEDED);
   }
 
+  const timeZone = resolveTimezoneSync(config.timeZone);
+
   const current = new Date(startDate);
   while (current <= endDate) {
     const date = new Date(current);
@@ -27,11 +30,21 @@ export function getPrayerTimesRange(
       return Failure(times.error);
     }
 
+    let dateStr = date.toLocaleDateString();
+    let weekdayStr = date.toLocaleDateString('en-US', { weekday: 'long' });
+
+    try {
+      if (typeof timeZone === 'string') {
+        dateStr = new Intl.DateTimeFormat('en-US', { timeZone }).format(date);
+        weekdayStr = new Intl.DateTimeFormat('en-US', { weekday: 'long', timeZone }).format(date);
+      }
+    } catch(e) {}
+
     results.push({
       ...times.data,
-      date: date.toLocaleDateString(),
+      date: dateStr,
       day: date.getDate(),
-      weekday: date.toLocaleDateString('en-US', { weekday: 'long' })
+      weekday: weekdayStr
     });
 
     current.setDate(current.getDate() + 1);

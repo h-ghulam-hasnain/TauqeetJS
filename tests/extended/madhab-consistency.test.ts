@@ -16,8 +16,8 @@ describe('Extended Test: Madhab Consistency (Asr Calculation)', () => {
     expect(hanafiResult.success).toBe(true);
 
     if (shafiResult.success && hanafiResult.success) {
-      const shafiAsr = shafiResult.data.asr.getTime();
-      const hanafiAsr = hanafiResult.data.asr.getTime();
+      const shafiAsr = shafiResult.data.asr.timestamp! * 1000;
+      const hanafiAsr = hanafiResult.data.asr.timestamp! * 1000;
 
       // Because the shadow must be longer, the sun must be lower, thus later in the day.
       expect(hanafiAsr).toBeGreaterThan(shafiAsr);

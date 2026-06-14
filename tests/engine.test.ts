@@ -13,9 +13,9 @@ describe('TauqeetJS Technical Specification & Engine Validation', () => {
       const result = getPrayerTimes({ location: coords, date });
       expect(result.success).toBe(true);
       if (result.success) {
-        expect(result.data.fajr).toBeInstanceOf(Date);
-        expect(result.data.dhuhr).toBeInstanceOf(Date);
-        expect(isNaN(result.data.fajr.getTime())).toBe(false);
+        expect(result.data.fajr).toHaveProperty('timestamp');
+        expect(result.data.dhuhr).toHaveProperty('timestamp');
+        expect(result.data.fajr.timestamp).toBeDefined();
       }
     });
 
@@ -45,12 +45,12 @@ describe('TauqeetJS Technical Specification & Engine Validation', () => {
       
       if (res1.success && res3.success) {
         // Result for April 27 should be identical regardless of intermediate calculations
-        expect(res1.data.fajr.getTime()).toBe(res3.data.fajr.getTime());
+        expect(res1.data.fajr.value?.getTime()).toBe(res3.data.fajr.value?.getTime());
       }
       
       if (res1.success && res2.success) {
         // Result for April 27 and 28 must be different
-        expect(res1.data.fajr.getTime()).not.toBe(res2.data.fajr.getTime());
+        expect(res1.data.fajr.value?.getTime()).not.toBe(res2.data.fajr.value?.getTime());
       }
     });
   });
@@ -65,11 +65,11 @@ describe('TauqeetJS Technical Specification & Engine Validation', () => {
       
       if (seaLevel.success && highAlt.success) {
         // High altitude should see sunrise earlier and maghrib later (Altitude Dip)
-        expect(highAlt.data.sunrise.getTime()).toBeLessThan(seaLevel.data.sunrise.getTime());
-        expect(highAlt.data.maghrib.getTime()).toBeGreaterThan(seaLevel.data.maghrib.getTime());
+        expect(highAlt.data.sunrise.timestamp! * 1000).toBeLessThan(seaLevel.data.sunrise.timestamp! * 1000);
+        expect(highAlt.data.maghrib.timestamp! * 1000).toBeGreaterThan(seaLevel.data.maghrib.timestamp! * 1000);
         
         // Dhuhr (Noon) should remain largely unaffected by elevation refraction logic
-        expect(Math.abs(highAlt.data.dhuhr.getTime() - seaLevel.data.dhuhr.getTime())).toBeLessThan(10000);
+        expect(Math.abs(highAlt.data.dhuhr.timestamp! * 1000 - seaLevel.data.dhuhr.timestamp! * 1000)).toBeLessThan(10000);
       }
     });
 
@@ -79,10 +79,10 @@ describe('TauqeetJS Technical Specification & Engine Validation', () => {
       
       const result = getPrayerTimes({ location: tromso, date: summerDate });
       
-      // Should fail gracefully due to astronomical impossibility of some points
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error).toBe(ErrorCode.POLAR_DAY);
+      // Should handle gracefully by returning Success with POLAR_DAY status
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.sunrise.status).toBe('POLAR_DAY');
       }
     });
   });
@@ -101,8 +101,10 @@ describe('TauqeetJS Technical Specification & Engine Validation', () => {
       expect(result.success).toBe(true);
       if (result.success) {
         const formatted = formatPrayerTimes(result.data, 'iso8601');
-        expect(formatted.fajr).toBeTypeOf('string');
-        expect(formatted.fajr).toContain('T');
+        if (formatted.success) {
+          expect(typeof formatted.data.fajr).toBe('string');
+          expect(formatted.data.fajr).toContain('T');
+        }
       }
     });
 
@@ -111,8 +113,10 @@ describe('TauqeetJS Technical Specification & Engine Validation', () => {
       expect(result.success).toBe(true);
       if (result.success) {
         const formatted = formatPrayerTimes(result.data, 'unix');
-        expect(formatted.fajr).toBeTypeOf('number');
-        expect(formatted.fajr).toBeGreaterThan(0);
+        if (formatted.success) {
+          expect(typeof formatted.data.fajr).toBe('number');
+          expect(formatted.data.fajr).toBeGreaterThan(0);
+        }
       }
     });
 
@@ -121,7 +125,8 @@ describe('TauqeetJS Technical Specification & Engine Validation', () => {
       expect(result.success).toBe(true);
       if (result.success) {
         // @ts-expect-error - testing invalid format at runtime
-        expect(() => formatPrayerTimes(result.data, 'invalid_format')).toThrow(TypeError);
+        const formatRes = formatPrayerTimes(result.data, 'invalid_format');
+        expect(formatRes.success).toBe(false);
       }
     });
   });

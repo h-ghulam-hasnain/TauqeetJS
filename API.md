@@ -32,6 +32,18 @@ Calculates prayer times for a given location and date.
 | `withMetadata` | `boolean` | `false` | If true, returns astronomical primitives. |
 | `adjustments` | `Object` | `{}` | Manual minute offsets. |
 
+### `getRamadanSchedule(startDate: Date, endDate: Date, config: Omit<PrayerConfig, 'date'>, sahurBuffer?: number, iftarBuffer?: number)`
+Generates a Ramadan schedule over a date range, providing sahur and iftar entries for each day.
+
+- **Import**: `import { getRamadanSchedule } from 'tauqeet-js/prayer'`
+- **Parameters**:
+  - `startDate`: Beginning of the Ramadan range.
+  - `endDate`: End of the Ramadan range.
+  - `config`: Prayer calculation configuration without `date`.
+  - `sahurBuffer`: Optional minutes before Fajr for sahur end.
+  - `iftarBuffer`: Optional minutes after Maghrib for iftar.
+- **Returns**: `Result<RamadanScheduleEntry[]>`
+
 ---
 
 ## Moon Visibility API
@@ -85,7 +97,7 @@ const result = engine.calculate(new Date(), 2, 10, 1013, undefined, true);
 ### `Result<T, E>`
 TauqeetJS avoids `throws`. Every API returns a `Result` object.
 ```typescript
-type Result<T, E = ErrorCode | string> = 
+type Result<T, E = ErrorCode | string> =
   | { success: true; data: T }
   | { success: false; error: E };
 ```
