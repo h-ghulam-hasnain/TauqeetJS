@@ -1,52 +1,68 @@
+/** Converts degrees to radians. */
+export function toRadians(deg: number): number {
+  return deg * (Math.PI / 180);
+}
+
+/** Converts radians to degrees. */
+export function toDegrees(rad: number): number {
+  return rad * (180 / Math.PI);
+}
+
 /**
- * Core mathematical utilities for astronomical calculations (internal).
- * Precision-focused, degree-based trigonometric functions.
+ * Great-circle distance between two geographic points using the Haversine formula.
+ * @returns Distance in kilometres.
  */
+export function haversineDistance(
+  lat1: number, lon1: number,
+  lat2: number, lon2: number,
+  radiusKm = 6371
+): number {
+  const φ1 = toRadians(lat1);
+  const φ2 = toRadians(lat2);
+  const Δφ = toRadians(lat2 - lat1);
+  const Δλ = toRadians(lon2 - lon1);
 
-export const DTR = Math.PI / 180;
-export const RTD = 180 / Math.PI;
+  const a =
+    Math.sin(Δφ / 2) ** 2 +
+    Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) ** 2;
 
-export const sind = (x: number): number => {
-  return Math.sin(DTR * x);
-};
+  return radiusKm * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
 
-export const cosd = (x: number): number => {
-  return Math.cos(DTR * x);
-};
+/**
+ * Initial bearing from point 1 to point 2 using the Spherical Law of Cosines.
+ * @returns Bearing in degrees, 0..360 (clockwise from true north).
+ */
+export function sphericalLawOfCosinesBearing(
+  lat1: number, lon1: number,
+  lat2: number, lon2: number
+): number {
+  const φ1 = toRadians(lat1);
+  const φ2 = toRadians(lat2);
+  const Δλ = toRadians(lon2 - lon1);
 
-export const tand = (x: number): number => {
-  return Math.tan(DTR * x);
-};
+  const y = Math.sin(Δλ) * Math.cos(φ2);
+  const x = Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
 
-export const asind = (x: number): number => {
-  return Math.asin(Math.max(-1, Math.min(1, x))) * RTD;
-};
+  return ((toDegrees(Math.atan2(y, x)) % 360) + 360) % 360;
+}
 
-export const acosd = (x: number): number => {
-  return Math.acos(Math.max(-1, Math.min(1, x))) * RTD;
-};
+/**
+ * Rhumb-line (loxodromic) bearing from point 1 to point 2.
+ * @returns Bearing in degrees, 0..360.
+ */
+export function rhumbLineBearing(
+  lat1: number, lon1: number,
+  lat2: number, lon2: number
+): number {
+  const φ1 = toRadians(lat1);
+  const φ2 = toRadians(lat2);
 
-export const atan2d = (y: number, x: number): number => {
-  return Math.atan2(y, x) * RTD;
-};
+  const Δφ = Math.log(
+    Math.tan(Math.PI / 4 + φ2 / 2) /
+    Math.tan(Math.PI / 4 + φ1 / 2)
+  );
+  const Δλ = toRadians(lon2 - lon1);
 
-export const norm360 = (x: number): number => {
-  let res = x % 360;
-  if (res < 0) res += 360;
-  return res;
-};
-
-export const norm24 = (x: number): number => {
-  let res = x % 24;
-  if (res < 0) res += 24;
-  return res;
-};
-
-export const havd = (x: number): number => {
-  const a = Math.sin(DTR * x / 2);
-  return a * a;
-};
-
-export const ahavd = (x: number): number => {
-  return 2 * Math.asin(Math.sqrt(Math.max(0, Math.min(1, x)))) * RTD;
-};
+  return ((toDegrees(Math.atan2(Δλ, Δφ)) % 360) + 360) % 360;
+}

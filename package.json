@@ -1,64 +1,54 @@
 {
   "name": "tauqeet-js",
-  "version": "1.0.3",
-  "description": "Next generation of Tauqeet.js - Modular, Private, High-Precision, and Headless.",
+  "version": "1.1.0",
+  "description": "High-precision TypeScript library for Islamic astronomical calculations: prayer times, Qibla direction, moon phase & crescent visibility, and Hijri calendar conversions.",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
-    },
-    "./prayer": {
-      "types": "./dist/prayer/index.d.ts",
-      "import": "./dist/prayer/index.js",
-      "require": "./dist/prayer/index.cjs"
-    },
-    "./qibla": {
-      "types": "./dist/qibla/index.d.ts",
-      "import": "./dist/qibla/index.js",
-      "require": "./dist/qibla/index.cjs"
-    },
-    "./moon-visibility": {
-      "types": "./dist/moon-visibility/index.d.ts",
-      "import": "./dist/moon-visibility/index.js",
-      "require": "./dist/moon-visibility/index.cjs"
-    },
-    "./factory": {
-      "types": "./dist/factory/index.d.ts",
-      "import": "./dist/factory/index.js",
-      "require": "./dist/factory/index.cjs"
     }
   },
-  "files": [
-    "dist"
-  ],
   "scripts": {
     "build": "tsup",
-    "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "lint": "tsc --noEmit"
+    "dev": "tsup --watch",
+    "test": "vitest run"
   },
   "keywords": [
+    "islam",
+    "prayer",
     "prayer-times",
-    "astronomy",
-    "meeus",
-    "precision",
-    "solar",
-    "lunar",
     "qibla",
-    "islamic"
+    "hijri",
+    "moon",
+    "crescent",
+    "astronomical",
+    "ephemeris",
+    "typescript"
   ],
-  "author": "Ghulam Hasnain",
+  "author": {
+    "name": "Ghulam Hasnain",
+    "url": "https://github.com/h-ghulam-hasnain"
+  },
   "license": "MIT",
-  "sideEffects": false,
+  "homepage": "https://tauqeet-js.web.app",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/h-ghulam-hasnain/tauqeet-js.git"
+  },
+  "bugs": {
+    "url": "https://github.com/h-ghulam-hasnain/tauqeet-js/issues"
+  },
   "devDependencies": {
-    "tsup": "^8.4.0",
-    "typescript": "^6.0.3",
-    "vitest": "^4.1.4"
+    "tsup": "^8.5.1",
+    "typescript": "^6.0.0",
+    "vitest": "^4.1.8"
   }
 }

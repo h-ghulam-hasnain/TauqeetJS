@@ -1,115 +1,143 @@
-# TauqeetJS
+# tauqeet-js
 
-**TauqeetJS** is a high-performance, modular, and headless-first TypeScript library for calculating Islamic prayer times, Qibla direction, and moon data. Designed for professional applications, it prioritizes precision, tree-shakability, and robust error handling.
+**A high-precision TypeScript library for Islamic astronomical calculations.**
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-![Bundle Size](https://img.shields.io/bundlephobia/minzip/tauqeet-js)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5%2B-blue)](https://www.typescriptlang.org/)
 
----
+> 📖 **Interactive documentation & live API explorer:** [https://tauqeet-js.web.app](https://tauqeet-js.web.app)
 
-## 🚀 Key Features
-
-- **Modular & Tree-Shakable**: Import only what you need (e.g., just Qibla logic) to keep your bundles lean.
-- **Headless-First**: 100% logic-based. No DOM dependencies or CSS injections.
-- **High Precision**: Built on rigorous astronomical algorithms (Meeus) with atmospheric corrections and iteration convergence.
-- **Robust Error Handling**: Uses the `Result<T, E>` pattern—no silent failures or unexpected exceptions.
-- **Deep Metadata**: Access internal astronomical values (DEC, EOT, SD, HP) used in calculations via the metadata flag.
+`tauqeet-js` (تَوقِيت — Arabic for "timing") provides high-fidelity Islamic astronomical computation powered by a full VSOP87-derived solar ephemeris, lunar theory, and ΔT correction. It is modular by design — import only the feature you need.
 
 ---
 
-## 📦 Installation
+## Table of Contents
+
+- [Features](#features)
+- [Prerequisites](#prerequisites)
+- [Installation](#installation)
+- [Quick Start](#quick-start)
+- [Documentation](#documentation)
+- [Modules Overview](#modules-overview)
+- [License](#license)
+- [Author](#author)
+
+---
+
+## Features
+
+| Module | Capability |
+|---|---|
+| **Prayers** | Fajr, Sunrise, Ḍuḥā, Dhuhr, Asr, Maghrib, Isha with 8 built-in calculation methods |
+| **Qibla** | Great-circle bearing, rhumb-line bearing, and distance to the Kaaba |
+| **Moon** | Phase, illumination, age, lunar events, crescent visibility (Odeh / Yallop / HMNAO) |
+| **Hijri** | Gregorian ↔ Hijri conversion via Civil, Conjunction, Visibility, or Umm al-Qura methods |
+| **Solar Alignment** | Times when the sun aligns with the Qibla direction (useful for compass calibration) |
+
+---
+
+## Prerequisites
+
+- **Node.js** ≥ 18
+- **TypeScript** ≥ 5 (for source usage)
+- ESM-first; CJS bundle also provided.
+
+---
+
+## Installation
 
 ```bash
 npm install tauqeet-js
 ```
 
+> **Note:** The package is currently in active development. See [CONTRIBUTING.md](CONTRIBUTING.md) for building from source.
+
 ---
 
-## 💡 Quick Start
+## Quick Start
 
-### Basic Prayer Times
-```typescript
-import { getPrayerTimes } from 'tauqeet-js';
+### Prayer Times
 
-const result = getPrayerTimes({
-  location: { latitude: 24.8607, longitude: 67.0011 },
-  withMetadata: true // Optional: returns astronomical primitives
+```ts
+import { calculatePrayerTimes, BUILT_IN_METHODS } from 'tauqeet-js';
+
+// London, UK – today
+const result = calculatePrayerTimes({
+  lat: 51.5074,
+  long: -0.1278,
+  timeZone: 'Europe/London',
+  method: 'MWL',         // Muslim World League
+  madhab: 'Shafi',
 });
 
-if (result.success) {
-  const { fajr, dhuhr, asr, maghrib, isha } = result.data;
-  console.log(`Fajr: ${fajr.toISOString()}`);
-}
+console.log(result.fajr.local);    // e.g. "03:41 AM"
+console.log(result.dhuhr.local);   // e.g. "01:05 PM"
+console.log(result.isha.local);    // e.g. "10:52 PM"
 ```
 
-### Modular Imports (Better Tree-Shaking)
-If you only need specific logic, import from sub-paths:
+### Qibla Direction
 
-```typescript
-import { calculateQibla } from 'tauqeet-js/qibla';
-import { getMoonVisibility } from 'tauqeet-js/moon-visibility';
+```ts
+import { getQiblaDirection } from 'tauqeet-js';
+
+const qibla = getQiblaDirection({ latitude: 51.5074, longitude: -0.1278 });
+console.log(`Bearing to Kaaba: ${qibla.bearing?.toFixed(2)}°`);
+console.log(`Distance: ${qibla.distanceKm.toFixed(0)} km`);
+```
+
+### Moon Phase
+
+```ts
+import { getMoonPhase, getMoonAge } from 'tauqeet-js';
+
+const phase = getMoonPhase(new Date());
+console.log(`Phase: ${phase.phaseName}`);           // e.g. "Waxing Crescent"
+console.log(`Illumination: ${(phase.illuminatedFraction * 100).toFixed(1)}%`);
+
+const age = getMoonAge(new Date());
+console.log(`Moon age: ${age.ageDays.toFixed(1)} days`);
+```
+
+### Hijri Date Conversion
+
+```ts
+import { toHijri, HijriMethod, HIJRI_MONTH_NAMES } from 'tauqeet-js';
+
+const hijri = toHijri(new Date(), HijriMethod.CIVIL);
+console.log(`${hijri.day} ${HIJRI_MONTH_NAMES[hijri.month - 1]} ${hijri.year} AH`);
 ```
 
 ---
 
-## � Ramadan Schedule
-```typescript
-import { getRamadanSchedule } from 'tauqeet-js';
+## Documentation
 
-const result = getRamadanSchedule(
-  new Date(2026, 2, 1),
-  new Date(2026, 2, 29),
-  { location: { latitude: 25.2048, longitude: 55.2708 }, method: 'MWL' },
-  30, // sahur buffer in minutes
-  2,  // iftar buffer in minutes
-);
+| File | Description |
+|---|---|
+| [API.md](API.md) | Complete API reference for all exported functions, types, and classes |
+| [USAGE.md](USAGE.md) | Practical code guides with real-world examples |
+| [MODULES.md](MODULES.md) | Architecture overview and module import guide |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | Build, test, and contribution guidelines |
 
-if (result.success) {
-  result.data.forEach((day) => {
-    console.log(day.date, day.sahurEndsAt.local, day.iftarAt.local);
-  });
-}
-```
+For the most up-to-date, interactive reference visit **[https://tauqeet-js.web.app](https://tauqeet-js.web.app)**.
 
 ---
 
-## �🌍 TimeZone Handling Guide
+## Modules Overview
 
-TauqeetJS follows a **Strict UTC Internal Pattern** to maintain astronomical precision.
-
-### 1. Internal Pattern
-All internal calculations (Julian Dates, Ephemeris Time, and Solvers) are performed in **UTC/TDT**. The library does not "know" about local time during the calculation phase.
-
-### 2. Input Dates
-When passing a `Date` object to the library, it is treated as a UTC reference point for the calculation day.
-```typescript
-const date = new Date(); // Current system time, but used as a UTC reference
+```
+tauqeet-js
+├── prayers/          Prayer time engine (8 methods, high-latitude strategies)
+├── qibla/            Qibla bearing & distance to Mecca
+├── moon/             Moon phase, age, events, crescent visibility
+├── hijri/            Gregorian ↔ Hijri calendar conversion
+├── solar-alignment/  Sun-at-Qibla times
+└── astronomy/        Internal ephemeris (VSOP87, lunar theory, ΔT) — private
 ```
 
-### 3. Local Conversion (Output Layer)
-The transformation to local time happens **only at the final formatting/output layer**. The `format()` method on the result object should be used with an IANA timezone string.
-
-```typescript
-const result = getPrayerTimes(config);
-
-if (result.success) {
-  // Format to a specific IANA TimeZone
-  const times = result.data.format('24h', 'Asia/Karachi');
-  console.log(times.fajr); // "04:15:22"
-}
-```
-
-### 4. Handling DST and Offsets
-Since the library utilizes the browser/Node.js `Intl.DateTimeFormat` engine, it automatically handles **Daylight Saving Time (DST)** transitions based on the IANA timezone provided.
-- **Avoid Manual Offsets**: It is recommended to use IANA names (e.g., `Europe/London`) rather than manual UTC offsets to ensure DST transitions are handled correctly by the underlying platform.
+See [MODULES.md](MODULES.md) for a detailed dependency graph and tree-shaking guide.
 
 ---
 
-## 📖 Documentation
+## License
 
-Detailed API documentation and metadata strict mapping can be found in [API.md](./API.md).
-
-## 📄 License
-MIT © [Ghulam Hasnain](https://github.com/h-ghulam-hasnain)
-
+[MIT](LICENSE) © Ghulam Hasnain
