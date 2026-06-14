@@ -1,14 +1,16 @@
 import { describe, it, expect } from 'vitest';
-import { getPrayerTimes } from '../../src/prayer/calculate.js';
+import { getPrayerTimes } from '../../src/prayers/index.js';
 
 describe('Prayer Module: Formula Invariants & Mathematical Logic', () => {
-  const coords = { latitude: 24.8607, longitude: 67.0011 }; // Karachi
+  const lat = 24.8607;
+  const long = 67.0011;
   const baseDate = new Date(Date.UTC(2026, 4, 18)); // May 18, 2026
 
   describe('Chronological Sequence Invariant', () => {
     it('should maintain standard chronological order for all five daily prayers + sunrise', () => {
       const result = getPrayerTimes({
-        location: coords,
+        lat,
+        long,
         date: baseDate,
         method: 'Karachi'
       });
@@ -38,9 +40,10 @@ describe('Prayer Module: Formula Invariants & Mathematical Logic', () => {
   describe('Solar Transit (Dhuhr / Noon) Invariant', () => {
     it('should place Dhuhr extremely close to solar noon (approx 12:00 in local timezone, corrected by longitude & EOT)', () => {
       const result = getPrayerTimes({
-        location: coords,
+        lat,
+        long,
         date: baseDate,
-        timeZone: 5 // UTC+5 for Karachi
+        timeZone: 5
       });
 
       expect(result.success).toBe(true);
@@ -49,15 +52,15 @@ describe('Prayer Module: Formula Invariants & Mathematical Logic', () => {
         // 67 vs 75 is an 8 degree difference, representing ~32 minutes delay.
         // Thus local noon is around 12:32.
         const localDhuhr = result.data.dhuhr.local!;
-        expect(localDhuhr).toMatch(/12:\d{2} PM/);
+        expect(localDhuhr).toMatch(/12:\d{2}:\d{2} PM/);
       }
     });
   });
 
   describe('Asr Madhab Shadow Factor Invariant', () => {
     it('should ensure Hanafi Asr (2x shadow) is strictly later than Shafi Asr (1x shadow) by > 30 minutes', () => {
-      const shafi = getPrayerTimes({ location: coords, date: baseDate, madhab: 'Shafi' });
-      const hanafi = getPrayerTimes({ location: coords, date: baseDate, madhab: 'Hanafi' });
+      const shafi  = getPrayerTimes({ lat, long, date: baseDate, madhab: 'Shafi' });
+      const hanafi = getPrayerTimes({ lat, long, date: baseDate, madhab: 'Hanafi' });
 
       expect(shafi.success).toBe(true);
       expect(hanafi.success).toBe(true);
@@ -75,8 +78,8 @@ describe('Prayer Module: Formula Invariants & Mathematical Logic', () => {
 
   describe('Atmospheric Refraction & Elevation Dip Invariant', () => {
     it('should shift Sunrise earlier and Maghrib later at 3000m altitude, while keeping Dhuhr unchanged', () => {
-      const seaLevel = getPrayerTimes({ location: coords, date: baseDate, elevation: 0 });
-      const mountain = getPrayerTimes({ location: coords, date: baseDate, elevation: 3000 });
+      const seaLevel = getPrayerTimes({ lat, long, date: baseDate, elevation: 0 });
+      const mountain = getPrayerTimes({ lat, long, date: baseDate, elevation: 3000 });
 
       expect(seaLevel.success).toBe(true);
       expect(mountain.success).toBe(true);
@@ -101,9 +104,10 @@ describe('Prayer Module: Formula Invariants & Mathematical Logic', () => {
 
   describe('Manual Offsets & Adjustments Integration', () => {
     it('should shift specified times exactly by the adjustments configured in minutes', () => {
-      const noAdjust = getPrayerTimes({ location: coords, date: baseDate });
+      const noAdjust = getPrayerTimes({ lat, long, date: baseDate });
       const adjust = getPrayerTimes({
-        location: coords,
+        lat,
+        long,
         date: baseDate,
         adjustments: {
           fajr: 5,   // shift Fajr 5 mins later
@@ -132,7 +136,8 @@ describe('Prayer Module: Formula Invariants & Mathematical Logic', () => {
   describe('Calculation Engine Structural Metadata', () => {
     it('should include declination (DEC), equation of time (EOT), and solver iteration counts in results when requested', () => {
       const result = getPrayerTimes({
-        location: coords,
+        lat,
+        long,
         date: baseDate,
         withMetadata: true
       });

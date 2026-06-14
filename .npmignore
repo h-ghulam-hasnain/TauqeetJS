@@ -1,0 +1,23 @@
+# Source & tests — consumers only need dist/
+src/
+tests/
+manual_testing/
+coverage/
+
+# Config files
+tsconfig*.json
+tsup.config.ts
+vitest.config.ts
+.gitignore
+
+# Docs (README and LICENSE are explicitly included via "files")
+USAGE.md
+API.md
+MODULES.md
+CONTRIBUTING.md
+
+# Editor & OS noise
+.vscode/
+.idea/
+.DS_Store
+*.log
