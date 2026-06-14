@@ -1,0 +1,92 @@
+export type Result<T> =
+  | { readonly success: true; readonly data: T }
+  | { readonly success: false; readonly error: string };
+
+export function Success<T>(data: T): Result<T> {
+  return { success: true, data };
+}
+
+export function Failure(error: string): Result<never> {
+  return { success: false, error };
+}
+
+// import { GeographicPosition } from '../../astronomy/index.js';
+
+export type PrayerStatus =
+  | 'SUCCESS'
+  | 'CONTINUOUS_TWILIGHT'
+  | 'ASTRONOMICAL_MIDNIGHT'
+  | 'POLAR_NIGHT'
+  | 'POLAR_DAY'
+  | 'REGIONAL_FALLBACK';
+
+export interface DMSTuple {
+  readonly degrees: number;
+  readonly minutes: number;
+  readonly seconds: number;
+  readonly direction: 'N' | 'S' | 'E' | 'W' | 'n' | 's' | 'e' | 'w';
+}
+
+export type CoordinateInput = number | string | DMSTuple;
+
+export interface ElevationInput {
+  readonly value: number;
+  readonly unit: 'meters' | 'feet';
+}
+
+export interface PrayerMethodConfig {
+  readonly id: string;
+  readonly name: string;
+  readonly fajrAngle: number;
+  readonly ishaAngle: number | null; // null if ishaMinutes/interval is used instead
+  readonly ishaMinutes?: number;      // Minutes after Maghrib (e.g. Umm al-Qura: 90)
+  readonly maghribAngle?: number;     // If non-null, Maghrib uses angle not sunset
+  readonly maghribMinutes?: number;   // Minutes after sunset (alternative)
+  readonly source: string;
+}
+
+export interface PrayerConfig {
+  readonly lat: CoordinateInput;
+  readonly long: CoordinateInput;
+  readonly timeZone?: string | number;
+  readonly date?: Date | number | string;
+  readonly method?: string | PrayerMethodConfig;
+  readonly madhab?: 'Hanafi' | 'Shafi';
+  readonly elevation?: number | ElevationInput;
+  readonly temperatureC?: number;
+  readonly pressureMbar?: number;
+  readonly resolveTimezoneAsync?: (lat: number, lon: number) => Promise<string> | string;
+  readonly adjustments?: Partial<Record<'fajr' | 'sunrise' | 'dhahwaKubra' | 'dhuhr' | 'asr' | 'maghrib' | 'isha', number>>;
+  readonly withMetadata?: boolean;
+  readonly highLatitudeStrategy?: 'AngleBased' | 'MiddleOfNight' | 'SeventhOfNight' | 'NearestLatitude';
+  readonly regionalFallbackLatitude?: number; // fallback latitude if Case 5 triggered (default 45)
+}
+
+export interface TimeField {
+  readonly utc: string | null;       // ISO 8601 String ("2026-05-24T04:12:00Z")
+  readonly local: string | null;     // Formatted display text ("05:12 AM") using target timezone
+  readonly timestamp: number | null; // Raw UNIX epoch timestamp
+  readonly status: PrayerStatus;
+}
+
+export interface PrayerMetadata {
+  readonly fajr?: { readonly DEC: number; readonly EOT: number; readonly angle: number; readonly iterations: number; } | undefined;
+  readonly sunrise?: { readonly DEC: number; readonly EOT: number; readonly HP: number; readonly SD: number; readonly iterations: number; } | undefined;
+  readonly dhuha?: { readonly DEC: number; readonly EOT: number; readonly iterations: number; } | undefined;
+  readonly dhuhr?: { readonly DEC: number; readonly EOT: number; readonly SD: number; readonly iterations: number; } | undefined;
+  readonly asr?: { readonly DEC: number; readonly EOT: number; readonly HP: number; readonly SD: number; readonly asrAngle: number; readonly iterations: number; } | undefined;
+  readonly maghrib?: { readonly DEC: number; readonly EOT: number; readonly HP: number; readonly SD: number; readonly iterations: number; } | undefined;
+  readonly isha?: { readonly DEC: number; readonly EOT: number; readonly angle?: number; readonly iterations: number; } | undefined;
+}
+
+export interface PrayerTimesResult {
+  readonly fajr: TimeField;
+  readonly sunrise: TimeField;
+  readonly dhahwaKubra: TimeField;
+  readonly dhuhr: TimeField;
+  readonly asr: TimeField;
+  readonly maghrib: TimeField;
+  readonly isha: TimeField;
+  readonly metadata?: PrayerMetadata;
+}
+

@@ -1,30 +1,14 @@
 import { defineConfig } from 'tsup';
 
-/**
- * TauqeetJS Tsup Configuration — ESM + CJS, declaration maps, tree-shakable entries.
- */
 export default defineConfig({
-  entry: [
-    'src/index.ts',
-    'src/prayer/index.ts',
-    'src/qibla/index.ts',
-    'src/moon-visibility/index.ts',
-    'src/factory/index.ts',
-  ],
-  format: ['cjs', 'esm'],
+  entry: ['src/index.ts'],
+  format: ['esm', 'cjs'],
   dts: {
-    resolve: true,
     compilerOptions: {
-      declarationMap: true,
-    },
+      ignoreDeprecations: '6.0' // Instructs TypeScript 6 to bypass the internal tsup baseUrl warning
+    }
   },
-  clean: true,
-  minify: true,
-  treeshake: true,
-  splitting: true,
+  splitting: false,
   sourcemap: true,
-  target: 'es2015',
-  outDir: 'dist',
-  bundle: true,
-  skipNodeModulesBundle: true,
+  clean: true,
 });
