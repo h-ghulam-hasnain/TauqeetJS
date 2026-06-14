@@ -70,7 +70,9 @@ export function calculateSunAtQibla(
   const engine = createPrayerEngine({ latitude: lat, longitude: lng, elevation });
   const prayerTimesResult = engine.calculate(date, 2, temperature, pressure);
   if (!prayerTimesResult.success) return Failure(prayerTimesResult.error);
-  const zuhrDate = prayerTimesResult.data.dhuhr;
+  const zuhrField = prayerTimesResult.data.dhuhr;
+  if (!zuhrField.value || isNaN(zuhrField.value.getTime())) return Failure('Dhuhr not calculable');
+  const zuhrDate = zuhrField.value;
 
   const zuhrDecimal = zuhrDate.getUTCHours() + zuhrDate.getUTCMinutes() / 60 + zuhrDate.getUTCSeconds() / 3600;
 
@@ -101,7 +103,7 @@ export function calculateSunAtQibla(
       const timeOffset = angleP / 15;
       const finalTimeDecimal = currentDir > 180 ? zuhrDecimal + timeOffset : zuhrDecimal - timeOffset;
 
-      const time = new Date(zuhrDate);
+      const time = new Date(zuhrDate.getTime());
       const hours = Math.floor(finalTimeDecimal);
       const minutes = Math.floor((finalTimeDecimal - hours) * 60);
       const seconds = Math.floor(((finalTimeDecimal - hours) * 60 - minutes) * 60);

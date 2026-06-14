@@ -1,30 +1,31 @@
-import { PrayerTimesResult } from './types/index.js';
+import { PrayerTimesResult, TimeField } from './types/index.js';
+import { Result, Success, Failure, ErrorCode } from '../core/result.js';
+
+export type FormattedTimes<T> = {
+  [K in Exclude<keyof PrayerTimesResult, 'metadata'>]: T extends 'unix' ? number | null : string | null;
+};
 
 /**
- * Utility to format calculated prayer times.
+ * Utility to format calculated prayer times from TimeField structs.
  * Supports ISO8601, Unix timestamps, 12-hour, and 24-hour formats.
  * Incorporates timezone conversion using Intl.DateTimeFormat options.
  *
- * @param times The computed prayer times object.
+ * @param times The computed prayer times object (which uses TimeFields).
  * @param type The formatting target ('iso8601' | 'unix' | '12h' | '24h').
  * @param timeZone Optional IANA time zone identifier.
  */
 export function formatPrayerTimes<T extends 'iso8601' | 'unix' | '12h' | '24h'>(
-  times: Omit<PrayerTimesResult, 'format'>,
+  times: Omit<PrayerTimesResult, 'metadata'>,
   type: T,
   timeZone?: string
-): {
-  [K in Exclude<keyof Omit<PrayerTimesResult, 'format'>, 'metadata'>]: K extends 'fajr' | 'isha' | 'dhahwaKubra'
-    ? (T extends 'unix' ? number | null : string | null)
-    : (T extends 'unix' ? number : string);
-} {
+): Result<FormattedTimes<T>> {
   const VALID_FORMATS = new Set(['iso8601', 'unix', '12h', '24h']);
   if (!VALID_FORMATS.has(type)) {
-    throw new TypeError(`Invalid format: '${type}'. Allowed formats are: iso8601, unix, 12h, 24h.`);
+    return Failure(ErrorCode.UNKNOWN_ERROR);
   }
 
   const formatted: Record<string, string | number | null> = {};
-  const keys: (keyof Omit<PrayerTimesResult, 'format' | 'metadata'>)[] = [
+  const keys: (keyof Omit<PrayerTimesResult, 'metadata'>)[] = [
     'fajr',
     'sunrise',
     'dhahwaKubra',
@@ -35,21 +36,18 @@ export function formatPrayerTimes<T extends 'iso8601' | 'unix' | '12h' | '24h'>(
   ];
 
   for (const key of keys) {
-    const d = times[key];
-    if (d === null) {
-      formatted[key] = type === 'unix' ? null : '';
-      continue;
-    }
-    if (isNaN(d.getTime())) {
-      formatted[key] = type === 'unix' ? NaN : 'Invalid Date';
+    const field = times[key] as TimeField;
+    if (!field.utc) {
+      formatted[key] = null;
       continue;
     }
 
     if (type === 'iso8601') {
-      formatted[key] = d.toISOString();
+      formatted[key] = field.utc;
     } else if (type === 'unix') {
-      formatted[key] = Math.floor(d.getTime() / 1000);
+      formatted[key] = field.timestamp;
     } else {
+      const d = new Date(field.utc);
       const options: Intl.DateTimeFormatOptions = {
         hour: '2-digit',
         minute: '2-digit',
@@ -59,13 +57,13 @@ export function formatPrayerTimes<T extends 'iso8601' | 'unix' | '12h' | '24h'>(
       if (timeZone) {
         options.timeZone = timeZone;
       }
-      formatted[key] = new Intl.DateTimeFormat('en-US', options).format(d);
+      try {
+        formatted[key] = new Intl.DateTimeFormat('en-US', options).format(d);
+      } catch (e) {
+        formatted[key] = null;
+      }
     }
   }
 
-  return formatted as {
-    [K in Exclude<keyof Omit<PrayerTimesResult, 'format'>, 'metadata'>]: K extends 'fajr' | 'isha' | 'dhahwaKubra'
-      ? (T extends 'unix' ? number | null : string | null)
-      : (T extends 'unix' ? number : string);
-  };
+  return Success(formatted as FormattedTimes<T>);
 }

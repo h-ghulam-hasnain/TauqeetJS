@@ -53,9 +53,30 @@ import { getMoonVisibility } from 'tauqeet-js/moon-visibility';
 
 ---
 
-## 🌍 TimeZone Handling Guide
+## � Ramadan Schedule
+```typescript
+import { getRamadanSchedule } from 'tauqeet-js';
 
-TauqeetJS follows a **Strict UTC Internal Pattern** to maintain astronomical precision. 
+const result = getRamadanSchedule(
+  new Date(2026, 2, 1),
+  new Date(2026, 2, 29),
+  { location: { latitude: 25.2048, longitude: 55.2708 }, method: 'MWL' },
+  30, // sahur buffer in minutes
+  2,  // iftar buffer in minutes
+);
+
+if (result.success) {
+  result.data.forEach((day) => {
+    console.log(day.date, day.sahurEndsAt.local, day.iftarAt.local);
+  });
+}
+```
+
+---
+
+## �🌍 TimeZone Handling Guide
+
+TauqeetJS follows a **Strict UTC Internal Pattern** to maintain astronomical precision.
 
 ### 1. Internal Pattern
 All internal calculations (Julian Dates, Ephemeris Time, and Solvers) are performed in **UTC/TDT**. The library does not "know" about local time during the calculation phase.

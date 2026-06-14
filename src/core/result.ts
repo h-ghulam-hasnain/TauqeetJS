@@ -5,17 +5,19 @@ export type Result<T, E = ErrorCode | ValidationError | string> =
   | { success: true; data: T }
   | { success: false; error: E };
 
-export const enum ErrorCode {
-  INVALID_LATITUDE = 'INVALID_LATITUDE',
-  INVALID_LONGITUDE = 'INVALID_LONGITUDE',
-  INVALID_DATE = 'INVALID_DATE',
-  DATE_RANGE_EXCEEDED = 'DATE_RANGE_EXCEEDED',
-  EXTREME_LATITUDE = 'EXTREME_LATITUDE',
-  CALCULATION_FAILED = 'CALCULATION_FAILED',
-  UNKNOWN_ERROR = 'UNKNOWN_ERROR',
-  POLAR_DAY = 'POLAR_DAY',
-  POLAR_NIGHT = 'POLAR_NIGHT'
-}
+export const ErrorCode = {
+  INVALID_LATITUDE: 'INVALID_LATITUDE',
+  INVALID_LONGITUDE: 'INVALID_LONGITUDE',
+  INVALID_DATE: 'INVALID_DATE',
+  DATE_RANGE_EXCEEDED: 'DATE_RANGE_EXCEEDED',
+  EXTREME_LATITUDE: 'EXTREME_LATITUDE',
+  CALCULATION_FAILED: 'CALCULATION_FAILED',
+  UNKNOWN_ERROR: 'UNKNOWN_ERROR',
+  POLAR_DAY: 'POLAR_DAY',
+  POLAR_NIGHT: 'POLAR_NIGHT'
+} as const;
+
+export type ErrorCode = typeof ErrorCode[keyof typeof ErrorCode];
 
 export enum ValidationError {
   MISSING_COORDINATES = 'MISSING_COORDINATES'
@@ -47,8 +49,8 @@ export const validateInputs = (
     lat === null ||
     typeof lat !== 'number' ||
     isNaN(lat) ||
-    lat < -90 ||
-    lat > 90
+    lat <= -90 ||
+    lat >= 90
   ) {
     return Failure(ErrorCode.INVALID_LATITUDE);
   }

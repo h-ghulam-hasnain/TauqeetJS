@@ -23,8 +23,8 @@ describe('Extended Test: Location Validation', () => {
     const result = getPrayerTimes({ location: { latitude: 0, longitude: 0 }, date });
     expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.data.fajr).toBeInstanceOf(Date);
-      expect(result.data.dhuhr).toBeInstanceOf(Date);
+      expect(result.data.fajr).toHaveProperty('timestamp');
+      expect(result.data.dhuhr).toHaveProperty('timestamp');
     }
   });
 

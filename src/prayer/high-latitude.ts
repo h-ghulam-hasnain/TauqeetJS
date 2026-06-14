@@ -1,6 +1,16 @@
-import { Coordinates, PrayerTimesResult, HighLatitudeMethod } from './types/index.js';
+import { Coordinates, HighLatitudeMethod } from './types/index.js';
 import { Result, Success, Failure, ErrorCode } from '../core/result.js';
 import { cosd, sind } from '../internal/math.js';
+
+interface RawTimes {
+  fajr: Date | null;
+  sunrise: Date;
+  dhahwaKubra: Date | null;
+  dhuhr: Date;
+  asr: Date;
+  maghrib: Date;
+  isha: Date | null;
+}
 
 /**
  * Adjusts calculated prayer times for high latitudes where standard geometry fails.
@@ -10,13 +20,17 @@ import { cosd, sind } from '../internal/math.js';
  * @param coords Observer coordinates.
  * @param method The high latitude adjustment method to apply.
  * @param declination The solar declination of the day.
+ * @param fajrAngle The angle used for fajr
+ * @param ishaAngle The angle used for isha
  */
 export function adjustHighLatitudeTimes(
-  times: Omit<PrayerTimesResult, 'format' | 'metadata'>,
+  times: RawTimes,
   coords: Coordinates,
   method: HighLatitudeMethod | undefined,
-  declination: number
-): Result<Omit<PrayerTimesResult, 'format' | 'metadata'>, ErrorCode> {
+  declination: number,
+  fajrAngle: number,
+  ishaAngle: number
+): Result<RawTimes, ErrorCode> {
   // 1. Astronomical check for Polar conditions
   const targetZenith = 90 + 50 / 60; // Sunrise/sunset zenith angle ~90°50'
   const denominator = cosd(coords.latitude) * cosd(declination);
@@ -38,7 +52,7 @@ export function adjustHighLatitudeTimes(
     }
   }
 
-  const adjusted: Omit<PrayerTimesResult, 'format' | 'metadata'> = {
+  const adjusted: RawTimes = {
     fajr: times.fajr,
     sunrise: times.sunrise,
     dhahwaKubra: times.dhahwaKubra,
@@ -75,36 +89,37 @@ export function adjustHighLatitudeTimes(
   if (method === HighLatitudeMethod.MIDDLE_OF_THE_NIGHT) {
     const halfNight = nightDuration / 2;
 
-    // Fajr adjustment: if null, NaN or falls before the allowed limit (halfNight before sunrise)
-    if (
-      times.fajr === null ||
-      isNaN(times.fajr.getTime()) ||
-      times.fajr.getTime() < safeSunrise.getTime() - halfNight
-    ) {
+    if (times.fajr === null || isNaN(times.fajr.getTime()) || times.fajr.getTime() < safeSunrise.getTime() - halfNight) {
       adjusted.fajr = new Date(safeSunrise.getTime() - halfNight);
     }
-
-    // Isha adjustment: if null, NaN or falls after the allowed limit (halfNight after maghrib)
-    if (
-      times.isha === null ||
-      isNaN(times.isha.getTime()) ||
-      times.isha.getTime() > safeMaghrib.getTime() + halfNight
-    ) {
+    if (times.isha === null || isNaN(times.isha.getTime()) || times.isha.getTime() > safeMaghrib.getTime() + halfNight) {
       adjusted.isha = new Date(safeMaghrib.getTime() + halfNight);
+    }
+  } else if (method === HighLatitudeMethod.SEVENTH_OF_THE_NIGHT) {
+    const seventhNight = nightDuration / 7;
+
+    if (times.fajr === null || isNaN(times.fajr.getTime()) || times.fajr.getTime() < safeSunrise.getTime() - seventhNight) {
+      adjusted.fajr = new Date(safeSunrise.getTime() - seventhNight);
+    }
+    if (times.isha === null || isNaN(times.isha.getTime()) || times.isha.getTime() > safeMaghrib.getTime() + seventhNight) {
+      adjusted.isha = new Date(safeMaghrib.getTime() + seventhNight);
+    }
+  } else if (method === HighLatitudeMethod.ANGLE_BASED) {
+    const fajrPortion = nightDuration * (fajrAngle / 60);
+    const ishaPortion = nightDuration * (ishaAngle / 60);
+
+    if (times.fajr === null || isNaN(times.fajr.getTime()) || times.fajr.getTime() < safeSunrise.getTime() - fajrPortion) {
+      adjusted.fajr = new Date(safeSunrise.getTime() - fajrPortion);
+    }
+    if (times.isha === null || isNaN(times.isha.getTime()) || times.isha.getTime() > safeMaghrib.getTime() + ishaPortion) {
+      adjusted.isha = new Date(safeMaghrib.getTime() + ishaPortion);
     }
   } else {
     // Default fallback: Conditional "No Isha / Fajr at Midnight" logic
-    // If Sunrise and Maghrib are valid, but Isha (or Fajr) fails to calculate geometrically (NaN)
-    if (
-      times.fajr === null ||
-      isNaN(times.fajr.getTime()) ||
-      times.isha === null ||
-      isNaN(times.isha.getTime())
-    ) {
+    if (times.fajr === null || isNaN(times.fajr.getTime()) || times.isha === null || isNaN(times.isha.getTime())) {
       adjusted.isha = null;
       // fajr strictly to Midnight of that night (midpoint between Maghrib and next day's Sunrise)
-      const midnightOfNight = new Date(safeMaghrib.getTime() + nightDuration / 2);
-      adjusted.fajr = midnightOfNight;
+      adjusted.fajr = new Date(safeMaghrib.getTime() + nightDuration / 2);
     }
   }
 
@@ -118,7 +133,7 @@ export function adjustHighLatitudeTimes(
   }
 
   // Recalculate Dhahwa Kubra using the adjusted Fajr and Maghrib
-  if (adjusted.fajr !== null && adjusted.maghrib !== null) {
+  if (adjusted.fajr !== null && adjusted.maghrib !== null && !isNaN(adjusted.fajr.getTime()) && !isNaN(adjusted.maghrib.getTime())) {
     adjusted.dhahwaKubra = new Date((adjusted.fajr.getTime() + adjusted.maghrib.getTime()) / 2);
   } else {
     adjusted.dhahwaKubra = null;
