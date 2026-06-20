@@ -17,21 +17,14 @@ export function calculateIsha(
     if (!maghribResult) return null;
     return {
       ...maghribResult,
-      time: new Date(maghribResult.time.getTime() + ishaMinutes * 60000)
+      time: new Date(maghribResult.time.getTime() + ishaMinutes * 60000),
     };
   }
 
   if (method.ishaAngle !== undefined && method.ishaAngle !== null) {
     const targetZenithFn = () => 90 + method.ishaAngle!;
-    const initialEstimate = 18 - (longitude / 15);
-    return solveIteratively(
-      date,
-      latitude,
-      longitude,
-      'evening',
-      targetZenithFn,
-      initialEstimate
-    );
+    const initialEstimate = 18 - longitude / 15;
+    return solveIteratively(date, latitude, longitude, 'evening', targetZenithFn, initialEstimate);
   }
 
   return null;

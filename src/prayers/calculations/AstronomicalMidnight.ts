@@ -28,19 +28,31 @@ export function calculateAstronomicalMidnight(
 ): Date | null {
   // ── Step 1: Today's sunrise ─────────────────────────────────────────────
   const sunriseResult = calculateSunrise(
-    date, latitude, longitude, elevationMeters, temperatureC, pressureMbar
+    date,
+    latitude,
+    longitude,
+    elevationMeters,
+    temperatureC,
+    pressureMbar
   );
   if (!sunriseResult?.time || isNaN(sunriseResult.time.getTime())) return null;
   const sunriseMs = sunriseResult.time.getTime();
 
   // ── Step 2: Previous civil day's sunset ─────────────────────────────────
-  const previousDate = new Date(Date.UTC(
-    date.getUTCFullYear(),
-    date.getUTCMonth(),
-    date.getUTCDate() - 1   // one calendar day back
-  ));
+  const previousDate = new Date(
+    Date.UTC(
+      date.getUTCFullYear(),
+      date.getUTCMonth(),
+      date.getUTCDate() - 1 // one calendar day back
+    )
+  );
   const prevSunsetResult = calculateSunset(
-    previousDate, latitude, longitude, elevationMeters, temperatureC, pressureMbar
+    previousDate,
+    latitude,
+    longitude,
+    elevationMeters,
+    temperatureC,
+    pressureMbar
   );
   if (!prevSunsetResult?.time || isNaN(prevSunsetResult.time.getTime())) return null;
   const prevSunsetMs = prevSunsetResult.time.getTime();

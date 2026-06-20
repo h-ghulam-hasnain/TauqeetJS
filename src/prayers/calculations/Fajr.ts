@@ -12,14 +12,7 @@ export function calculateFajr(
   method: PrayerMethodConfig
 ): IterativeSolverResult | null {
   const targetZenithFn = () => 90 + method.fajrAngle;
-  const initialEstimate = 6 - (longitude / 15);
+  const initialEstimate = 6 - longitude / 15;
 
-  return solveIteratively(
-    date,
-    latitude,
-    longitude,
-    'morning',
-    targetZenithFn,
-    initialEstimate
-  );
+  return solveIteratively(date, latitude, longitude, 'morning', targetZenithFn, initialEstimate);
 }

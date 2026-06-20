@@ -1,5 +1,4 @@
-import type { PrayerConfig, PrayerTimesResult, TimeField, PrayerStatus, PrayerMetadata } from '../types/index.js';
-import { validatePrayerConfig } from '../validators/validatePrayerConfig.js';
+import type { PrayerTimesResult, TimeField, PrayerStatus, PrayerMetadata } from '../types/index.js';
 import type { ValidatedPrayerConfig } from '../validators/validatePrayerConfig.js';
 import { classifyLatitude, LatitudeCase } from './LatitudeClassifier.js';
 import { ASR_SHADOW_FACTOR } from '../config/madhabs.js';
@@ -10,19 +9,7 @@ import { calculateAsr } from '../calculations/Asr.js';
 import { calculateMaghrib, calculateSunset } from '../calculations/Maghrib.js';
 import { calculateIsha } from '../calculations/Isha.js';
 import { calculateAstronomicalMidnight } from '../calculations/AstronomicalMidnight.js';
-import { AngleBasedStrategy } from '../highLatitude/AngleBased.js';
-import { MiddleOfNightStrategy } from '../highLatitude/MiddleOfNight.js';
-import { SeventhOfNightStrategy } from '../highLatitude/SeventhOfNight.js';
-import { NearestLatitudeStrategy } from '../highLatitude/NearestLatitude.js';
-import type { HighLatitudeStrategy, HighLatitudeContext } from '../highLatitude/HighLatitudeStrategy.js';
 import type { IterativeSolverResult } from '../solvers/IterativeSolver.js';
-
-const STRATEGIES: Record<string, HighLatitudeStrategy> = {
-  AngleBased: new AngleBasedStrategy(),
-  MiddleOfNight: new MiddleOfNightStrategy(),
-  SeventhOfNight: new SeventhOfNightStrategy(),
-  NearestLatitude: new NearestLatitudeStrategy()
-};
 
 export class PrayerCalculationError extends Error {
   constructor(message: string) {
@@ -62,7 +49,7 @@ export function formatTimeField(
       utc: null,
       local: null,
       timestamp: null,
-      status
+      status,
     };
   }
 
@@ -82,7 +69,7 @@ export function formatTimeField(
           hour: '2-digit',
           minute: '2-digit',
           second: '2-digit',
-          timeZone
+          timeZone,
         }).format(rounded);
       }
     }
@@ -102,13 +89,13 @@ export function formatTimeField(
     utc: rounded.toISOString(),
     local,
     timestamp: Math.round(rounded.getTime() / 1000),
-    status
+    status,
   };
 }
 
 function formatManualOffset(date: Date, offsetHours: number): string {
   const localTime = new Date(date.getTime() + offsetHours * 3600000);
-  const hours   = localTime.getUTCHours();
+  const hours = localTime.getUTCHours();
   const minutes = localTime.getUTCMinutes();
   const seconds = localTime.getUTCSeconds();
   const ampm = hours >= 12 ? 'PM' : 'AM';
@@ -124,14 +111,14 @@ function calculateRawTimes(
   config: ValidatedPrayerConfig,
   latToUse: number
 ): {
-  fajr:        { time: Date | null; status: PrayerStatus; metadata: IterativeSolverResult | null };
-  sunrise:     { time: Date | null; status: PrayerStatus; metadata: IterativeSolverResult | null };
+  fajr: { time: Date | null; status: PrayerStatus; metadata: IterativeSolverResult | null };
+  sunrise: { time: Date | null; status: PrayerStatus; metadata: IterativeSolverResult | null };
   dhahwaKubra: { time: Date | null; status: PrayerStatus; metadata: null };
-  dhuhr:       { time: Date | null; status: PrayerStatus; metadata: IterativeSolverResult | null };
-  asr:         { time: Date | null; status: PrayerStatus; metadata: IterativeSolverResult | null };
-  maghrib:     { time: Date | null; status: PrayerStatus; metadata: IterativeSolverResult | null };
-  isha:        { time: Date | null; status: PrayerStatus; metadata: IterativeSolverResult | null };
-  sunsetRaw:   IterativeSolverResult | null;
+  dhuhr: { time: Date | null; status: PrayerStatus; metadata: IterativeSolverResult | null };
+  asr: { time: Date | null; status: PrayerStatus; metadata: IterativeSolverResult | null };
+  maghrib: { time: Date | null; status: PrayerStatus; metadata: IterativeSolverResult | null };
+  isha: { time: Date | null; status: PrayerStatus; metadata: IterativeSolverResult | null };
+  sunsetRaw: IterativeSolverResult | null;
 } {
   const { date, longitude, method, madhab, elevationMeters, temperatureC, pressureMbar } = config;
   const sf = ASR_SHADOW_FACTOR[madhab];
@@ -148,14 +135,14 @@ function calculateRawTimes(
   // Initialize raw structure
   let fajrTime: Date | null = null;
   let sunriseTime: Date | null = null;
-  let dhuhrTime: Date = dhuhrRes.time;
+  const dhuhrTime: Date = dhuhrRes.time;
   let asrTime: Date | null = null;
   let maghribTime: Date | null = null;
   let ishaTime: Date | null = null;
 
   let fajrStatus: PrayerStatus = 'SUCCESS';
   let sunriseStatus: PrayerStatus = 'SUCCESS';
-  let dhuhrStatus: PrayerStatus = 'SUCCESS';
+  const dhuhrStatus: PrayerStatus = 'SUCCESS';
   let asrStatus: PrayerStatus = 'SUCCESS';
   let maghribStatus: PrayerStatus = 'SUCCESS';
   let ishaStatus: PrayerStatus = 'SUCCESS';
@@ -180,7 +167,16 @@ function calculateRawTimes(
     ishaStatus = 'POLAR_DAY';
 
     // Asr evaluated dynamically based on diurnal shadow-ratio curve at transit
-    resAsr = calculateAsr(date, latToUse, longitude, sf, dhuhrRes.declination, dhuhrRes.semidiameter, temperatureC, pressureMbar);
+    resAsr = calculateAsr(
+      date,
+      latToUse,
+      longitude,
+      sf,
+      dhuhrRes.declination,
+      dhuhrRes.semidiameter,
+      temperatureC,
+      pressureMbar
+    );
     if (resAsr) {
       asrTime = resAsr.time;
       asrStatus = 'SUCCESS';
@@ -190,10 +186,42 @@ function calculateRawTimes(
   } else {
     // Normal or Continuous Twilight
     resFajr = calculateFajr(date, latToUse, longitude, method);
-    resSunrise = calculateSunrise(date, latToUse, longitude, elevationMeters, temperatureC, pressureMbar);
-    resSunset = calculateSunset(date, latToUse, longitude, elevationMeters, temperatureC, pressureMbar);
-    resMaghrib = calculateMaghrib(date, latToUse, longitude, elevationMeters, temperatureC, pressureMbar, method, resSunset);
-    resAsr = calculateAsr(date, latToUse, longitude, sf, dhuhrRes.declination, dhuhrRes.semidiameter, temperatureC, pressureMbar);
+    resSunrise = calculateSunrise(
+      date,
+      latToUse,
+      longitude,
+      elevationMeters,
+      temperatureC,
+      pressureMbar
+    );
+    resSunset = calculateSunset(
+      date,
+      latToUse,
+      longitude,
+      elevationMeters,
+      temperatureC,
+      pressureMbar
+    );
+    resMaghrib = calculateMaghrib(
+      date,
+      latToUse,
+      longitude,
+      elevationMeters,
+      temperatureC,
+      pressureMbar,
+      method,
+      resSunset
+    );
+    resAsr = calculateAsr(
+      date,
+      latToUse,
+      longitude,
+      sf,
+      dhuhrRes.declination,
+      dhuhrRes.semidiameter,
+      temperatureC,
+      pressureMbar
+    );
     resIsha = calculateIsha(date, latToUse, longitude, method, resMaghrib);
 
     // Assign solved times if available
@@ -213,33 +241,43 @@ function calculateRawTimes(
       } else if (!fajrValid && ishaValid) {
         // Case 2: Isha calculable, Fajr not → Fajr = Astronomical Midnight
         const midnight = calculateAstronomicalMidnight(
-          date, latToUse, longitude, elevationMeters, temperatureC, pressureMbar
+          date,
+          latToUse,
+          longitude,
+          elevationMeters,
+          temperatureC,
+          pressureMbar
         );
-        fajrTime   = midnight;
+        fajrTime = midnight;
         fajrStatus = midnight ? 'ASTRONOMICAL_MIDNIGHT' : 'CONTINUOUS_TWILIGHT';
-        resFajr    = null;
+        resFajr = null;
       } else if (fajrValid && !ishaValid) {
         // Case 3: Fajr calculable, Isha not → Isha = null
-        ishaTime   = null;
+        ishaTime = null;
         ishaStatus = 'CONTINUOUS_TWILIGHT';
-        resIsha    = null;
+        resIsha = null;
       } else {
         // Case 4: Neither calculable → Fajr = Astronomical Midnight, Isha = null
         const midnight = calculateAstronomicalMidnight(
-          date, latToUse, longitude, elevationMeters, temperatureC, pressureMbar
+          date,
+          latToUse,
+          longitude,
+          elevationMeters,
+          temperatureC,
+          pressureMbar
         );
-        fajrTime   = midnight;
+        fajrTime = midnight;
         fajrStatus = midnight ? 'ASTRONOMICAL_MIDNIGHT' : 'CONTINUOUS_TWILIGHT';
-        resFajr    = null;
-        ishaTime   = null;
+        resFajr = null;
+        ishaTime = null;
         ishaStatus = 'CONTINUOUS_TWILIGHT';
-        resIsha    = null;
+        resIsha = null;
       }
 
       // Asr fallback if it failed to converge
       if (!asrTime || isNaN(asrTime.getTime())) {
         const safeSunset = resSunset ? resSunset.time : new Date(dhuhrTime.getTime() + 6 * 3600000);
-        asrTime   = new Date((dhuhrTime.getTime() + safeSunset.getTime()) / 2);
+        asrTime = new Date((dhuhrTime.getTime() + safeSunset.getTime()) / 2);
         asrStatus = 'CONTINUOUS_TWILIGHT';
       }
     }
@@ -270,7 +308,7 @@ function calculateRawTimes(
     asr: { time: asrTime, status: asrStatus, metadata: resAsr },
     maghrib: { time: maghribTime, status: maghribStatus, metadata: resMaghrib },
     isha: { time: ishaTime, status: ishaStatus, metadata: resIsha },
-    sunsetRaw: resSunset
+    sunsetRaw: resSunset,
   };
 }
 
@@ -289,13 +327,12 @@ export function calculatePrayerTimesInternal(config: ValidatedPrayerConfig): Pra
 
   const useFallback =
     latCase === LatitudeCase.REGIONAL_FALLBACK ||
-    ((latCase === LatitudeCase.POLAR_NIGHT || latCase === LatitudeCase.POLAR_DAY) && highLatitudeStrategy === 'NearestLatitude');
+    ((latCase === LatitudeCase.POLAR_NIGHT || latCase === LatitudeCase.POLAR_DAY) &&
+      highLatitudeStrategy === 'NearestLatitude');
 
   let rawResults: ReturnType<typeof calculateRawTimes>;
-  let finalStatus: PrayerStatus = 'SUCCESS';
 
   if (useFallback) {
-    finalStatus = 'REGIONAL_FALLBACK';
     const sign = latitude < 0 ? -1 : 1;
     const anchorLat = sign * config.regionalFallbackLatitude;
     rawResults = calculateRawTimes(config, anchorLat);
@@ -310,13 +347,48 @@ export function calculatePrayerTimesInternal(config: ValidatedPrayerConfig): Pra
   };
 
   const result: PrayerTimesResult = {
-    fajr: formatTimeField(rawResults.fajr.time, resolveStatus(rawResults.fajr.status), timeZone, adjustments.fajr),
-    sunrise: formatTimeField(rawResults.sunrise.time, resolveStatus(rawResults.sunrise.status), timeZone, adjustments.sunrise),
-    dhahwaKubra: formatTimeField(rawResults.dhahwaKubra.time, resolveStatus(rawResults.dhahwaKubra.status), timeZone, adjustments.dhahwaKubra),
-    dhuhr: formatTimeField(rawResults.dhuhr.time, resolveStatus(rawResults.dhuhr.status), timeZone, adjustments.dhuhr),
-    asr: formatTimeField(rawResults.asr.time, resolveStatus(rawResults.asr.status), timeZone, adjustments.asr),
-    maghrib: formatTimeField(rawResults.maghrib.time, resolveStatus(rawResults.maghrib.status), timeZone, adjustments.maghrib),
-    isha: formatTimeField(rawResults.isha.time, resolveStatus(rawResults.isha.status), timeZone, adjustments.isha),
+    fajr: formatTimeField(
+      rawResults.fajr.time,
+      resolveStatus(rawResults.fajr.status),
+      timeZone,
+      adjustments.fajr
+    ),
+    sunrise: formatTimeField(
+      rawResults.sunrise.time,
+      resolveStatus(rawResults.sunrise.status),
+      timeZone,
+      adjustments.sunrise
+    ),
+    dhahwaKubra: formatTimeField(
+      rawResults.dhahwaKubra.time,
+      resolveStatus(rawResults.dhahwaKubra.status),
+      timeZone,
+      adjustments.dhahwaKubra
+    ),
+    dhuhr: formatTimeField(
+      rawResults.dhuhr.time,
+      resolveStatus(rawResults.dhuhr.status),
+      timeZone,
+      adjustments.dhuhr
+    ),
+    asr: formatTimeField(
+      rawResults.asr.time,
+      resolveStatus(rawResults.asr.status),
+      timeZone,
+      adjustments.asr
+    ),
+    maghrib: formatTimeField(
+      rawResults.maghrib.time,
+      resolveStatus(rawResults.maghrib.status),
+      timeZone,
+      adjustments.maghrib
+    ),
+    isha: formatTimeField(
+      rawResults.isha.time,
+      resolveStatus(rawResults.isha.status),
+      timeZone,
+      adjustments.isha
+    ),
   };
 
   if (config.withMetadata) {
@@ -327,7 +399,7 @@ export function calculatePrayerTimesInternal(config: ValidatedPrayerConfig): Pra
         DEC: rawResults.fajr.metadata.declination,
         EOT: rawResults.fajr.metadata.equationOfTime,
         angle: method.fajrAngle,
-        iterations: rawResults.fajr.metadata.iterations
+        iterations: rawResults.fajr.metadata.iterations,
       };
     }
     if (rawResults.sunrise.metadata) {
@@ -336,7 +408,7 @@ export function calculatePrayerTimesInternal(config: ValidatedPrayerConfig): Pra
         EOT: rawResults.sunrise.metadata.equationOfTime,
         HP: rawResults.sunrise.metadata.horizontalParallax,
         SD: rawResults.sunrise.metadata.semidiameter,
-        iterations: rawResults.sunrise.metadata.iterations
+        iterations: rawResults.sunrise.metadata.iterations,
       };
     }
     if (rawResults.dhuhr.metadata) {
@@ -344,7 +416,7 @@ export function calculatePrayerTimesInternal(config: ValidatedPrayerConfig): Pra
         DEC: rawResults.dhuhr.metadata.declination,
         EOT: rawResults.dhuhr.metadata.equationOfTime,
         SD: rawResults.dhuhr.metadata.semidiameter,
-        iterations: rawResults.dhuhr.metadata.iterations
+        iterations: rawResults.dhuhr.metadata.iterations,
       };
     }
     if (rawResults.asr.metadata) {
@@ -353,7 +425,7 @@ export function calculatePrayerTimesInternal(config: ValidatedPrayerConfig): Pra
         EOT: rawResults.asr.metadata.equationOfTime,
         HP: rawResults.asr.metadata.horizontalParallax,
         SD: rawResults.asr.metadata.semidiameter,
-        iterations: rawResults.asr.metadata.iterations
+        iterations: rawResults.asr.metadata.iterations,
       };
     }
     if (rawResults.maghrib.metadata) {
@@ -362,14 +434,14 @@ export function calculatePrayerTimesInternal(config: ValidatedPrayerConfig): Pra
         EOT: rawResults.maghrib.metadata.equationOfTime,
         HP: rawResults.maghrib.metadata.horizontalParallax,
         SD: rawResults.maghrib.metadata.semidiameter,
-        iterations: rawResults.maghrib.metadata.iterations
+        iterations: rawResults.maghrib.metadata.iterations,
       };
     }
     if (rawResults.isha.metadata) {
       const ishaMeta: any = {
         DEC: rawResults.isha.metadata.declination,
         EOT: rawResults.isha.metadata.equationOfTime,
-        iterations: rawResults.isha.metadata.iterations
+        iterations: rawResults.isha.metadata.iterations,
       };
       if (method.ishaAngle !== null && method.ishaAngle !== undefined) {
         ishaMeta.angle = method.ishaAngle;

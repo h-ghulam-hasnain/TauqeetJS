@@ -3,7 +3,7 @@
  */
 export function normalizeLongitude(lon: number): number {
   let result = lon % 360;
-  if (result > 180)  result -= 360;
+  if (result > 180) result -= 360;
   if (result <= -180) result += 360;
   return result;
 }

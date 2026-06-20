@@ -35,7 +35,7 @@ export class HijriEngine {
 
   constructor(
     private readonly method: HijriMethod = HijriMethod.CIVIL,
-    private readonly options: HijriEngineOptions = {},
+    private readonly options: HijriEngineOptions = {}
   ) {
     this.calendar = this.buildCalendar();
   }
@@ -95,7 +95,7 @@ export class HijriEngine {
         const loc = this.options.location;
         if (!loc) {
           throw new Error(
-            'HijriEngine: HijriMethod.VISIBILITY requires a location (latitude, longitude).',
+            'HijriEngine: HijriMethod.VISIBILITY requires a location (latitude, longitude).'
           );
         }
         return new VisibilityCalendar(loc);

@@ -1,9 +1,9 @@
 import { computeSolarPosition, dateToJulianDay, calculateDeltaT } from '../astronomy/index.js';
 
 export interface SolarEphemeris {
-  readonly declination: number;      // degrees
-  readonly equationOfTime: number;   // minutes
-  readonly semidiameter: number;      // degrees
+  readonly declination: number; // degrees
+  readonly equationOfTime: number; // minutes
+  readonly semidiameter: number; // degrees
   readonly horizontalParallax: number; // degrees
 }
 
@@ -53,7 +53,7 @@ export class EphemerisService {
         declination: pos.declination,
         equationOfTime: pos.equationOfTime,
         semidiameter: pos.semidiameter,
-        horizontalParallax: pos.horizontalParallax
+        horizontalParallax: pos.horizontalParallax,
       });
     }
 
@@ -81,29 +81,34 @@ export class EphemerisService {
       // Recover year from JD (approx — only needed for deltaT)
       year = date.getUTCFullYear();
     } else {
-      year  = date.getUTCFullYear();
+      year = date.getUTCFullYear();
       const month = date.getUTCMonth() + 1;
-      const day   = date.getUTCDate();
+      const day = date.getUTCDate();
       jdStart = dateToJulianDay(year, month, day);
     }
 
     const samples = this.getOrComputeDaySamples(jdStart, year);
 
     // Compute continuous UT from the date object relative to jdStart
-    const actualJd = dateToJulianDay(date.getUTCFullYear(), date.getUTCMonth() + 1, date.getUTCDate());
+    const actualJd = dateToJulianDay(
+      date.getUTCFullYear(),
+      date.getUTCMonth() + 1,
+      date.getUTCDate()
+    );
     const dayDiff = actualJd - jdStart;
 
-    const ut = (dayDiff * 24)
-             + date.getUTCHours()
-             + date.getUTCMinutes() / 60
-             + date.getUTCSeconds() / 3600
-             + date.getUTCMilliseconds() / 3600000;
+    const ut =
+      dayDiff * 24 +
+      date.getUTCHours() +
+      date.getUTCMinutes() / 60 +
+      date.getUTCSeconds() / 3600 +
+      date.getUTCMilliseconds() / 3600000;
 
     return {
-      declination:        this.interpolate(ut, samples),
-      equationOfTime:     this.interpolate(ut, samples, 'equationOfTime'),
-      semidiameter:       this.interpolate(ut, samples, 'semidiameter'),
-      horizontalParallax: this.interpolate(ut, samples, 'horizontalParallax')
+      declination: this.interpolate(ut, samples),
+      equationOfTime: this.interpolate(ut, samples, 'equationOfTime'),
+      semidiameter: this.interpolate(ut, samples, 'semidiameter'),
+      horizontalParallax: this.interpolate(ut, samples, 'horizontalParallax'),
     };
   }
 
@@ -111,7 +116,11 @@ export class EphemerisService {
    * Lagrange 3-point interpolation over 15 samples spanning -2h to +26h.
    * Sample index i corresponds to hour = i*2 - 2.
    */
-  private interpolate(ut: number, samples: SolarEphemeris[], key: keyof SolarEphemeris = 'declination'): number {
+  private interpolate(
+    ut: number,
+    samples: SolarEphemeris[],
+    key: keyof SolarEphemeris = 'declination'
+  ): number {
     // samples[0] = -2h, samples[1] = 0h, ..., samples[14] = 26h
     // Convert ut to fractional index in this extended array
     // hour = i*2 - 2  =>  i = (hour + 2) / 2
@@ -128,17 +137,17 @@ export class EphemerisService {
       return samples[clamped]![key];
     }
 
-    const x1 = p1 * 2 - 2;   // actual hour of sample p1
-    const x2 = p2 * 2 - 2;   // actual hour of sample p2
-    const x3 = p3 * 2 - 2;   // actual hour of sample p3
+    const x1 = p1 * 2 - 2; // actual hour of sample p1
+    const x2 = p2 * 2 - 2; // actual hour of sample p2
+    const x3 = p3 * 2 - 2; // actual hour of sample p3
 
     const y1 = samples[p1]![key];
     const y2 = samples[p2]![key];
     const y3 = samples[p3]![key];
 
-    const term1 = y1 * ((ut - x2) * (ut - x3)) / ((x1 - x2) * (x1 - x3));
-    const term2 = y2 * ((ut - x1) * (ut - x3)) / ((x2 - x1) * (x2 - x3));
-    const term3 = y3 * ((ut - x1) * (ut - x2)) / ((x3 - x1) * (x3 - x2));
+    const term1 = (y1 * ((ut - x2) * (ut - x3))) / ((x1 - x2) * (x1 - x3));
+    const term2 = (y2 * ((ut - x1) * (ut - x3))) / ((x2 - x1) * (x2 - x3));
+    const term3 = (y3 * ((ut - x1) * (ut - x2))) / ((x3 - x1) * (x3 - x2));
 
     return term1 + term2 + term3;
   }

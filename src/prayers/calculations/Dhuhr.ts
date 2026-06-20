@@ -8,7 +8,7 @@ export function calculateDhuhr(
   latitude: number,
   longitude: number
 ): IterativeSolverResult | null {
-  const initialEstimate = 12 - (longitude / 15);
+  const initialEstimate = 12 - longitude / 15;
   return solveIteratively(
     date,
     latitude,

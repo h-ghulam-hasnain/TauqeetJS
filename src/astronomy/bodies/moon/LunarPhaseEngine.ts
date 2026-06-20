@@ -1,4 +1,3 @@
-import { cosd } from '../../../internal/trig.js';
 import { normalizeDegrees } from '../../../internal/angles.js';
 import type { SolarEphemeris } from '../sun/SolarPosition.js';
 import type { LunarEphemeris } from './LunarPosition.js';
@@ -6,11 +5,11 @@ import type { LunarEphemeris } from './LunarPosition.js';
 /**
  * Internal lunar phase engine.
  * Computes instantaneous phase quantities and caches intermediate values.
- * 
+ *
  * Provides:
  * - Public: elongation, illuminatedFraction
  * - Internal: phase angle, geocentric separation, and other phase intermediates
- * 
+ *
  * This engine is designed to support future moon visibility algorithms
  * and Hijri calendar calculations without redundant recalculations.
  */
@@ -22,7 +21,7 @@ export class LunarPhaseEngine {
 
   constructor(
     readonly solarEngine: SolarEphemeris,
-    readonly lunarEngine: LunarEphemeris,
+    readonly lunarEngine: LunarEphemeris
   ) {}
 
   /**
@@ -40,10 +39,10 @@ export class LunarPhaseEngine {
 
   /**
    * Illuminated fraction of the Moon's disk (0-1).
-   * 
+   *
    * Uses the standard formula: k = (1 - cos(elongation)) / 2
    * where elongation is folded to [0°, 180°].
-   * 
+   *
    * - 0° elongation (New Moon)  → k = (1 - cos(0°))   / 2 = 0.0  (0%)
    * - 90° elongation (Quarter)  → k = (1 - cos(90°))  / 2 = 0.5  (50%)
    * - 180° elongation (Full)    → k = (1 - cos(180°)) / 2 = 1.0  (100%)

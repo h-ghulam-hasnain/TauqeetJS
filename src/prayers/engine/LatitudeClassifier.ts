@@ -5,12 +5,12 @@ export enum LatitudeCase {
   CONTINUOUS_TWILIGHT = 'CONTINUOUS_TWILIGHT',
   POLAR_NIGHT = 'POLAR_NIGHT',
   POLAR_DAY = 'POLAR_DAY',
-  REGIONAL_FALLBACK = 'REGIONAL_FALLBACK'
+  REGIONAL_FALLBACK = 'REGIONAL_FALLBACK',
 }
 
 /**
  * Classifies the latitude case for a given latitude, solar declination, and twilight angle.
- * 
+ *
  * @param latitude observer's latitude in degrees.
  * @param declination solar declination in degrees.
  * @param twilightAngle twilight angle in degrees (positive value, e.g. 18).

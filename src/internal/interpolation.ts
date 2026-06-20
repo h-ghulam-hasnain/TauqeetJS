@@ -1,4 +1,10 @@
-export function linearInterpolation(x0: number, y0: number, x1: number, y1: number, x: number): number {
+export function linearInterpolation(
+  x0: number,
+  y0: number,
+  x1: number,
+  y1: number,
+  x: number
+): number {
   if (x1 === x0) {
     return y0;
   }

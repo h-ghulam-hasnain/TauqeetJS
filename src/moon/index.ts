@@ -8,12 +8,17 @@ export { getMoonPhase } from './phase/MoonPhase.js';
 export { getMoonAge } from './phase/MoonAge.js';
 export { getMoonIllumination } from './phase/MoonIllumination.js';
 
-export { getNextNewMoon, getPreviousNewMoon, getNextFullMoon, getPreviousFullMoon } from './events/LunarEvents.js';
+export {
+  getNextNewMoon,
+  getPreviousNewMoon,
+  getNextFullMoon,
+  getPreviousFullMoon,
+} from './events/LunarEvents.js';
 
 export type { VisibilityCriterion } from './visibility/VisibilityCriteria.js';
 export { OdehCriterion } from './visibility/OdehCriterion.js';
 export { YallopCriterion } from './visibility/YallopCriterion.js';
 export { HMNAOCriterion } from './visibility/HMNAOCriterion.js';
-export { checkVisibility, checkMultipleCriteria } from './visibility/VisibilityEngine.js';
+export { checkVisibility, checkMultipleCriteria, type CheckVisibilityParams } from './visibility/VisibilityEngine.js';
 
 export { getSunset } from './utils/sunset.js';

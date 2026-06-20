@@ -1,4 +1,3 @@
-import { normalizeDegrees } from '../../internal/angles.js';
 import type { JulianDateComponents, TimeArgument } from '../types/time.js';
 
 export function dateToJulianDay(year: number, month: number, day: number): number {

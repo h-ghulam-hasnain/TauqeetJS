@@ -48,14 +48,7 @@ export function calculateAsr(
   };
 
   // Initial estimate: 15h local time (approx 3 PM local time)
-  const initialEstimate = 15 - (longitude / 15);
+  const initialEstimate = 15 - longitude / 15;
 
-  return solveIteratively(
-    date,
-    latitude,
-    longitude,
-    'evening',
-    targetZenithFn,
-    initialEstimate
-  );
+  return solveIteratively(date, latitude, longitude, 'evening', targetZenithFn, initialEstimate);
 }

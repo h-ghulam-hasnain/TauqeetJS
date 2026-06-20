@@ -4,12 +4,8 @@ import { normalizeDegrees } from '../../internal/angles.js';
 import { julianDayToDate } from '../time/JulianDate.js';
 import type { EventTime } from '../types/phenomena.js';
 
-function isClose(value: number, target: number, tolerance = 1e-6): boolean {
-  return Math.abs(value - target) <= tolerance;
-}
-
 function eventTimeFromJd(julianDay: number): EventTime {
-  let { year, month, day } = julianDayToDate(julianDay);
+  const { year, month, day } = julianDayToDate(julianDay);
   let dayWhole = Math.trunc(day);
   const dayFraction = day - dayWhole;
   const ut = dayFraction * 24;
@@ -78,7 +74,11 @@ export class LunarEventFinder {
     return normalizeDegrees(lunarEngine.apparentLongitude - solarEngine.apparentLongitude);
   }
 
-  private computeUnwrappedElongation(julianDay: number, referenceElongation: number, direction: 'forward' | 'backward'): number {
+  private computeUnwrappedElongation(
+    julianDay: number,
+    referenceElongation: number,
+    direction: 'forward' | 'backward'
+  ): number {
     const elongation = this.computeElongation(julianDay);
     if (direction === 'forward') {
       return elongation < referenceElongation ? elongation + 360 : elongation;
@@ -90,13 +90,17 @@ export class LunarEventFinder {
     julianDay: number,
     targetElongation: number,
     referenceElongation: number,
-    direction: 'forward' | 'backward',
+    direction: 'forward' | 'backward'
   ): number {
     const unwrapped = this.computeUnwrappedElongation(julianDay, referenceElongation, direction);
     return unwrapped - targetElongation;
   }
 
-  private determineTarget(startElongation: number, targetElongation: number, direction: 'forward' | 'backward'): number {
+  private determineTarget(
+    startElongation: number,
+    targetElongation: number,
+    direction: 'forward' | 'backward'
+  ): number {
     if (direction === 'forward') {
       if (startElongation < targetElongation) {
         return targetElongation;
@@ -114,7 +118,7 @@ export class LunarEventFinder {
     startJd: number,
     searchWindow: number,
     direction: 'forward' | 'backward',
-    targetElongation: number,
+    targetElongation: number
   ): EventTime {
     const startElongation = this.computeElongation(startJd);
     const target = this.determineTarget(startElongation, targetElongation, direction);
@@ -133,7 +137,11 @@ export class LunarEventFinder {
     let f1 = this.computeError(j1, target, startElongation, direction);
     let iterations = 0;
 
-    while (Math.sign(f0) === Math.sign(f1) && iterations < 60 && Math.abs(j1 - startJd) <= searchWindow) {
+    while (
+      Math.sign(f0) === Math.sign(f1) &&
+      iterations < 60 &&
+      Math.abs(j1 - startJd) <= searchWindow
+    ) {
       j0 = j1;
       f0 = f1;
       j1 += step;
@@ -144,7 +152,11 @@ export class LunarEventFinder {
     if (Math.sign(f0) === Math.sign(f1)) {
       // Fallback: if no sign change was found within the expected window,
       // widen the search using a one-day step.
-      while (Math.sign(f0) === Math.sign(f1) && iterations < 120 && Math.abs(j1 - startJd) <= searchWindow * 2) {
+      while (
+        Math.sign(f0) === Math.sign(f1) &&
+        iterations < 120 &&
+        Math.abs(j1 - startJd) <= searchWindow * 2
+      ) {
         j0 = j1;
         f0 = f1;
         j1 += step;

@@ -13,7 +13,7 @@ import { HijriEngine } from '../engine/HijriEngine.js';
 export function toGregorian(
   hijriDate: HijriDate,
   method: HijriMethod = HijriMethod.CIVIL,
-  options?: { location?: HijriLocationOptions },
+  options?: { location?: HijriLocationOptions }
 ): Date {
   return new HijriEngine(method, options ?? {}).toGregorian(hijriDate);
 }

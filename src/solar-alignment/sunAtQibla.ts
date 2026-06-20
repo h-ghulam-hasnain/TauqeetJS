@@ -35,7 +35,7 @@ function calculatePolarAngleP(PZdeg: number, PSdeg: number, Zdeg: number): numbe
 
   const candidateSides = [alpha + delta, alpha - delta]
     .map(normalizeAngle)
-    .filter((a) => a >= -1e-12 && a <= 180 + 1e-12);
+    .filter(a => a >= -1e-12 && a <= 180 + 1e-12);
 
   if (candidateSides.length === 0) return NaN;
 
@@ -64,7 +64,12 @@ export function getSunAtQibla(config: SunAlignmentConfig): SunAtQiblaResult {
   const qiblaResult = getQiblaDirection({ latitude, longitude });
   if (qiblaResult.bearing === null) {
     // Exactly at Kaaba, direction is undefined
-    return { qiblaAlignment: null, antiQiblaAlignment: null, rightPerpendicularAlignment: null, leftPerpendicularAlignment: null };
+    return {
+      qiblaAlignment: null,
+      antiQiblaAlignment: null,
+      rightPerpendicularAlignment: null,
+      leftPerpendicularAlignment: null,
+    };
   }
   const bearing = qiblaResult.bearing;
 
@@ -72,18 +77,18 @@ export function getSunAtQibla(config: SunAlignmentConfig): SunAtQiblaResult {
   const year = date.getUTCFullYear();
   const month = date.getUTCMonth() + 1;
   const day = date.getUTCDate();
-  
+
   const j0 = dateToJulianDay(year, month, day);
   const deltaT = calculateDeltaT(year);
 
   // Initial estimate of noon UT
-  let transitUt = 12 - (longitude / 15);
+  let transitUt = 12 - longitude / 15;
   let solarTransit;
 
   // Iterate to find exact solar transit based on Equation of Time
   for (let i = 0; i < 3; i++) {
     solarTransit = computeSolarPosition(j0, transitUt, deltaT);
-    transitUt = 12 - (longitude / 15) - (solarTransit.equationOfTime / 60);
+    transitUt = 12 - longitude / 15 - solarTransit.equationOfTime / 60;
   }
 
   const sunDecAtNoon = solarTransit!.declination;
@@ -93,21 +98,21 @@ export function getSunAtQibla(config: SunAlignmentConfig): SunAtQiblaResult {
     { key: 'qiblaAlignment', value: 0 },
     { key: 'antiQiblaAlignment', value: 180 },
     { key: 'rightPerpendicularAlignment', value: 90 },
-    { key: 'leftPerpendicularAlignment', value: -90 }
+    { key: 'leftPerpendicularAlignment', value: -90 },
   ] as const;
 
   const result: Record<string, SolarTimeField | null> = {
     qiblaAlignment: null,
     antiQiblaAlignment: null,
     rightPerpendicularAlignment: null,
-    leftPerpendicularAlignment: null
+    leftPerpendicularAlignment: null,
   };
 
   const zuhrDate = new Date(Date.UTC(year, month - 1, day, 0, 0, 0));
 
-  offsets.forEach((offset) => {
+  offsets.forEach(offset => {
     const currentDir = normalizeAngle(bearing + offset.value);
-    
+
     let currentDec = sunDecAtNoon;
     let currentEqT = eqTAtNoon;
     let eventUt = transitUt;
@@ -126,8 +131,8 @@ export function getSunAtQibla(config: SunAlignmentConfig): SunAtQiblaResult {
 
       isSolvable = true;
       const timeOffset = angleP / 15;
-      
-      const baseNoonUt = 12 - (longitude / 15) - (currentEqT / 60);
+
+      const baseNoonUt = 12 - longitude / 15 - currentEqT / 60;
       eventUt = currentDir > 180 ? baseNoonUt + timeOffset : baseNoonUt - timeOffset;
 
       // Re-evaluate solar position exactly at the newly estimated event time
@@ -140,7 +145,7 @@ export function getSunAtQibla(config: SunAlignmentConfig): SunAtQiblaResult {
       const finalTimeDecimal = eventUt;
 
       const time = new Date(zuhrDate.getTime());
-      
+
       const hours = Math.floor(finalTimeDecimal);
       const minutes = Math.floor((finalTimeDecimal - hours) * 60);
       const seconds = Math.floor(((finalTimeDecimal - hours) * 60 - minutes) * 60);
@@ -149,7 +154,7 @@ export function getSunAtQibla(config: SunAlignmentConfig): SunAtQiblaResult {
 
       result[offset.key] = {
         time,
-        local: formatLocalTime(time, timeZone)
+        local: formatLocalTime(time, timeZone),
       };
     }
   });
@@ -172,7 +177,7 @@ function formatLocalTime(date: Date, timeZone?: string | number): string {
         hour: '2-digit',
         minute: '2-digit',
         second: '2-digit',
-        timeZone
+        timeZone,
       }).format(date);
     } else {
       return formatManualOffset(date, timeZone);
@@ -184,7 +189,7 @@ function formatLocalTime(date: Date, timeZone?: string | number): string {
 
 function formatManualOffset(date: Date, offsetHours: number): string {
   const localTime = new Date(date.getTime() + offsetHours * 3600000);
-  const hours   = localTime.getUTCHours();
+  const hours = localTime.getUTCHours();
   const minutes = localTime.getUTCMinutes();
   const seconds = localTime.getUTCSeconds();
   const ampm = hours >= 12 ? 'PM' : 'AM';

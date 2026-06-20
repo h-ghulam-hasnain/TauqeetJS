@@ -1,4 +1,9 @@
-import type { PrayerConfig, CoordinateInput, ElevationInput, PrayerMethodConfig } from '../types/index.js';
+import type {
+  PrayerConfig,
+  CoordinateInput,
+  ElevationInput,
+  PrayerMethodConfig,
+} from '../types/index.js';
 import { BUILT_IN_METHODS } from '../config/methodRegistry.js';
 import { Madhab } from '../config/madhabs.js';
 
@@ -13,9 +18,16 @@ export interface ValidatedPrayerConfig {
   readonly temperatureC: number;
   readonly pressureMbar: number;
   readonly resolveTimezoneAsync?: (lat: number, lon: number) => Promise<string> | string;
-  readonly adjustments: Record<'fajr' | 'sunrise' | 'dhahwaKubra' | 'dhuhr' | 'asr' | 'maghrib' | 'isha', number>;
+  readonly adjustments: Record<
+    'fajr' | 'sunrise' | 'dhahwaKubra' | 'dhuhr' | 'asr' | 'maghrib' | 'isha',
+    number
+  >;
   readonly withMetadata: boolean;
-  readonly highLatitudeStrategy: 'AngleBased' | 'MiddleOfNight' | 'SeventhOfNight' | 'NearestLatitude';
+  readonly highLatitudeStrategy:
+    | 'AngleBased'
+    | 'MiddleOfNight'
+    | 'SeventhOfNight'
+    | 'NearestLatitude';
   readonly regionalFallbackLatitude: number;
 }
 
@@ -40,7 +52,13 @@ function parseCoordinate(input: CoordinateInput | undefined, isLat: boolean): nu
     return val;
   }
 
-  if (typeof input === 'object' && 'degrees' in input && 'minutes' in input && 'seconds' in input && 'direction' in input) {
+  if (
+    typeof input === 'object' &&
+    'degrees' in input &&
+    'minutes' in input &&
+    'seconds' in input &&
+    'direction' in input
+  ) {
     const dir = input.direction.toUpperCase();
     if (isLat && dir !== 'N' && dir !== 'S') return NaN;
     if (!isLat && dir !== 'E' && dir !== 'W') return NaN;
@@ -129,8 +147,17 @@ export function validatePrayerConfig(config: PrayerConfig): ValidationResult {
     }
 
     const pressure = config.pressureMbar ?? 1010;
-    if (typeof pressure !== 'number' || isNaN(pressure) || !Number.isInteger(pressure) || pressure < 500 || pressure > 1100) {
-      return { success: false, error: 'Pressure must be an integer between 500 mbar and 1100 mbar' };
+    if (
+      typeof pressure !== 'number' ||
+      isNaN(pressure) ||
+      !Number.isInteger(pressure) ||
+      pressure < 500 ||
+      pressure > 1100
+    ) {
+      return {
+        success: false,
+        error: 'Pressure must be an integer between 500 mbar and 1100 mbar',
+      };
     }
 
     // Date normalization
@@ -153,37 +180,81 @@ export function validatePrayerConfig(config: PrayerConfig): ValidationResult {
       }
     }
 
-    // Method parsing
-    let methodConfig: PrayerMethodConfig;
-    if (config.method === undefined) {
-      methodConfig = BUILT_IN_METHODS.Karachi!;
-    } else if (typeof config.method === 'string') {
-      const match = BUILT_IN_METHODS[config.method];
-      if (!match) {
-        return { success: false, error: `Unknown method preset: ${config.method}` };
-      }
-      methodConfig = match!;
-    } else if (typeof config.method === 'object') {
-      const mc = config.method;
-      if (typeof mc.id !== 'string' || typeof mc.name !== 'string' || typeof mc.fajrAngle !== 'number' || isNaN(mc.fajrAngle)) {
-        return { success: false, error: 'Custom method config is missing required fields' };
-      }
-      methodConfig = mc;
-    } else {
-      return { success: false, error: 'Invalid method configuration format' };
-    }
-
-    // Madhab
+    // Madhab (Default: Hanafi)
     let madhab: Madhab = Madhab.HANAFI;
-    if (config.madhab !== undefined) {
+    if (config.madhab !== undefined && config.madhab !== null) {
       const mStr = String(config.madhab).toLowerCase();
       if (mStr === 'hanafi') {
         madhab = Madhab.HANAFI;
       } else if (mStr === 'shafi' || mStr === 'shafii') {
         madhab = Madhab.SHAFI;
+      } else if (mStr === 'maliki') {
+        madhab = Madhab.MALIKI;
+      } else if (mStr === 'hanbali') {
+        madhab = Madhab.HANBALI;
+      } else if (mStr === 'jaafari' || mStr === 'jafari') {
+        madhab = Madhab.JAAFARI;
       } else {
         return { success: false, error: `Invalid madhab: ${config.madhab}` };
       }
+    }
+
+    // Method parsing
+    const allowedMethods = BUILT_IN_METHODS[madhab];
+    let methodConfig: PrayerMethodConfig;
+    if (config.method === undefined || config.method === null) {
+      const defaultMethod = Object.values(allowedMethods).find(m => m.isDefault);
+      if (!defaultMethod) {
+        return { success: false, error: `No default method found for madhab: ${madhab}` };
+      }
+      methodConfig = defaultMethod;
+    } else if (typeof config.method === 'string') {
+      const match =
+        allowedMethods[config.method] ||
+        Object.values(allowedMethods).find(m => m.id === config.method);
+      if (!match) {
+        return {
+          success: false,
+          error: `Unknown method preset: ${config.method} for madhab: ${madhab}`,
+        };
+      }
+      methodConfig = match;
+    } else if (typeof config.method === 'object') {
+      const mc = config.method;
+      if (
+        typeof mc.id !== 'string' ||
+        typeof mc.name !== 'string' ||
+        typeof mc.fajrAngle !== 'number' ||
+        isNaN(mc.fajrAngle)
+      ) {
+        return { success: false, error: 'Custom method config is missing required fields' };
+      }
+      methodConfig = {
+        id: mc.id,
+        name: mc.name,
+        fajrAngle: mc.fajrAngle,
+        ishaAngle: mc.ishaAngle !== undefined ? mc.ishaAngle : null,
+        ishaMinutes: mc.ishaMinutes,
+        maghribAngle: mc.maghribAngle,
+        maghribMinutes: mc.maghribMinutes,
+        asrShadowMultiplier:
+          mc.asrShadowMultiplier !== undefined
+            ? mc.asrShadowMultiplier
+            : madhab === Madhab.HANAFI
+              ? 2
+              : 1,
+        twilightType:
+          mc.twilightType !== undefined
+            ? mc.twilightType
+            : madhab === Madhab.HANAFI
+              ? 'White'
+              : 'Red',
+        description: mc.description || 'Custom Method Configuration',
+        source: mc.source || 'Custom',
+        isDefault: mc.isDefault,
+      };
+    } else {
+      return { success: false, error: 'Invalid method configuration format' };
     }
 
     // Elevation
@@ -195,7 +266,10 @@ export function validatePrayerConfig(config: PrayerConfig): ValidationResult {
     }
 
     // Adjustments
-    const adjustments: Record<'fajr' | 'sunrise' | 'dhahwaKubra' | 'dhuhr' | 'asr' | 'maghrib' | 'isha', number> = {
+    const adjustments: Record<
+      'fajr' | 'sunrise' | 'dhahwaKubra' | 'dhuhr' | 'asr' | 'maghrib' | 'isha',
+      number
+    > = {
       fajr: 0,
       sunrise: 0,
       dhahwaKubra: 0,
@@ -223,7 +297,11 @@ export function validatePrayerConfig(config: PrayerConfig): ValidationResult {
     }
 
     const regionalFallbackLatitude = config.regionalFallbackLatitude ?? 45;
-    if (isNaN(regionalFallbackLatitude) || regionalFallbackLatitude < -90 || regionalFallbackLatitude > 90) {
+    if (
+      isNaN(regionalFallbackLatitude) ||
+      regionalFallbackLatitude < -90 ||
+      regionalFallbackLatitude > 90
+    ) {
       return { success: false, error: 'Regional fallback latitude must be between -90 and 90' };
     }
 
@@ -243,7 +321,9 @@ export function validatePrayerConfig(config: PrayerConfig): ValidationResult {
         withMetadata: !!config.withMetadata,
         highLatitudeStrategy: highLatitudeStrategy as any,
         regionalFallbackLatitude,
-        ...(config.resolveTimezoneAsync ? { resolveTimezoneAsync: config.resolveTimezoneAsync } : {})
+        ...(config.resolveTimezoneAsync
+          ? { resolveTimezoneAsync: config.resolveTimezoneAsync }
+          : {}),
       },
     };
   } catch (e: any) {

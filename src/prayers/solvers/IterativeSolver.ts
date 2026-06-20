@@ -19,7 +19,9 @@ export interface IterativeSolverResult {
  * separately to getSolarEphemeris so cache always stays on the prayer day.
  */
 export function toDate(baseDate: Date, utcHours: number): Date {
-  const d = new Date(Date.UTC(baseDate.getUTCFullYear(), baseDate.getUTCMonth(), baseDate.getUTCDate(), 0, 0, 0));
+  const d = new Date(
+    Date.UTC(baseDate.getUTCFullYear(), baseDate.getUTCMonth(), baseDate.getUTCDate(), 0, 0, 0)
+  );
   if (isNaN(utcHours)) return new Date(NaN);
 
   // Convert hours to milliseconds and add directly to midnight of the base day.
@@ -46,7 +48,10 @@ export function solveIteratively(
   side: 'morning' | 'evening' | 'transit',
   targetZenithFn: (ephemeris: SolarEphemeris) => number,
   initialEstimateHours: number,
-  options: { maxIterations: number; convergenceSeconds: number } = { maxIterations: 15, convergenceSeconds: 0.1 }
+  options: { maxIterations: number; convergenceSeconds: number } = {
+    maxIterations: 15,
+    convergenceSeconds: 0.1,
+  }
 ): IterativeSolverResult | null {
   // Compute the anchor Julian Day once for the entire solver run.
   // This ensures all ephemeris cache lookups stay on the prayer day,
@@ -71,7 +76,7 @@ export function solveIteratively(
     const ephemeris = ephemerisService.getSolarEphemeris(checkDate, baseDateJd);
     lastEphemeris = ephemeris;
 
-    const transitHours = 12 - (longitude / 15) - (ephemeris.equationOfTime / 60);
+    const transitHours = 12 - longitude / 15 - ephemeris.equationOfTime / 60;
 
     if (side === 'transit') {
       currentUtcHours = transitHours;
@@ -105,6 +110,6 @@ export function solveIteratively(
     equationOfTime: lastEphemeris.equationOfTime,
     semidiameter: lastEphemeris.semidiameter,
     horizontalParallax: lastEphemeris.horizontalParallax,
-    iterations
+    iterations,
   };
 }

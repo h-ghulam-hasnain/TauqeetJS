@@ -6,7 +6,7 @@ import { calculatePrayerTimesInternal, PrayerCalculationError } from './engine/P
 export { resolveTimeZoneSync } from './engine/PrayerEngine.js';
 export { Madhab } from './config/madhabs.js';
 export { BUILT_IN_METHODS } from './config/methodRegistry.js';
-export { formatPrayerTimes } from './formatter/index.js';
+export * from './formatter/index.js';
 
 export * from './types/index.js';
 
@@ -42,7 +42,7 @@ export async function calculatePrayerTimesAsync(config: PrayerConfig): Promise<P
       );
       return calculatePrayerTimesInternal({
         ...validatedConfig,
-        timeZone: resolvedTz
+        timeZone: resolvedTz,
       });
     } catch (err: unknown) {
       throw new PrayerCalculationError(`Timezone resolution failed: ${toMessage(err)}`);
@@ -73,7 +73,9 @@ export function getPrayerTimes(config: PrayerConfig): Result<PrayerTimesResult> 
 /**
  * Legacy-compatible asynchronous API. Returns a Result wrapper instead of throwing.
  */
-export async function getPrayerTimesAsync(config: PrayerConfig): Promise<Result<PrayerTimesResult>> {
+export async function getPrayerTimesAsync(
+  config: PrayerConfig
+): Promise<Result<PrayerTimesResult>> {
   try {
     const data = await calculatePrayerTimesAsync(config);
     return Success(data);

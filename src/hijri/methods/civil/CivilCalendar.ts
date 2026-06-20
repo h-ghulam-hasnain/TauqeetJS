@@ -1,6 +1,6 @@
 import type { HijriDate } from '../../types/HijriDate.js';
 import { HIJRI_EPOCH_JD, dateToJD, jdToDate } from '../../core/HijriEpoch.js';
-import { getCivilMonthLength, isCivilLeapYear } from '../../core/HijriMonthLength.js';
+import { getCivilMonthLength } from '../../core/HijriMonthLength.js';
 import { getCivilYearLength, daysBeforeYear } from '../../core/HijriYearLength.js';
 
 /**

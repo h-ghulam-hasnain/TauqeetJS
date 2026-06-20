@@ -12,7 +12,7 @@ describe('Prayer Module: Formula Invariants & Mathematical Logic', () => {
         lat,
         long,
         date: baseDate,
-        method: 'Karachi'
+        method: 'Karachi',
       });
 
       expect(result.success).toBe(true);
@@ -43,7 +43,7 @@ describe('Prayer Module: Formula Invariants & Mathematical Logic', () => {
         lat,
         long,
         date: baseDate,
-        timeZone: 5
+        timeZone: 5,
       });
 
       expect(result.success).toBe(true);
@@ -59,7 +59,7 @@ describe('Prayer Module: Formula Invariants & Mathematical Logic', () => {
 
   describe('Asr Madhab Shadow Factor Invariant', () => {
     it('should ensure Hanafi Asr (2x shadow) is strictly later than Shafi Asr (1x shadow) by > 30 minutes', () => {
-      const shafi  = getPrayerTimes({ lat, long, date: baseDate, madhab: 'Shafi' });
+      const shafi = getPrayerTimes({ lat, long, date: baseDate, madhab: 'Shafi' });
       const hanafi = getPrayerTimes({ lat, long, date: baseDate, madhab: 'Hanafi' });
 
       expect(shafi.success).toBe(true);
@@ -110,9 +110,9 @@ describe('Prayer Module: Formula Invariants & Mathematical Logic', () => {
         long,
         date: baseDate,
         adjustments: {
-          fajr: 5,   // shift Fajr 5 mins later
-          dhuhr: -3  // shift Dhuhr 3 mins earlier
-        }
+          fajr: 5, // shift Fajr 5 mins later
+          dhuhr: -3, // shift Dhuhr 3 mins earlier
+        },
       });
 
       expect(noAdjust.success).toBe(true);
@@ -139,7 +139,7 @@ describe('Prayer Module: Formula Invariants & Mathematical Logic', () => {
         lat,
         long,
         date: baseDate,
-        withMetadata: true
+        withMetadata: true,
       });
 
       expect(result.success).toBe(true);

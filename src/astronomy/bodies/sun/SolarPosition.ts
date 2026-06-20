@@ -33,7 +33,11 @@ export class SolarEphemeris {
   private _semidiameter?: number;
   private _horizontalParallax?: number;
 
-  constructor(readonly j: number, readonly ut: number, readonly deltaT: number) {}
+  constructor(
+    readonly j: number,
+    readonly ut: number,
+    readonly deltaT: number
+  ) {}
 
   private get timeArgs() {
     if (!this._timeArguments) {
@@ -80,21 +84,24 @@ export class SolarEphemeris {
 
   private get L_prime() {
     if (this._L_prime === undefined) {
-      this._L_prime = normalizeDegrees(this.L_sun - this.timeArgs.te * (1.397 + 0.00031 * this.timeArgs.te));
+      this._L_prime = normalizeDegrees(
+        this.L_sun - this.timeArgs.te * (1.397 + 0.00031 * this.timeArgs.te)
+      );
     }
     return this._L_prime;
   }
 
   private get Delta_L() {
     if (this._Delta_L === undefined) {
-      this._Delta_L = (-0.09033 + 0.03916 * (cosd(this.L_prime) + sind(this.L_prime)) * tand(this.B_corr)) / 3600;
+      this._Delta_L =
+        (-0.09033 + 0.03916 * (cosd(this.L_prime) + sind(this.L_prime)) * tand(this.B_corr)) / 3600;
     }
     return this._Delta_L;
   }
 
   private get Delta_B() {
     if (this._Delta_B === undefined) {
-      this._Delta_B = 0.03916 * (cosd(this.L_prime) - sind(this.L_prime)) / 3600;
+      this._Delta_B = (0.03916 * (cosd(this.L_prime) - sind(this.L_prime))) / 3600;
     }
     return this._Delta_B;
   }
@@ -124,9 +131,10 @@ export class SolarEphemeris {
     if (this._RA === undefined) {
       this._RA = normalizeDegrees(
         atand2(
-          sind(this.apparentLongitude) * cosd(this.nutation.eps) - tand(this.B_corr) * sind(this.nutation.eps),
-          cosd(this.apparentLongitude),
-        ),
+          sind(this.apparentLongitude) * cosd(this.nutation.eps) -
+            tand(this.B_corr) * sind(this.nutation.eps),
+          cosd(this.apparentLongitude)
+        )
       );
     }
     return this._RA;
@@ -135,7 +143,8 @@ export class SolarEphemeris {
   get declination() {
     if (this._Dec === undefined) {
       this._Dec = asind(
-        sind(this.B_corr) * cosd(this.nutation.eps) + cosd(this.B_corr) * sind(this.nutation.eps) * sind(this.apparentLongitude),
+        sind(this.B_corr) * cosd(this.nutation.eps) +
+          cosd(this.B_corr) * sind(this.nutation.eps) * sind(this.apparentLongitude)
       );
     }
     return this._Dec;
@@ -144,7 +153,9 @@ export class SolarEphemeris {
   get gmst() {
     if (this._GMST === undefined) {
       this._GMST = normalizeDegrees(
-        280.46061837 + 360.98564736629 * (this.timeArgs.jd - 2451545) + this.timeArgs.t * this.timeArgs.t * (0.000387933 - this.timeArgs.t / 38710000),
+        280.46061837 +
+          360.98564736629 * (this.timeArgs.jd - 2451545) +
+          this.timeArgs.t * this.timeArgs.t * (0.000387933 - this.timeArgs.t / 38710000)
       );
     }
     return this._GMST;

@@ -3,7 +3,11 @@ import type { HighLatitudeStrategy, HighLatitudeContext } from './HighLatitudeSt
 export class SeventhOfNightStrategy implements HighLatitudeStrategy {
   readonly strategyName = 'SeventhOfNight';
 
-  private getNightDuration(ctx: HighLatitudeContext): { safeSunrise: Date; safeSunset: Date; nightDuration: number } {
+  private getNightDuration(ctx: HighLatitudeContext): {
+    safeSunrise: Date;
+    safeSunset: Date;
+    nightDuration: number;
+  } {
     const safeDhuhr = ctx.dhuhr ?? new Date(ctx.baseDate.getTime());
     const safeSunrise = ctx.sunrise ?? new Date(safeDhuhr.getTime() - 6 * 3600000);
     const safeSunset = ctx.sunset ?? new Date(safeDhuhr.getTime() + 6 * 3600000);

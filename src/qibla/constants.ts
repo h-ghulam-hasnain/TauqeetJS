@@ -1,7 +1,7 @@
 /** Kaaba (Masjid al-Haram) geographic coordinates. */
 export const MECCA = Object.freeze({
-  latitude: 21.4224870000,
-  longitude: 39.8262060000,
+  latitude: 21.422487,
+  longitude: 39.826206,
 } as const);
 
 /** Mean radius of the Earth in kilometres (IAU standard). */
