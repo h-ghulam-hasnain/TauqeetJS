@@ -13,6 +13,7 @@
   "files": [
     "dist",
     "README.md",
+    "CHANGELOG.md",
     "LICENSE"
   ],
   "exports": {
@@ -23,12 +24,57 @@
         "types": "./dist/index.d.cts",
         "default": "./dist/index.cjs"
       }
+    },
+    "./prayers": {
+      "types": "./dist/prayers/index.d.ts",
+      "import": "./dist/prayers/index.js",
+      "require": {
+        "types": "./dist/prayers/index.d.cts",
+        "default": "./dist/prayers/index.cjs"
+      }
+    },
+    "./qibla": {
+      "types": "./dist/qibla/index.d.ts",
+      "import": "./dist/qibla/index.js",
+      "require": {
+        "types": "./dist/qibla/index.d.cts",
+        "default": "./dist/qibla/index.cjs"
+      }
+    },
+    "./moon": {
+      "types": "./dist/moon/index.d.ts",
+      "import": "./dist/moon/index.js",
+      "require": {
+        "types": "./dist/moon/index.d.cts",
+        "default": "./dist/moon/index.cjs"
+      }
+    },
+    "./hijri": {
+      "types": "./dist/hijri/index.d.ts",
+      "import": "./dist/hijri/index.js",
+      "require": {
+        "types": "./dist/hijri/index.d.cts",
+        "default": "./dist/hijri/index.cjs"
+      }
+    },
+    "./solar-alignment": {
+      "types": "./dist/solar-alignment/index.d.ts",
+      "import": "./dist/solar-alignment/index.js",
+      "require": {
+        "types": "./dist/solar-alignment/index.d.cts",
+        "default": "./dist/solar-alignment/index.cjs"
+      }
     }
   },
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
     "test": "vitest run",
+    "lint": "eslint src tests",
+    "lint:fix": "eslint src tests --fix",
+    "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
+    "format:check": "prettier --check \"src/**/*.ts\" \"tests/**/*.ts\"",
+    "docs": "typedoc",
     "prepublishOnly": "npm run build && npm test"
   },
   "keywords": [
@@ -57,7 +103,13 @@
     "url": "https://github.com/h-ghulam-hasnain/tauqeet-js/issues"
   },
   "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
+    "eslint": "^9.0.0",
+    "eslint-config-prettier": "^10.0.0",
+    "prettier": "^3.0.0",
     "tsup": "^8.5.1",
+    "typedoc": "^0.28.19",
     "typescript": "^6.0.0",
     "vitest": "^4.1.8"
   }

@@ -11,7 +11,7 @@ describe('Prayer Module: Extreme Edge Cases & Boundary Values', () => {
       const result = getPrayerTimes({
         lat: 89.9,
         long: 0,
-        date: equinox
+        date: equinox,
       });
       // At equinox, near poles can be calculated or might return success with special status.
       expect(result.success).toBe(true);
@@ -24,7 +24,7 @@ describe('Prayer Module: Extreme Edge Cases & Boundary Values', () => {
       const result = getPrayerTimes({
         lat: -89.9,
         long: 0,
-        date: equinox
+        date: equinox,
       });
       expect(result.success).toBe(true);
     });
@@ -33,7 +33,7 @@ describe('Prayer Module: Extreme Edge Cases & Boundary Values', () => {
       const result = getPrayerTimes({
         lat: 0,
         long: 0,
-        date: equinox
+        date: equinox,
       });
       expect(result.success).toBe(true);
       if (result.success) {
@@ -49,7 +49,7 @@ describe('Prayer Module: Extreme Edge Cases & Boundary Values', () => {
       const result = getPrayerTimes({
         lat: 69.6492,
         long: 18.9553,
-        date: summerSolstice
+        date: summerSolstice,
       });
 
       expect(result.success).toBe(true);
@@ -66,7 +66,7 @@ describe('Prayer Module: Extreme Edge Cases & Boundary Values', () => {
       const result = getPrayerTimes({
         lat: 69.6492,
         long: 18.9553,
-        date: winterSolstice
+        date: winterSolstice,
       });
 
       expect(result.success).toBe(true);

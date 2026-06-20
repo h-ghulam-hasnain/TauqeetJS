@@ -3,7 +3,7 @@
 **A high-precision TypeScript library for Islamic astronomical calculations.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5%2B-blue)](https://www.typescriptlang.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5%2B-blue.svg)](https://www.typescriptlang.org/)
 
 > 📖 **Interactive documentation & live API explorer:** [https://tauqeet-js.web.app](https://tauqeet-js.web.app)
 
@@ -50,7 +50,7 @@
 npm install tauqeet-js
 ```
 
-> **Note:** The package is currently in active development. See [CONTRIBUTING.md](CONTRIBUTING.md) for building from source.
+> **Note:** The package is currently in active development for v1.2.0. See [CONTRIBUTING.md](CONTRIBUTING.md) for building from source.
 
 ---
 

@@ -1,6 +1,4 @@
-import { cosd } from '../../../internal/trig.js';
 import { kahanSum } from '../../../internal/polynomial.js';
-import { normalizeDegrees } from '../../../internal/angles.js';
 import {
   L0_A,
   L0_B,
@@ -43,7 +41,12 @@ export interface EarthHeliocentricState {
   readonly radius: number;
 }
 
-function seriesSum(a: readonly number[], b: readonly number[], c: readonly number[], tau: number): number {
+function seriesSum(
+  a: readonly number[],
+  b: readonly number[],
+  c: readonly number[],
+  tau: number
+): number {
   const len = Math.min(a.length, b.length, c.length);
   const values: number[] = [];
   for (let i = 0; i < len; i += 1) {
@@ -62,7 +65,9 @@ export function computeEarthHeliocentricState(tau: number): EarthHeliocentricSta
   const sumL3 = seriesSum(L3_A, L3_B, L3_C, tau);
   const sumL4 = seriesSum(L4_A, L4_B, L4_C, tau);
   const sumL5 = Math.cos(3.14);
-  const longitude = (sumL0 + tau * (sumL1 + tau * (sumL2 + tau * (sumL3 + tau * (sumL4 + tau * sumL5))))) / 100000000;
+  const longitude =
+    (sumL0 + tau * (sumL1 + tau * (sumL2 + tau * (sumL3 + tau * (sumL4 + tau * sumL5))))) /
+    100000000;
 
   const sumB0 = seriesSum(B0_A, B0_B, B0_C, tau);
   const sumB1 = seriesSum(B1_A, B1_B, B1_C, tau);

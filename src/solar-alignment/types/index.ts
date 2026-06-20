@@ -23,11 +23,11 @@ export interface SolarTimeField {
 /** Times when the sun aligns with the Qibla direction and its three offsets. */
 export interface SunAtQiblaResult {
   /** Time when sun azimuth equals the Qibla bearing (sun faces Kaaba). */
-  readonly qiblaAlignment:    SolarTimeField | null;
+  readonly qiblaAlignment: SolarTimeField | null;
   /** Time when sun azimuth equals Qibla + 180° (shadow faces Kaaba). */
   readonly antiQiblaAlignment: SolarTimeField | null;
   /** Time when sun azimuth equals Qibla + 90° (Kaaba is to the right). */
-  readonly rightPerpendicularAlignment:    SolarTimeField | null;
+  readonly rightPerpendicularAlignment: SolarTimeField | null;
   /** Time when sun azimuth equals Qibla – 90° (Kaaba is to the left). */
-  readonly leftPerpendicularAlignment:     SolarTimeField | null;
+  readonly leftPerpendicularAlignment: SolarTimeField | null;
 }

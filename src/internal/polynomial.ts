@@ -4,7 +4,7 @@ export function kahanSum(values: number[]): number {
   for (const value of values) {
     const y = value - c;
     const t = sum + y;
-    c = (t - sum) - y;
+    c = t - sum - y;
     sum = t;
   }
   return sum;

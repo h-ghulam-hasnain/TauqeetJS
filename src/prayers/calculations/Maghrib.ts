@@ -10,9 +10,9 @@ export function calculateMaghrib(
   date: Date,
   latitude: number,
   longitude: number,
-  elevationMeters: number,
-  temperatureC: number,
-  pressureMbar: number,
+  _elevationMeters: number,
+  _temperatureC: number,
+  _pressureMbar: number,
   method: PrayerMethodConfig,
   sunsetResult: IterativeSolverResult | null
 ): IterativeSolverResult | null {
@@ -22,22 +22,15 @@ export function calculateMaghrib(
     if (!sunsetResult) return null;
     return {
       ...sunsetResult,
-      time: new Date(sunsetResult.time.getTime() + maghribMinutes * 60000)
+      time: new Date(sunsetResult.time.getTime() + maghribMinutes * 60000),
     };
   }
 
   // 2. If Maghrib is defined by a specific twilight angle
   if (method.maghribAngle !== undefined && method.maghribAngle !== null) {
     const targetZenithFn = () => 90 + method.maghribAngle!;
-    const initialEstimate = 18 - (longitude / 15);
-    return solveIteratively(
-      date,
-      latitude,
-      longitude,
-      'evening',
-      targetZenithFn,
-      initialEstimate
-    );
+    const initialEstimate = 18 - longitude / 15;
+    return solveIteratively(date, latitude, longitude, 'evening', targetZenithFn, initialEstimate);
   }
 
   // 3. Default: Maghrib is Sunset itself
@@ -59,17 +52,10 @@ export function calculateSunset(
   const refraction = computeRefraction(0, temperatureC, pressureMbar);
 
   const targetZenithFn = (ephemeris: any) => {
-    return 90 + refraction + (ephemeris.semidiameter / 60) - (ephemeris.horizontalParallax / 60) + dip;
+    return 90 + refraction + ephemeris.semidiameter / 60 - ephemeris.horizontalParallax / 60 + dip;
   };
 
-  const initialEstimate = 18 - (longitude / 15);
+  const initialEstimate = 18 - longitude / 15;
 
-  return solveIteratively(
-    date,
-    latitude,
-    longitude,
-    'evening',
-    targetZenithFn,
-    initialEstimate
-  );
+  return solveIteratively(date, latitude, longitude, 'evening', targetZenithFn, initialEstimate);
 }

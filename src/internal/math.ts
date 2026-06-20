@@ -13,8 +13,10 @@ export function toDegrees(rad: number): number {
  * @returns Distance in kilometres.
  */
 export function haversineDistance(
-  lat1: number, lon1: number,
-  lat2: number, lon2: number,
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number,
   radiusKm = 6371
 ): number {
   const φ1 = toRadians(lat1);
@@ -22,9 +24,7 @@ export function haversineDistance(
   const Δφ = toRadians(lat2 - lat1);
   const Δλ = toRadians(lon2 - lon1);
 
-  const a =
-    Math.sin(Δφ / 2) ** 2 +
-    Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) ** 2;
+  const a = Math.sin(Δφ / 2) ** 2 + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) ** 2;
 
   return radiusKm * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
@@ -34,8 +34,10 @@ export function haversineDistance(
  * @returns Bearing in degrees, 0..360 (clockwise from true north).
  */
 export function sphericalLawOfCosinesBearing(
-  lat1: number, lon1: number,
-  lat2: number, lon2: number
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number
 ): number {
   const φ1 = toRadians(lat1);
   const φ2 = toRadians(lat2);
@@ -51,17 +53,11 @@ export function sphericalLawOfCosinesBearing(
  * Rhumb-line (loxodromic) bearing from point 1 to point 2.
  * @returns Bearing in degrees, 0..360.
  */
-export function rhumbLineBearing(
-  lat1: number, lon1: number,
-  lat2: number, lon2: number
-): number {
+export function rhumbLineBearing(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const φ1 = toRadians(lat1);
   const φ2 = toRadians(lat2);
 
-  const Δφ = Math.log(
-    Math.tan(Math.PI / 4 + φ2 / 2) /
-    Math.tan(Math.PI / 4 + φ1 / 2)
-  );
+  const Δφ = Math.log(Math.tan(Math.PI / 4 + φ2 / 2) / Math.tan(Math.PI / 4 + φ1 / 2));
   const Δλ = toRadians(lon2 - lon1);
 
   return ((toDegrees(Math.atan2(Δλ, Δφ)) % 360) + 360) % 360;

@@ -1,11 +1,7 @@
 import type { HijriDate } from '../../types/HijriDate.js';
 import type { HijriLocationOptions } from '../../types/HijriCalendarResult.js';
-import { getPreviousNewMoon, getNextNewMoon, checkVisibility, VisibilityMethod } from '../../../moon/index.js';
-import { dateToJD, jdToDate } from '../../core/HijriEpoch.js';
+import { checkVisibility, VisibilityMethod } from '../../../moon/index.js';
 import { ConjunctionCalendar } from '../astronomical/ConjunctionCalendar.js';
-import { CivilCalendar } from '../civil/CivilCalendar.js';
-
-const MEAN_SYNODIC_MONTH = 29.530588861;
 
 /**
  * Crescent-visibility-based Hijri calendar.
@@ -24,7 +20,6 @@ const MEAN_SYNODIC_MONTH = 29.530588861;
  */
 export class VisibilityCalendar {
   private conjunction = new ConjunctionCalendar();
-  private civil = new CivilCalendar();
 
   constructor(private readonly location: HijriLocationOptions) {}
 
@@ -50,8 +45,7 @@ export class VisibilityCalendar {
     const adjustment = wasVisible ? -1 : 0;
     const adjustedStart = new Date(currentMonthStart.getTime() + adjustment * 24 * 3600000);
 
-    const day =
-      Math.floor((date.getTime() - adjustedStart.getTime()) / (24 * 3600000)) + 1;
+    const day = Math.floor((date.getTime() - adjustedStart.getTime()) / (24 * 3600000)) + 1;
 
     return { ...conjResult, day: Math.max(1, day) };
   }

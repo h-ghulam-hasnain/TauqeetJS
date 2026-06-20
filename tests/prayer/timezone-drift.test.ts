@@ -3,7 +3,7 @@ import { getPrayerTimes, getPrayerTimesAsync } from '../../src/prayers/index.js'
 
 describe('Prayer Module: Timezone Resolution & Drift Verification', () => {
   const lat = 40.7128;
-  const long = -74.0060;
+  const long = -74.006;
   const baseDate = new Date(Date.UTC(2026, 4, 18)); // May 18, 2026
 
   describe('Explicit Sync Timezone Resolution', () => {
@@ -12,7 +12,7 @@ describe('Prayer Module: Timezone Resolution & Drift Verification', () => {
         lat,
         long,
         date: baseDate,
-        timeZone: 0
+        timeZone: 0,
       });
       expect(result.success).toBe(true);
       if (result.success) {
@@ -28,7 +28,7 @@ describe('Prayer Module: Timezone Resolution & Drift Verification', () => {
         lat: 24.8607,
         long: 67.0011,
         date: baseDate,
-        timeZone: 5
+        timeZone: 5,
       });
       expect(result.success).toBe(true);
       if (result.success) {
@@ -42,7 +42,7 @@ describe('Prayer Module: Timezone Resolution & Drift Verification', () => {
         lat,
         long,
         date: baseDate,
-        timeZone: -4
+        timeZone: -4,
       });
       expect(result.success).toBe(true);
       if (result.success) {
@@ -56,7 +56,7 @@ describe('Prayer Module: Timezone Resolution & Drift Verification', () => {
         lat,
         long,
         date: baseDate,
-        timeZone: 'America/New_York'
+        timeZone: 'America/New_York',
       });
       expect(result.success).toBe(true);
       if (result.success) {
@@ -68,9 +68,9 @@ describe('Prayer Module: Timezone Resolution & Drift Verification', () => {
     it('should handle fractional timezone offsets cleanly without crashing (e.g., India: +5.5)', () => {
       const result = getPrayerTimes({
         lat: 28.6139,
-        long: 77.2090,
+        long: 77.209,
         date: baseDate,
-        timeZone: 5.5
+        timeZone: 5.5,
       });
       expect(result.success).toBe(true);
       if (result.success) {
@@ -91,7 +91,7 @@ describe('Prayer Module: Timezone Resolution & Drift Verification', () => {
         lat,
         long,
         date: baseDate,
-        resolveTimezoneAsync: customHook
+        resolveTimezoneAsync: customHook,
       });
 
       expect(result.success).toBe(true);
@@ -110,8 +110,8 @@ describe('Prayer Module: Timezone Resolution & Drift Verification', () => {
         lat,
         long,
         date: baseDate,
-        timeZone: 'UTC',              // this is overridden by the hook's return value
-        resolveTimezoneAsync: customHook
+        timeZone: 'UTC', // this is overridden by the hook's return value
+        resolveTimezoneAsync: customHook,
       });
 
       expect(result.success).toBe(true);

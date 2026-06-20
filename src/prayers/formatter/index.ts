@@ -2,7 +2,9 @@ import type { PrayerTimesResult, TimeField, Result } from '../types/index.js';
 import { Success, Failure } from '../types/index.js';
 
 export type FormattedTimes<T> = {
-  [K in Exclude<keyof PrayerTimesResult, 'metadata'>]: T extends 'unix' ? number | null : string | null;
+  [K in Exclude<keyof PrayerTimesResult, 'metadata'>]: T extends 'unix'
+    ? number | null
+    : string | null;
 };
 
 /**
@@ -24,7 +26,9 @@ export function formatPrayerTimes<T extends 'iso8601' | 'unix' | '12h' | '24h'>(
     return Failure('Invalid format type');
   }
 
-  const formatted: Partial<Record<keyof Omit<PrayerTimesResult, 'metadata'>, string | number | null>> = {};
+  const formatted: Partial<
+    Record<keyof Omit<PrayerTimesResult, 'metadata'>, string | number | null>
+  > = {};
   const keys: (keyof Omit<PrayerTimesResult, 'metadata'>)[] = [
     'fajr',
     'sunrise',
@@ -32,7 +36,7 @@ export function formatPrayerTimes<T extends 'iso8601' | 'unix' | '12h' | '24h'>(
     'dhuhr',
     'asr',
     'maghrib',
-    'isha'
+    'isha',
   ];
 
   for (const key of keys) {
@@ -52,7 +56,7 @@ export function formatPrayerTimes<T extends 'iso8601' | 'unix' | '12h' | '24h'>(
         hour: '2-digit',
         minute: '2-digit',
         second: '2-digit',
-        hour12: type === '12h'
+        hour12: type === '12h',
       };
       if (timeZone) {
         options.timeZone = timeZone;

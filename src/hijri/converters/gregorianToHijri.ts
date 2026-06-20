@@ -13,7 +13,7 @@ import { HijriEngine } from '../engine/HijriEngine.js';
 export function toHijri(
   date: Date,
   method: HijriMethod = HijriMethod.CIVIL,
-  options?: { location?: HijriLocationOptions },
+  options?: { location?: HijriLocationOptions }
 ): HijriDate {
   return new HijriEngine(method, options ?? {}).toHijri(date);
 }

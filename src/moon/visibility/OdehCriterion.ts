@@ -21,10 +21,9 @@ export class OdehCriterion implements VisibilityCriterion {
   }
 
   evaluate(input: VisibilityInput): VisibilityResult {
-    const visible = input.moonAltitudeAtSunset >= 5 && 
-                    input.elongation >= 8 && 
-                    input.moonAgeHours >= 15;
-    
+    const visible =
+      input.moonAltitudeAtSunset >= 5 && input.elongation >= 8 && input.moonAgeHours >= 15;
+
     return {
       criterionName: this.name,
       visible,
@@ -32,8 +31,8 @@ export class OdehCriterion implements VisibilityCriterion {
       details: {
         altitude: input.moonAltitudeAtSunset,
         elongation: input.elongation,
-        ageHours: input.moonAgeHours
-      }
+        ageHours: input.moonAgeHours,
+      },
     };
   }
 }

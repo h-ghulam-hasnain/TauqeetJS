@@ -13,7 +13,13 @@ import { MECCA, EARTH_RADIUS_KM } from '../constants.js';
 export function getQiblaDistance(coordinates: QiblaCoordinates): QiblaDistanceResult {
   validateCoordinates(coordinates.latitude, coordinates.longitude);
 
-  const distanceKm = haversineDistance(coordinates.latitude, coordinates.longitude, MECCA.latitude, MECCA.longitude, EARTH_RADIUS_KM);
-  
+  const distanceKm = haversineDistance(
+    coordinates.latitude,
+    coordinates.longitude,
+    MECCA.latitude,
+    MECCA.longitude,
+    EARTH_RADIUS_KM
+  );
+
   return { distanceKm };
 }

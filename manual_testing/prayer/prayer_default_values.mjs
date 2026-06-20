@@ -1,21 +1,34 @@
-import { calculatePrayerTimes, getPrayerTimes } from '../../dist/index.js';
+import { calculatePrayerTimes } from '../../dist/index.js';
 
 // console.log(`\n=============================================================`);
 // console.log(`🧪 TEST 1: PRAYER TIMES WITH DEFAULT VALUES`);
 // console.log(`=============================================================`);
 
 // Faisalabad coordinates (minimum required inputs)
+// South-West Corner: 31.3356° N, 72.9938° E
+// North-East Corner: 31.5264° N, 73.1930° E
+// Center-city: 31.4187° N, 73.0791° E
 const config = {
-  lat: 82.28,
-  long: -62.3,
+  // South-West
+  lat: 31.3356,
+  long: 72.9938,
+
+  // North-East Corner
+  // lat: 31.5264,
+  // long: 73.1930,
+
+  // Center-city
+  // lat: 31.4187,
+  // long: 73.0791,
+
 
   // Topographical and climatic corrections
   // elevation: { value: 0, unit: 'meters' },
-  temperatureC: 12.714,
-  pressureMbar: 1010,
-  date: new Date('2026-06-11'),
+  // temperatureC: 12.714,
+  // pressureMbar: 1010,
+  date: new Date('2027-01-01'),
 
-  timeZone: 1,
+  timeZone: 5,
 };
 
 // console.log(`Config inputs:`);

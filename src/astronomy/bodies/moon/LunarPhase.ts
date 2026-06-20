@@ -12,7 +12,11 @@ import { LunarPhaseEngine } from './LunarPhaseEngine.js';
  * Note: Moon age and event-based queries (next New Moon, etc.)
  * are separate and require explicit event searches.
  */
-export function computeLunarPhase(j: number, ut: number, deltaT: number): {
+export function computeLunarPhase(
+  j: number,
+  ut: number,
+  deltaT: number
+): {
   readonly elongation: number;
   readonly illuminatedFraction: number;
 } {
@@ -25,4 +29,3 @@ export function computeLunarPhase(j: number, ut: number, deltaT: number): {
     illuminatedFraction: phaseEngine.illuminatedFraction,
   };
 }
-

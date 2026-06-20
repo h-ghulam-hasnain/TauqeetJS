@@ -1,0 +1,45 @@
+name: Auto Bump Version
+
+on:
+  pull_request:
+    types:
+      - closed
+    branches:
+      - main
+      - master
+
+jobs:
+  bump-version:
+    # Only run this job if the pull request was actually merged, not just closed
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # A personal access token or GITHUB_TOKEN is required to push changes back
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Bump patch version
+        # npm version patch will automatically increment the last number (e.g. 1.1.0 -> 1.1.1),
+        # update package.json, package-lock.json, and create a git commit and tag.
+        # [skip ci] prevents this commit from triggering another CI run in an infinite loop.
+        run: |
+          npm version patch -m "chore: bump version to %s [skip ci]"
+
+      - name: Push changes and tags
+        run: git push --follow-tags

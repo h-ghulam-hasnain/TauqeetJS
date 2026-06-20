@@ -31,11 +31,15 @@ function applyEccentricity(value: number, mfactor: number, e: number): number {
 export function computeLunarPosition(j: number, ut: number, deltaT: number): LunarPositionResult {
   const { jd, t, te } = timeArguments(j, ut, deltaT);
 
-  let Ldash = 218.316447 + te * (te * (te * (1.85584e-6 - te / 65194000) - 0.0015786) + 481267.88123421);
-  let D = 297.8501921 + te * (te * (te * (1.83194e-6 - te / 113065000) - 0.0018819) + 445267.1114034);
-  let M = 357.5291092 + te * (te * (te / 24490000 - 0.0001536) + 35999.0502909);
-  let Mdash = 134.9633964 + te * (te * (te * (1.434741e-5 - te / 14712000) + 0.0087414) + 477198.8675055);
-  let F = 93.272095 + te * (te * (te * (te / 8633100000 - 2.8361e-7) - 0.0036539) + 483202.0175233);
+  const Ldash =
+    218.316447 + te * (te * (te * (1.85584e-6 - te / 65194000) - 0.0015786) + 481267.88123421);
+  const D =
+    297.8501921 + te * (te * (te * (1.83194e-6 - te / 113065000) - 0.0018819) + 445267.1114034);
+  const M = 357.5291092 + te * (te * (te / 24490000 - 0.0001536) + 35999.0502909);
+  const Mdash =
+    134.9633964 + te * (te * (te * (1.434741e-5 - te / 14712000) + 0.0087414) + 477198.8675055);
+  const F =
+    93.272095 + te * (te * (te * (te / 8633100000 - 2.8361e-7) - 0.0036539) + 483202.0175233);
 
   const A_1 = normalizeDegrees(119.75 + 131.849 * te);
   const A_2 = normalizeDegrees(53.09 + 479264.29 * te);
@@ -114,11 +118,28 @@ export function computeLunarPosition(j: number, ut: number, deltaT: number): Lun
     sumB += sineCoef * sind(arg);
   }
 
-  const betaMoon = (sumB - 2235 * sind(Ldash) + 382 * sind(A_3) + 175 * sind(A_1 - F) + 175 * sind(A_1 + F) + 127 * sind(Ldash - Mdash) - 115 * sind(Ldash + Mdash)) / 1000000;
+  const betaMoon =
+    (sumB -
+      2235 * sind(Ldash) +
+      382 * sind(A_3) +
+      175 * sind(A_1 - F) +
+      175 * sind(A_1 + F) +
+      127 * sind(Ldash - Mdash) -
+      115 * sind(Ldash + Mdash)) /
+    1000000;
 
-  const RA = normalizeDegrees(atand2(sind(lambdaMoonApparent) * cosd(eps) - tand(betaMoon) * sind(eps), cosd(lambdaMoonApparent)));
-  const Dec = asind(sind(betaMoon) * cosd(eps) + cosd(betaMoon) * sind(eps) * sind(lambdaMoonApparent));
-  const GMST = normalizeDegrees(280.46061837 + 360.98564736629 * (jd - 2451545) + t * t * (0.000387933 - t / 38710000));
+  const RA = normalizeDegrees(
+    atand2(
+      sind(lambdaMoonApparent) * cosd(eps) - tand(betaMoon) * sind(eps),
+      cosd(lambdaMoonApparent)
+    )
+  );
+  const Dec = asind(
+    sind(betaMoon) * cosd(eps) + cosd(betaMoon) * sind(eps) * sind(lambdaMoonApparent)
+  );
+  const GMST = normalizeDegrees(
+    280.46061837 + 360.98564736629 * (jd - 2451545) + t * t * (0.000387933 - t / 38710000)
+  );
   const GAST = normalizeDegrees(GMST + deltaPsi * cosd(eps));
   const GHAMoon = normalizeDegrees(GAST - RA);
 
@@ -126,7 +147,10 @@ export function computeLunarPosition(j: number, ut: number, deltaT: number): Lun
   const SDMoon = asind(1738 / deltaMoon);
 
   const sun = computeSolarPosition(j, ut, deltaT);
-  const psi = acosd(sind(sun.declination) * sind(Dec) + cosd(sun.declination) * cosd(Dec) * cosd(sun.rightAscension - RA));
+  const psi = acosd(
+    sind(sun.declination) * sind(Dec) +
+      cosd(sun.declination) * cosd(Dec) * cosd(sun.rightAscension - RA)
+  );
   const deltaSun = 1.496e8 * sun.distanceAu;
   const iAngle = atand2(deltaSun * sind(psi), deltaMoon - deltaSun * cosd(psi));
   const k = (1 + Math.cos(iAngle * (Math.PI / 180))) / 2;

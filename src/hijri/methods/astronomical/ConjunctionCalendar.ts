@@ -1,6 +1,6 @@
 import type { HijriDate } from '../../types/HijriDate.js';
-import { getPreviousNewMoon, getNextNewMoon } from '../../../moon/index.js';
-import { dateToJD, jdToDate, HIJRI_EPOCH_JD } from '../../core/HijriEpoch.js';
+import { getPreviousNewMoon } from '../../../moon/index.js';
+import { dateToJD, jdToDate } from '../../core/HijriEpoch.js';
 
 /**
  * Mean synodic month length (days).

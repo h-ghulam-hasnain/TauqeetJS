@@ -1,6 +1,14 @@
-import type { QiblaCoordinates, QiblaDirectionResult, QiblaAdvancedResult } from '../types/index.js';
+import type {
+  QiblaCoordinates,
+  QiblaDirectionResult,
+  QiblaAdvancedResult,
+} from '../types/index.js';
 import { validateCoordinates } from '../../internal/validation.js';
-import { haversineDistance, sphericalLawOfCosinesBearing, rhumbLineBearing } from '../../internal/math.js';
+import {
+  haversineDistance,
+  sphericalLawOfCosinesBearing,
+  rhumbLineBearing,
+} from '../../internal/math.js';
 import { MECCA, EARTH_RADIUS_KM } from '../constants.js';
 
 /**
@@ -13,13 +21,25 @@ import { MECCA, EARTH_RADIUS_KM } from '../constants.js';
 export function getQiblaDirection(coordinates: QiblaCoordinates): QiblaDirectionResult {
   validateCoordinates(coordinates.latitude, coordinates.longitude);
 
-  const distanceKm = haversineDistance(coordinates.latitude, coordinates.longitude, MECCA.latitude, MECCA.longitude, EARTH_RADIUS_KM);
-  
-  if (distanceKm < 0.001) { // within 1 meter of Kaaba
+  const distanceKm = haversineDistance(
+    coordinates.latitude,
+    coordinates.longitude,
+    MECCA.latitude,
+    MECCA.longitude,
+    EARTH_RADIUS_KM
+  );
+
+  if (distanceKm < 0.001) {
+    // within 1 meter of Kaaba
     return { bearing: null, distanceKm };
   }
 
-  const bearing = sphericalLawOfCosinesBearing(coordinates.latitude, coordinates.longitude, MECCA.latitude, MECCA.longitude);
+  const bearing = sphericalLawOfCosinesBearing(
+    coordinates.latitude,
+    coordinates.longitude,
+    MECCA.latitude,
+    MECCA.longitude
+  );
 
   return { bearing, distanceKm };
 }
@@ -34,14 +54,30 @@ export function getQiblaDirection(coordinates: QiblaCoordinates): QiblaDirection
 export function getQiblaAdvanced(coordinates: QiblaCoordinates): QiblaAdvancedResult {
   validateCoordinates(coordinates.latitude, coordinates.longitude);
 
-  const distanceKm = haversineDistance(coordinates.latitude, coordinates.longitude, MECCA.latitude, MECCA.longitude, EARTH_RADIUS_KM);
-  
+  const distanceKm = haversineDistance(
+    coordinates.latitude,
+    coordinates.longitude,
+    MECCA.latitude,
+    MECCA.longitude,
+    EARTH_RADIUS_KM
+  );
+
   if (distanceKm < 0.001) {
     return { bearing: null, rhumbBearing: null, distanceKm };
   }
 
-  const bearing      = sphericalLawOfCosinesBearing(coordinates.latitude, coordinates.longitude, MECCA.latitude, MECCA.longitude);
-  const rhumbBearing = rhumbLineBearing(coordinates.latitude, coordinates.longitude, MECCA.latitude, MECCA.longitude);
+  const bearing = sphericalLawOfCosinesBearing(
+    coordinates.latitude,
+    coordinates.longitude,
+    MECCA.latitude,
+    MECCA.longitude
+  );
+  const rhumbBearing = rhumbLineBearing(
+    coordinates.latitude,
+    coordinates.longitude,
+    MECCA.latitude,
+    MECCA.longitude
+  );
 
   return { bearing, rhumbBearing, distanceKm };
 }

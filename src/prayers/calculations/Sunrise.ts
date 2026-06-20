@@ -16,18 +16,11 @@ export function calculateSunrise(
   const refraction = computeRefraction(0, temperatureC, pressureMbar);
 
   const targetZenithFn = (ephemeris: any) => {
-    return 90 + refraction + (ephemeris.semidiameter / 60) - (ephemeris.horizontalParallax / 60) + dip;
+    return 90 + refraction + ephemeris.semidiameter / 60 - ephemeris.horizontalParallax / 60 + dip;
   };
 
   // Initial estimate: 6 hours before local noon
-  const initialEstimate = 6 - (longitude / 15);
+  const initialEstimate = 6 - longitude / 15;
 
-  return solveIteratively(
-    date,
-    latitude,
-    longitude,
-    'morning',
-    targetZenithFn,
-    initialEstimate
-  );
+  return solveIteratively(date, latitude, longitude, 'morning', targetZenithFn, initialEstimate);
 }

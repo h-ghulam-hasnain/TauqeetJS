@@ -18,7 +18,7 @@ import { HijriEngine } from './engine/HijriEngine.js';
 export function toHijri(
   date: Date,
   method: HijriMethod = HijriMethod.CIVIL,
-  options?: { location?: HijriLocationOptions },
+  options?: { location?: HijriLocationOptions }
 ): HijriDate {
   return new HijriEngine(method, options ?? {}).toHijri(date);
 }
@@ -27,7 +27,7 @@ export function toHijri(
 export function toGregorian(
   hijriDate: HijriDate,
   method: HijriMethod = HijriMethod.CIVIL,
-  options?: { location?: HijriLocationOptions },
+  options?: { location?: HijriLocationOptions }
 ): Date {
   return new HijriEngine(method, options ?? {}).toGregorian(hijriDate);
 }
@@ -42,4 +42,3 @@ export { UmmAlQuraCalendar } from './methods/ummalqura/UmmAlQuraCalendar.js';
 export { getCivilMonthLength, isCivilLeapYear } from './core/HijriMonthLength.js';
 export { getCivilYearLength } from './core/HijriYearLength.js';
 export { HIJRI_EPOCH_JD } from './core/HijriEpoch.js';
-
