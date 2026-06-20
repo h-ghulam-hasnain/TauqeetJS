@@ -1,10 +1,7 @@
 {
-  "name": "@h-ghulam-hasnain/tauqeet-js",
-  "version": "1.1.1",
+  "name": "tauqeet-js",
+  "version": "1.1.0",
   "description": "High-precision TypeScript library for Islamic astronomical calculations: prayer times, Qibla direction, moon phase & crescent visibility, and Hijri calendar conversions.",
-  "publishConfig": {
-    "registry": "https://npm.pkg.github.com"
-  },
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
