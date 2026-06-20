@@ -3,6 +3,7 @@ node_modules/
 
 # ── Build output ─────────────────────────────────────────────────
 dist/
+docs/
 
 # ── TypeScript incremental build cache ───────────────────────────
 *.tsbuildinfo
@@ -20,6 +21,7 @@ yarn-error.log*
 .env
 .env.*
 !.env.example
+.npmrc
 
 # ── OS noise ──────────────────────────────────────────────────────
 .DS_Store
