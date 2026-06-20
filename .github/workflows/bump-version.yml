@@ -1,17 +1,14 @@
 name: Auto Bump Version
 
 on:
-  pull_request:
-    types:
-      - closed
+  push:
     branches:
       - main
       - master
 
 jobs:
   bump-version:
-    # Only run this job if the pull request was actually merged, not just closed
-    if: github.event.pull_request.merged == true
+    # We remove the PR merged check since this runs directly on push
     runs-on: ubuntu-latest
     permissions:
       contents: write
