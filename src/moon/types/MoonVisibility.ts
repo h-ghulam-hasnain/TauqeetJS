@@ -14,7 +14,7 @@ export interface VisibilityResult {
   visible: boolean;
   confidence?: number; // 0..1
   category?: string; // e.g., 'A', 'B', 'C' for Yallop
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
 }
 
 export enum VisibilityMethod {

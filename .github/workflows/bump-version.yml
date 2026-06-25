@@ -1,34 +1,36 @@
-name: Auto Bump Version
+name: Auto Bump & Publish
 
 on:
   push:
-    branches:
-      - main
-      - master
+    branches: [ main, master ]
+    paths:
+      - 'src/**'
+      - 'package.json'
+      - 'package-lock.json'
 
 jobs:
-  bump-version:
-    # We remove the PR merged check since this runs directly on push
+  release:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
-          # A personal access token or GITHUB_TOKEN is required to push changes back
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
           registry-url: 'https://registry.npmjs.org'
 
-      - name: Install dependencies
-        run: npm ci
+      - run: npm ci
+
+      - name: Run tests
+        run: npm test
+
+      - name: Build
+        run: npm run build
 
       - name: Configure Git
         run: |
@@ -36,13 +38,12 @@ jobs:
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Bump patch version
-        run: |
-          npm version patch -m "chore: bump version to %s [skip ci]"
+        run: npm version patch -m "chore: bump version to %s [skip ci]"
 
       - name: Push changes and tags
         run: git push --follow-tags
 
       - name: Publish to NPM
-        run: npm publish
+        run: npm publish  # add --access public if scoped
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

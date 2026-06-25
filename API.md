@@ -790,7 +790,7 @@ Advanced users can instantiate calendars directly:
 | `CivilCalendar` | `CIVIL` | Pure arithmetic 30-year cycle |
 | `ConjunctionCalendar` | `CONJUNCTION` | Astronomical new moon (UTC conjunction) |
 | `VisibilityCalendar` | `VISIBILITY` | Location-aware crescent sighting |
-| `UmmAlQuraCalendar` | `UMM_AL_QURA` | Official Saudi calendar |
+| `UmmAlQuraCalendar` | `UMM_AL_QURA` | Official Saudi calendar (Tabular Hybrid) |
 
 Each exposes:
 ```ts

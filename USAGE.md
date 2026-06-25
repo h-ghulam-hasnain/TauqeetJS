@@ -482,7 +482,7 @@ console.log(`${hijri.day}/${hijri.month}/${hijri.year} AH`);
 
 ### 4.4 Gregorian → Hijri (Umm al-Qura)
 
-The official Saudi calendar, based on conjunction relative to Mecca. No location needed.
+The official Saudi calendar. It uses exact tabulated data (1343 AH – 1500 AH) to guarantee 100% civil accuracy with official records, gracefully falling back to a conjunction-based approximation for out-of-bounds dates. No location needed.
 
 ```ts
 import { toHijri, HijriMethod } from 'tauqeet-js';

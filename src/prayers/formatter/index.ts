@@ -63,7 +63,7 @@ export function formatPrayerTimes<T extends 'iso8601' | 'unix' | '12h' | '24h'>(
       }
       try {
         formatted[key] = new Intl.DateTimeFormat('en-US', options).format(d);
-      } catch (e) {
+      } catch {
         formatted[key] = null;
       }
     }

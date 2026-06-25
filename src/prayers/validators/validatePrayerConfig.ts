@@ -164,8 +164,8 @@ export function validatePrayerConfig(config: PrayerConfig): ValidationResult {
     let date: Date;
     try {
       date = parseDate(config.date);
-    } catch (err: any) {
-      return { success: false, error: err.message || 'Invalid date' };
+    } catch (err: unknown) {
+      return { success: false, error: err instanceof Error ? err.message : String(err) || 'Invalid date' };
     }
 
     // TimeZone: fall back to the system timezone when not supplied.
@@ -261,8 +261,8 @@ export function validatePrayerConfig(config: PrayerConfig): ValidationResult {
     let elevationMeters: number;
     try {
       elevationMeters = parseElevation(config.elevation);
-    } catch (err: any) {
-      return { success: false, error: err.message || 'Invalid elevation' };
+    } catch (err: unknown) {
+      return { success: false, error: err instanceof Error ? err.message : String(err) || 'Invalid elevation' };
     }
 
     // Adjustments
@@ -319,14 +319,14 @@ export function validatePrayerConfig(config: PrayerConfig): ValidationResult {
         pressureMbar: pressure,
         adjustments,
         withMetadata: !!config.withMetadata,
-        highLatitudeStrategy: highLatitudeStrategy as any,
+        highLatitudeStrategy: highLatitudeStrategy as 'AngleBased' | 'MiddleOfNight' | 'SeventhOfNight' | 'NearestLatitude',
         regionalFallbackLatitude,
         ...(config.resolveTimezoneAsync
           ? { resolveTimezoneAsync: config.resolveTimezoneAsync }
           : {}),
       },
     };
-  } catch (e: any) {
-    return { success: false, error: `Validation exception: ${e.message || e}` };
+  } catch (e: unknown) {
+    return { success: false, error: `Validation exception: ${e instanceof Error ? e.message : String(e)}` };
   }
 }

@@ -2,6 +2,7 @@ import { solveIteratively } from '../solvers/IterativeSolver.js';
 import type { IterativeSolverResult } from '../solvers/IterativeSolver.js';
 import { computeRefraction, computeDipAngle } from '../corrections/HorizonCorrections.js';
 import type { PrayerMethodConfig } from '../types/index.js';
+import type { SolarEphemeris } from '../../internal/EphemerisService.js';
 
 /**
  * Calculates Maghrib (sunset or method-based Maghrib) time.
@@ -51,7 +52,7 @@ export function calculateSunset(
   const dip = computeDipAngle(elevationMeters);
   const refraction = computeRefraction(0, temperatureC, pressureMbar);
 
-  const targetZenithFn = (ephemeris: any) => {
+  const targetZenithFn = (ephemeris: SolarEphemeris) => {
     return 90 + refraction + ephemeris.semidiameter / 60 - ephemeris.horizontalParallax / 60 + dip;
   };
 

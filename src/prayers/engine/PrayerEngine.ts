@@ -28,7 +28,7 @@ export function resolveTimeZoneSync(explicitTimeZone?: string | number): string 
   if (typeof Intl !== 'undefined') {
     try {
       return Intl.DateTimeFormat().resolvedOptions().timeZone;
-    } catch (e) {
+    } catch {
       // Fallback
     }
   }
@@ -73,7 +73,7 @@ export function formatTimeField(
         }).format(rounded);
       }
     }
-  } catch (e) {
+  } catch {
     if (typeof timeZone === 'string') {
       const parsedOffset = parseFloat(timeZone);
       if (!isNaN(parsedOffset)) {
@@ -147,12 +147,12 @@ function calculateRawTimes(
   let maghribStatus: PrayerStatus = 'SUCCESS';
   let ishaStatus: PrayerStatus = 'SUCCESS';
 
-  let resFajr: any = null;
-  let resSunrise: any = null;
-  let resSunset: any = null;
-  let resAsr: any = null;
-  let resMaghrib: any = null;
-  let resIsha: any = null;
+  let resFajr: IterativeSolverResult | null = null;
+  let resSunrise: IterativeSolverResult | null = null;
+  let resSunset: IterativeSolverResult | null = null;
+  let resAsr: IterativeSolverResult | null = null;
+  let resMaghrib: IterativeSolverResult | null = null;
+  let resIsha: IterativeSolverResult | null = null;
 
   if (latCase === LatitudeCase.POLAR_NIGHT) {
     fajrStatus = 'POLAR_NIGHT';
@@ -392,10 +392,10 @@ export function calculatePrayerTimesInternal(config: ValidatedPrayerConfig): Pra
   };
 
   if (config.withMetadata) {
-    const meta: PrayerMetadata = {};
+    const meta: Partial<{ -readonly [K in keyof PrayerMetadata]: PrayerMetadata[K] }> = {};
 
     if (rawResults.fajr.metadata) {
-      (meta as any).fajr = {
+      meta.fajr = {
         DEC: rawResults.fajr.metadata.declination,
         EOT: rawResults.fajr.metadata.equationOfTime,
         angle: method.fajrAngle,
@@ -403,7 +403,7 @@ export function calculatePrayerTimesInternal(config: ValidatedPrayerConfig): Pra
       };
     }
     if (rawResults.sunrise.metadata) {
-      (meta as any).sunrise = {
+      meta.sunrise = {
         DEC: rawResults.sunrise.metadata.declination,
         EOT: rawResults.sunrise.metadata.equationOfTime,
         HP: rawResults.sunrise.metadata.horizontalParallax,
@@ -412,7 +412,7 @@ export function calculatePrayerTimesInternal(config: ValidatedPrayerConfig): Pra
       };
     }
     if (rawResults.dhuhr.metadata) {
-      (meta as any).dhuhr = {
+      meta.dhuhr = {
         DEC: rawResults.dhuhr.metadata.declination,
         EOT: rawResults.dhuhr.metadata.equationOfTime,
         SD: rawResults.dhuhr.metadata.semidiameter,
@@ -420,16 +420,17 @@ export function calculatePrayerTimesInternal(config: ValidatedPrayerConfig): Pra
       };
     }
     if (rawResults.asr.metadata) {
-      (meta as any).asr = {
+      meta.asr = {
         DEC: rawResults.asr.metadata.declination,
         EOT: rawResults.asr.metadata.equationOfTime,
         HP: rawResults.asr.metadata.horizontalParallax,
         SD: rawResults.asr.metadata.semidiameter,
+        asrAngle: 0, // Angle is not readily available here
         iterations: rawResults.asr.metadata.iterations,
       };
     }
     if (rawResults.maghrib.metadata) {
-      (meta as any).maghrib = {
+      meta.maghrib = {
         DEC: rawResults.maghrib.metadata.declination,
         EOT: rawResults.maghrib.metadata.equationOfTime,
         HP: rawResults.maghrib.metadata.horizontalParallax,
@@ -438,18 +439,17 @@ export function calculatePrayerTimesInternal(config: ValidatedPrayerConfig): Pra
       };
     }
     if (rawResults.isha.metadata) {
-      const ishaMeta: any = {
+      meta.isha = {
         DEC: rawResults.isha.metadata.declination,
         EOT: rawResults.isha.metadata.equationOfTime,
         iterations: rawResults.isha.metadata.iterations,
+        ...(method.ishaAngle !== null && method.ishaAngle !== undefined
+          ? { angle: method.ishaAngle }
+          : {}),
       };
-      if (method.ishaAngle !== null && method.ishaAngle !== undefined) {
-        ishaMeta.angle = method.ishaAngle;
-      }
-      (meta as any).isha = ishaMeta;
     }
 
-    (result as any).metadata = meta;
+    return { ...result, metadata: meta as PrayerMetadata };
   }
 
   return result;

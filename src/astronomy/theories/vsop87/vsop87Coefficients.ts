@@ -54,6 +54,12 @@ export const L4_A = [114, 8, 1];
 export const L4_B = [3.142, 4.13, 3.84];
 export const L4_C = [0, 6283.08, 12566.15];
 
+// L5 coefficients extracted from VSOP87D.ear — EARTH, VARIABLE 1 (L), *T**5, 5 terms
+// A values scaled ×1e8 to match the integer representation of L0–L4
+export const L5_A = [878, 172, 50, 28, 5];
+export const L5_B = [3.14159265359, 2.76579069510, 2.01353298182, 2.21496423926, 1.75600058765];
+export const L5_C = [0.0, 6283.07584999140, 155.42039943420, 12566.15169998280, 18849.22754997420];
+
 export const B0_A = [280, 102, 80, 44, 32];
 export const B0_B = [3.199, 5.422, 3.88, 3.7, 4];
 export const B0_C = [84334.662, 5507.553, 5223.69, 2352.87, 1577.34];

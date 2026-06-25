@@ -15,6 +15,9 @@ import {
   L4_A,
   L4_B,
   L4_C,
+  L5_A,
+  L5_B,
+  L5_C,
   B0_A,
   B0_B,
   B0_C,
@@ -64,7 +67,7 @@ export function computeEarthHeliocentricState(tau: number): EarthHeliocentricSta
   const sumL2 = seriesSum(L2_A, L2_B, L2_C, tau);
   const sumL3 = seriesSum(L3_A, L3_B, L3_C, tau);
   const sumL4 = seriesSum(L4_A, L4_B, L4_C, tau);
-  const sumL5 = Math.cos(3.14);
+  const sumL5 = seriesSum(L5_A, L5_B, L5_C, tau);
   const longitude =
     (sumL0 + tau * (sumL1 + tau * (sumL2 + tau * (sumL3 + tau * (sumL4 + tau * sumL5))))) /
     100000000;
