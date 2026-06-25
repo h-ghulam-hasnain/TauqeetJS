@@ -1,6 +1,6 @@
 {
   "name": "tauqeet-js",
-  "version": "1.1.0",
+  "version": "1.1.2",
   "description": "High-precision TypeScript library for Islamic astronomical calculations: prayer times, Qibla direction, moon phase & crescent visibility, and Hijri calendar conversions.",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -25,6 +25,7 @@
         "default": "./dist/index.cjs"
       }
     },
+    "./package.json": "./package.json",
     "./prayers": {
       "types": "./dist/prayers/index.d.ts",
       "import": "./dist/prayers/index.js",
@@ -63,6 +64,13 @@
       "require": {
         "types": "./dist/solar-alignment/index.d.cts",
         "default": "./dist/solar-alignment/index.cjs"
+      }
+    },
+    "./*": {
+      "types": "./dist/*/index.d.ts",
+      "import": "./dist/*/index.js",
+      "require": {
+        "default": "./dist/*/index.cjs"
       }
     }
   },
@@ -105,6 +113,7 @@
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^8.0.0",
     "@typescript-eslint/parser": "^8.0.0",
+    "esbuild": "^0.28.1",
     "eslint": "^9.0.0",
     "eslint-config-prettier": "^10.0.0",
     "prettier": "^3.0.0",
@@ -112,5 +121,8 @@
     "typedoc": "^0.28.19",
     "typescript": "^6.0.0",
     "vitest": "^4.1.8"
+  },
+  "overrides": {
+    "esbuild": "^0.28.1"
   }
 }

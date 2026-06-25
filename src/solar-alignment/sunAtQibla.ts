@@ -182,7 +182,7 @@ function formatLocalTime(date: Date, timeZone?: string | number): string {
     } else {
       return formatManualOffset(date, timeZone);
     }
-  } catch (e) {
+  } catch {
     return date.toISOString();
   }
 }

@@ -207,7 +207,7 @@ Lightweight module with no astronomy dependency — it uses only internal math u
 | `methods/civil/` | `CivilCalendar` — 30-year arithmetic cycle |
 | `methods/astronomical/` | `ConjunctionCalendar` — based on new moon (UTC conjunction) |
 | `methods/sighting/` | `VisibilityCalendar` — crescent visibility at observer location |
-| `methods/ummalqura/` | `UmmAlQuraCalendar` — official Saudi calendar |
+| `methods/ummalqura/` | `UmmAlQuraCalendar` — official Saudi calendar (tabular hybrid) |
 | `core/` | `HijriMonthLength`, `HijriYearLength`, `HijriEpoch` constants |
 | `converters/` | Helper functions for JD ↔ Hijri arithmetic |
 | `types/` | `HijriDate`, `HijriMethod`, `HijriCalendarResult`, `HijriLocationOptions` |

@@ -2,6 +2,7 @@ import { solveIteratively } from '../solvers/IterativeSolver.js';
 import type { IterativeSolverResult } from '../solvers/IterativeSolver.js';
 import { computeRefraction } from '../corrections/HorizonCorrections.js';
 import { tand, atand } from '../../internal/trig.js';
+import type { SolarEphemeris } from '../../internal/EphemerisService.js';
 
 /**
  * Calculates Asr time iteratively.
@@ -33,7 +34,7 @@ export function calculateAsr(
   const zZuhrVisual = zZuhr - refrZuhr - sdZuhr;
 
   // Target zenith function uses the probe ephemeris so SD and refraction are time-dependent
-  const targetZenithFn = (ephemeris: any) => {
+  const targetZenithFn = (ephemeris: SolarEphemeris) => {
     // 3. Compute Asr visual zenith from visual-noon baseline
     // Old implementation used: zAsrVisual = atan2d(tand(zZuhrVisual) + factor, 1)
     // which is equivalent to arctan(tan(zZuhrVisual) + sf)
