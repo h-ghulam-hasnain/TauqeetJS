@@ -65,7 +65,7 @@ for (let i = 0; i < len; i += 6) {
 ### Deoptimization Triggers
 - **Evidence:** A structural sweep of the codebase (`grep -r "try" src/`) reveals that `try/catch` blocks are exclusively restricted to API boundaries (e.g., `src/prayers/engine/PrayerEngine.ts:29`, `validatePrayerConfig.ts`). The `src/astronomy/` numeric hot loops are completely free of deopt-triggering closures, `try/catch`, or `arguments` accesses.
 
-### Empirical Benchmark Results (v1.2.0)
+### Empirical Benchmark Results (v1.1.3)
 
 | Metric | Pre‑refactor (stride‑3) | Post‑refactor (parallel + unrolled) | Δ |
 |--------|--------------------------|--------------------------------------|---|
