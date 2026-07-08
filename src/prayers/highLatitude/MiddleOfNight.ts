@@ -1,5 +1,6 @@
 import type { HighLatitudeStrategy, HighLatitudeContext } from './HighLatitudeStrategy.js';
 import { calculateSunrise } from '../calculations/Sunrise.js';
+import { getSafeNightDuration } from './utils.js';
 
 export class MiddleOfNightStrategy implements HighLatitudeStrategy {
   readonly strategyName = 'MiddleOfNight';
@@ -29,38 +30,30 @@ export class MiddleOfNightStrategy implements HighLatitudeStrategy {
     return nextSunrise?.time ?? null;
   }
 
-  private getNightDuration(ctx: HighLatitudeContext): {
-    safeSunrise: Date;
-    safeSunset: Date;
-    nightDuration: number;
-  } {
-    const safeDhuhr = ctx.dhuhr ?? new Date(ctx.baseDate.getTime());
-    const safeSunrise = ctx.sunrise ?? new Date(safeDhuhr.getTime() - 6 * 3600000);
-    const safeSunset = ctx.sunset ?? new Date(safeDhuhr.getTime() + 6 * 3600000);
-
-    let sunriseTime = safeSunrise.getTime();
-    if (sunriseTime < safeSunset.getTime()) {
-      sunriseTime += 24 * 3600000;
-    }
-    const nightDuration = sunriseTime - safeSunset.getTime();
-    return { safeSunrise, safeSunset, nightDuration };
-  }
-
   computeFajr(ctx: HighLatitudeContext): Date | null {
-    const safeSunset = ctx.sunset ?? new Date((ctx.dhuhr ?? ctx.baseDate).getTime() + 6 * 3600000);
+    const night = getSafeNightDuration(ctx);
+    if (!night) return null;
+    const { safeSunrise, safeSunset, nightDurationMs } = night;
+
     const nextSunrise = this.getNextSunrise(ctx);
     if (nextSunrise) {
-      return new Date(safeSunset.getTime() + (nextSunrise.getTime() - safeSunset.getTime()) / 2);
+      const diff = nextSunrise.getTime() - safeSunset.getTime();
+      // Defensive check to avoid NaN, negative splits, or crossing over another day
+      if (!Number.isNaN(diff) && diff > 0 && diff <= 24 * 3600000) {
+        return new Date(safeSunset.getTime() + diff / 2);
+      }
     }
 
-    const { safeSunrise, nightDuration } = this.getNightDuration(ctx);
-    const halfNight = nightDuration / 2;
+    const halfNight = nightDurationMs / 2;
     return new Date(safeSunrise.getTime() - halfNight);
   }
 
   computeIsha(ctx: HighLatitudeContext): Date | null {
-    const { safeSunset, nightDuration } = this.getNightDuration(ctx);
-    const halfNight = nightDuration / 2;
+    const night = getSafeNightDuration(ctx);
+    if (!night) return null;
+    const { safeSunset, nightDurationMs } = night;
+
+    const halfNight = nightDurationMs / 2;
     return new Date(safeSunset.getTime() + halfNight);
   }
 }

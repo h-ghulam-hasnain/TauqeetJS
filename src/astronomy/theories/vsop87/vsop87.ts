@@ -1,42 +1,23 @@
-import { kahanSum } from '../../../internal/polynomial.js';
 import {
-  L0_A,
-  L0_B,
-  L0_C,
-  L1_A,
-  L1_B,
-  L1_C,
-  L2_A,
-  L2_B,
-  L2_C,
-  L3_A,
-  L3_B,
-  L3_C,
-  L4_A,
-  L4_B,
-  L4_C,
-  L5_A,
-  L5_B,
-  L5_C,
-  B0_A,
-  B0_B,
-  B0_C,
-  B1_A,
-  B1_B,
-  B1_C,
-  R0_A,
-  R0_B,
-  R0_C,
-  R1_A,
-  R1_B,
-  R1_C,
-  R2_A,
-  R2_B,
-  R2_C,
-  R3_A,
-  R3_B,
-  R3_C,
+  L0,
+  L1,
+  L2,
+  L3,
+  L4,
+  L5,
+  B0,
+  B1,
+  B2,
+  B3,
+  B4,
+  R0,
+  R1,
+  R2,
+  R3,
+  R4,
+  R5,
 } from './vsop87Coefficients.js';
+import type { ParallelSeries } from './vsop87Coefficients.js';
 
 export interface EarthHeliocentricState {
   readonly longitude: number;
@@ -44,43 +25,81 @@ export interface EarthHeliocentricState {
   readonly radius: number;
 }
 
-function seriesSum(
-  a: readonly number[],
-  b: readonly number[],
-  c: readonly number[],
-  tau: number
-): number {
-  const len = Math.min(a.length, b.length, c.length);
-  const values: number[] = [];
-  for (let i = 0; i < len; i += 1) {
-    const ai = a[i]!;
-    const bi = b[i]!;
-    const ci = c[i]!;
-    values.push(ai * Math.cos(bi + tau * ci));
+/**
+ * Evaluates a single VSOP87 trigonometric series using 3 parallel Float64Arrays.
+ *
+ * Implements a 2-lane unrolled Kahan compensated summation to eliminate
+ * loop-carried dependencies (pipeline stalls), increasing ILP.
+ *
+ * Complexity: O(N) time, O(1) space.
+ */
+export function seriesSum(tau: number, A: Float64Array, B: Float64Array, C: Float64Array): number {
+  let sum1 = 0, c_comp1 = 0;
+  let sum2 = 0, c_comp2 = 0;
+  const len = A.length;
+  let i = 0;
+
+  for (; i <= len - 2; i += 2) {
+    // Lane 1
+    const val1 = A[i]! * Math.cos(B[i]! + tau * C[i]!);
+    const y1 = val1 - c_comp1;
+    const t1 = sum1 + y1;
+    c_comp1 = t1 - sum1 - y1;
+    sum1 = t1;
+
+    // Lane 2
+    const val2 = A[i + 1]! * Math.cos(B[i + 1]! + tau * C[i + 1]!);
+    const y2 = val2 - c_comp2;
+    const t2 = sum2 + y2;
+    c_comp2 = t2 - sum2 - y2;
+    sum2 = t2;
   }
-  return kahanSum(values);
+
+  // Remainder
+  for (; i < len; i++) {
+    const val1 = A[i]! * Math.cos(B[i]! + tau * C[i]!);
+    const y1 = val1 - c_comp1;
+    const t1 = sum1 + y1;
+    c_comp1 = t1 - sum1 - y1;
+    sum1 = t1;
+  }
+
+  // Merge the two accumulators safely using Kahan
+  const yFinal = sum2 - c_comp1;
+  const tFinal = sum1 + yFinal;
+  // c_comp1 = tFinal - sum1 - yFinal; // Not needed as we return
+  const finalSum = tFinal - c_comp2;
+
+  return finalSum;
+}
+
+function sumSeriesParallel(series: ParallelSeries, tau: number): number {
+  return seriesSum(tau, series.A, series.B, series.C);
 }
 
 export function computeEarthHeliocentricState(tau: number): EarthHeliocentricState {
-  const sumL0 = seriesSum(L0_A, L0_B, L0_C, tau);
-  const sumL1 = seriesSum(L1_A, L1_B, L1_C, tau);
-  const sumL2 = seriesSum(L2_A, L2_B, L2_C, tau);
-  const sumL3 = seriesSum(L3_A, L3_B, L3_C, tau);
-  const sumL4 = seriesSum(L4_A, L4_B, L4_C, tau);
-  const sumL5 = seriesSum(L5_A, L5_B, L5_C, tau);
-  const longitude =
-    (sumL0 + tau * (sumL1 + tau * (sumL2 + tau * (sumL3 + tau * (sumL4 + tau * sumL5))))) /
-    100000000;
+  const sumL0 = sumSeriesParallel(L0, tau);
+  const sumL1 = sumSeriesParallel(L1, tau);
+  const sumL2 = sumSeriesParallel(L2, tau);
+  const sumL3 = sumSeriesParallel(L3, tau);
+  const sumL4 = sumSeriesParallel(L4, tau);
+  const sumL5 = sumSeriesParallel(L5, tau);
+  const longitude = sumL0 + tau * (sumL1 + tau * (sumL2 + tau * (sumL3 + tau * (sumL4 + tau * sumL5))));
 
-  const sumB0 = seriesSum(B0_A, B0_B, B0_C, tau);
-  const sumB1 = seriesSum(B1_A, B1_B, B1_C, tau);
-  const latitude = (sumB0 + sumB1 * tau) / 100000000;
+  const sumB0 = sumSeriesParallel(B0, tau);
+  const sumB1 = sumSeriesParallel(B1, tau);
+  const sumB2 = sumSeriesParallel(B2, tau);
+  const sumB3 = sumSeriesParallel(B3, tau);
+  const sumB4 = sumSeriesParallel(B4, tau);
+  const latitude = sumB0 + tau * (sumB1 + tau * (sumB2 + tau * (sumB3 + tau * sumB4)));
 
-  const sumR0 = seriesSum(R0_A, R0_B, R0_C, tau);
-  const sumR1 = seriesSum(R1_A, R1_B, R1_C, tau);
-  const sumR2 = seriesSum(R2_A, R2_B, R2_C, tau);
-  const sumR3 = seriesSum(R3_A, R3_B, R3_C, tau);
-  const radius = (sumR0 + tau * (sumR1 + tau * (sumR2 + tau * sumR3))) / 100000000;
+  const sumR0 = sumSeriesParallel(R0, tau);
+  const sumR1 = sumSeriesParallel(R1, tau);
+  const sumR2 = sumSeriesParallel(R2, tau);
+  const sumR3 = sumSeriesParallel(R3, tau);
+  const sumR4 = sumSeriesParallel(R4, tau);
+  const sumR5 = sumSeriesParallel(R5, tau);
+  const radius = sumR0 + tau * (sumR1 + tau * (sumR2 + tau * (sumR3 + tau * (sumR4 + tau * sumR5))));
 
   return {
     longitude,

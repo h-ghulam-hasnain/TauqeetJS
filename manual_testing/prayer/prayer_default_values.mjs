@@ -10,8 +10,8 @@ import { calculatePrayerTimes } from '../../dist/index.js';
 // Center-city: 31.4187° N, 73.0791° E
 const config = {
   // South-West
-  lat: 31.3356,
-  long: 72.9938,
+  // lat: 31.3356,
+  // long: 72.9938,
 
   // North-East Corner
   // lat: 31.5264,
@@ -21,12 +21,14 @@ const config = {
   // lat: 31.4187,
   // long: 73.0791,
 
+  lat: 31.39965,
+  long: 73.02003,
 
   // Topographical and climatic corrections
   // elevation: { value: 0, unit: 'meters' },
-  // temperatureC: 12.714,
-  // pressureMbar: 1010,
-  date: new Date('2027-01-01'),
+  temperatureC: 12.714,
+  pressureMbar: 1010,
+  // date: new Date('2027-01-01'),
 
   timeZone: 5,
 };

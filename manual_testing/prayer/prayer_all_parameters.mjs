@@ -6,8 +6,11 @@ console.log(`=============================================================`);
 
 const config = {
   // Test DMS parsing for high latitude (London)
-  lat: "51°30'26\"N",
-  long: "0°07'39\"W",
+  // lat: "51°30'26\"N",
+  // long: "0°07'39\"W",
+
+  lat: 31.4187,
+  long: 73.0791,
 
   // Specific date and timezone
   date: new Date('2026-06-06T12:00:00Z'),

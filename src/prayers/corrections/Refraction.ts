@@ -6,7 +6,7 @@ export function getRefraction(
   temperatureC: number = 10,
   pressureMbar: number = 1010.0
 ): number {
-  if (apparentAltitudeDeg < 0) {
+  if (apparentAltitudeDeg < -1.0 || apparentAltitudeDeg > 89.9) {
     return 0;
   }
 
