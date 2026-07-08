@@ -28,3 +28,9 @@ CONTRIBUTING.md
 # Generated docs & CI
 docs/
 .github/
+
+# Development & utility scripts
+bench/
+scratch/
+scripts/
+turbo-*.cfg

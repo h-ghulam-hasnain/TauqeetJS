@@ -36,3 +36,6 @@ desktop.ini
 *.njsproj
 *.sln
 *.sw?
+
+# ── Temporary Tools/Artifacts ─────────────────────────────────────
+turbo-*.cfg

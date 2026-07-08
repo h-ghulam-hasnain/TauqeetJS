@@ -8,6 +8,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+## [1.1.3] — 2026-07-08
+
 ### Added
 - Sub-path exports (`/prayers`, `/qibla`, `/moon`, `/hijri`, `/solar-alignment`) for true per-module tree-shaking.
 - ESLint + Prettier configuration for consistent code quality enforcement.
@@ -78,6 +80,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ---
 
-[Unreleased]: https://github.com/h-ghulam-hasnain/tauqeet-js/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/h-ghulam-hasnain/tauqeet-js/compare/v1.1.3...HEAD
+[1.1.3]: https://github.com/h-ghulam-hasnain/tauqeet-js/compare/v1.1.0...v1.1.3
 [1.1.0]: https://github.com/h-ghulam-hasnain/tauqeet-js/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/h-ghulam-hasnain/tauqeet-js/releases/tag/v1.0.0

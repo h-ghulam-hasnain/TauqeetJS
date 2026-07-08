@@ -51,7 +51,7 @@
 npm install tauqeet-js
 ```
 
-> **Note:** The package is currently in active development for v1.2.0. See [CONTRIBUTING.md](CONTRIBUTING.md) for building from source.
+> **Note:** The package is currently in active development. See [CONTRIBUTING.md](CONTRIBUTING.md) for building from source.
 
 ---
 

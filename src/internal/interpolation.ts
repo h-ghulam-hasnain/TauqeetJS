@@ -39,11 +39,6 @@ export class ChebyshevInterpolator {
   /** Chebyshev expansion coefficients c₀…c_{n-1}. */
   private readonly coefficients: Float64Array;
 
-  /**
-   * Pre-computed DCT-II cosine matrix stored row-major in a single buffer.
-   * cosMatrix[j * n + (k-1)] = cos(j * (2k-1) * π / (2n))
-   */
-  private readonly cosMatrix: Float64Array;
 
   private readonly n: number;
 
@@ -64,7 +59,6 @@ export class ChebyshevInterpolator {
         cosMatrix[rowBase + (k - 1)] = Math.cos(j * (2 * k - 1) * piOver2n);
       }
     }
-    this.cosMatrix = cosMatrix;
 
     // ── Compute Chebyshev coefficients via DCT-II using Kahan summation ─────
     const scale        = 2 / n;

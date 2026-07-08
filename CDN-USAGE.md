@@ -5,12 +5,12 @@ This package is built as a pure ESM library and can be used directly in browsers
 ## Recommended CDN URLs
 
 ### esm.sh
-- Main import: `https://esm.sh/tauqeet-js@1.1.2`
-- Subpath import: `https://esm.sh/tauqeet-js@1.1.2/prayers`
+- Main import: `https://esm.sh/tauqeet-js@1.1.3`
+- Subpath import: `https://esm.sh/tauqeet-js@1.1.3/prayers`
 
 ### jsDelivr
-- Main import: `https://cdn.jsdelivr.net/npm/tauqeet-js@1.1.2/+esm`
-- Subpath import: `https://cdn.jsdelivr.net/npm/tauqeet-js@1.1.2/prayers/+esm`
+- Main import: `https://cdn.jsdelivr.net/npm/tauqeet-js@1.1.3/+esm`
+- Subpath import: `https://cdn.jsdelivr.net/npm/tauqeet-js@1.1.3/prayers/+esm`
 
 > Note: `Skypack` currently returns 404 for `tauqeet-js`, so it is not reliable until the package is indexed there.
 
@@ -32,7 +32,7 @@ This package is built as a pure ESM library and can be used directly in browsers
       getMoonAge,
       toHijri,
       HijriMethod
-    } from 'https://esm.sh/tauqeet-js@1.1.2';
+    } from 'https://esm.sh/tauqeet-js@1.1.3';
 
     console.log('calculatePrayerTimes', calculatePrayerTimes);
     console.log('getQiblaDirection', getQiblaDirection);
@@ -47,7 +47,7 @@ This package is built as a pure ESM library and can be used directly in browsers
 
 ```html
 <script type="module">
-  import * as prayers from 'https://esm.sh/tauqeet-js@1.1.2/prayers';
+  import * as prayers from 'https://esm.sh/tauqeet-js@1.1.3/prayers';
   console.log(prayers.calculatePrayerTimes);
 </script>
 ```
