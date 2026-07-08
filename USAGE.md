@@ -41,6 +41,8 @@ Practical, copy-paste-ready examples covering the most common use cases for `tau
 
 ## 1. Prayer Times for a City
 
+> 📖 **API Reference:** [docs/prayers.md](docs/prayers.md)
+
 ### 1.1 Basic Usage
 
 **Get Fajr time for London on 9 April 2024:**
@@ -262,6 +264,8 @@ if (result.sunrise.status === 'POLAR_DAY') {
 
 ## 2. Qibla Direction
 
+> 📖 **API Reference:** [docs/qibla-and-solar-alignment.md](docs/qibla-and-solar-alignment.md)
+
 ### 2.1 Basic Bearing & Distance
 
 ```ts
@@ -318,6 +322,8 @@ if (alignment.antiQiblaAlignment) {
 ---
 
 ## 3. Moon Module
+
+> 📖 **API Reference:** [docs/moon.md](docs/moon.md)
 
 ### 3.1 Moon Phase & Illumination
 
@@ -434,6 +440,8 @@ for (const r of results) {
 ---
 
 ## 4. Hijri Calendar
+
+> 📖 **API Reference:** [docs/hijri.md](docs/hijri.md)
 
 ### 4.1 Gregorian → Hijri (Civil)
 

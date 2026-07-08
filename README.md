@@ -18,6 +18,7 @@
 - [Installation](#installation)
 - [Quick Start](#quick-start)
 - [Documentation](#documentation)
+- [Limitations & Performance](#limitations--performance)
 - [Modules Overview](#modules-overview)
 - [License](#license)
 - [Author](#author)
@@ -113,12 +114,31 @@ console.log(`${hijri.day} ${HIJRI_MONTH_NAMES[hijri.month - 1]} ${hijri.year} AH
 
 | File | Description |
 |---|---|
-| [API.md](API.md) | Complete API reference for all exported functions, types, and classes |
+| [API.md](API.md) | API reference index to all modules, types, and classes |
+| [docs/](docs/) | Detailed module-specific API documentation (Prayers, Qibla, Moon, Hijri) |
 | [USAGE.md](USAGE.md) | Practical code guides with real-world examples |
 | [MODULES.md](MODULES.md) | Architecture overview and module import guide |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Build, test, and contribution guidelines |
 
 For the most up-to-date, interactive reference visit **[https://tauqeet-js.web.app](https://tauqeet-js.web.app)**.
+
+---
+
+## Limitations & Performance
+
+This library prioritizes numerical precision and scientific correctness. A few important limitations and runtime considerations you should know before integrating `tauqeet-js` into production systems:
+
+- ΔT model year range: the internal ΔT model is valid for years in the approximate range -2000..3000. Calls that request ephemerides or event searches outside this range will throw a `RangeError`. If you need values outside this range, pre-warn users and validate inputs.
+
+- Heavy numerical work: functions that evaluate full ephemerides (VSOP87 series, lunar theory) and global/local eclipse searches perform significant floating-point work and are synchronous. Run these calls off the main event loop (worker threads / web workers) in latency-sensitive applications.
+
+- Search convergence: several search routines (eclipse finders, lunar event searches) use iterative searches with configurable limits (e.g., `maxMoons`). When a search does not converge within the configured limit the function throws a `SearchConvergenceError`. You should catch this error or use the `get*` Result-style APIs where available.
+
+- Bundle size & coefficients: the VSOP87 coefficient tables are intentionally large to retain full precision. Importing the astronomy internals can increase bundle size and memory usage. For browser usage, consider server-side precomputation or dynamically importing astronomy modules only when needed.
+
+- Timezone & Intl: named timezone formatting depends on Node's ICU data. On some CI or minimal Node builds, Intl may not support IANA timezone names; to avoid discrepancies provide a `resolveTimezoneAsync` hook or run tests/environments with full-icu support.
+
+Refer to `API.md` and `docs/` for error types, configuration knobs, and recommended usage patterns for heavy computations.
 
 ---
 

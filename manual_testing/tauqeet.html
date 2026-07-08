@@ -1,0 +1,1668 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Astronomy & Prayer Times Dashboard</title>
+
+  <!-- Typography & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Leaflet CSS & Leaflet Control Geocoder CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+
+  <!-- Link CSS from style.css -->
+  <!-- <link rel="stylesheet" href="tauqeet.css" /> -->
+
+  <style>
+    /* ----------------------------------------------------
+       1. DESIGN SYSTEM & CSS VARIABLES
+       ---------------------------------------------------- */
+    :root {
+      --bg-base: #060a13;
+      --bg-surface: rgba(14, 20, 36, 0.75);
+      --bg-surface-hover: rgba(22, 30, 51, 0.85);
+      --bg-drawer: #090e1a;
+
+      --border-color: rgba(255, 255, 255, 0.08);
+      --border-active: rgba(6, 182, 212, 0.4);
+      --border-active-glow: rgba(6, 182, 212, 0.15);
+
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+
+      --color-accent: #06b6d4;
+      /* Cyan */
+      --color-accent-hover: #22d3ee;
+      --color-success: #10b981;
+      /* Emerald */
+      --color-success-bg: rgba(16, 185, 129, 0.1);
+
+      --font-sans: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --sidebar-width: 380px;
+
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+      --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 8px 10px -6px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Reset & Base Styles */
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background-color: var(--bg-base);
+      background-image:
+        radial-gradient(circle at 50% 0%, rgba(6, 182, 212, 0.12), transparent 45%),
+        radial-gradient(circle at 100% 100%, rgba(16, 185, 129, 0.05), transparent 35%);
+      background-attachment: fixed;
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      min-height: 100vh;
+      line-height: 1.5;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Common Components & Typography */
+    h1,
+    h2,
+    h3,
+    h4 {
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+
+    button,
+    input,
+    select {
+      font-family: inherit;
+      color: inherit;
+      background: transparent;
+      border: none;
+    }
+
+    /* Main Container Layout */
+    .app-container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 1.5rem;
+      position: relative;
+    }
+
+    /* Glass Card Styling */
+    .glass-card {
+      background: var(--bg-surface);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border-color);
+      border-radius: 24px;
+      box-shadow: var(--shadow-xl);
+      padding: 1.5rem;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    /* Toast Notifications */
+    .toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-width: 320px;
+    }
+
+    .toast {
+      background: rgba(14, 20, 36, 0.95);
+      border-left: 4px solid var(--color-accent);
+      border-radius: 8px;
+      padding: 12px 16px;
+      box-shadow: var(--shadow-xl);
+      color: var(--text-primary);
+      font-size: 0.875rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    }
+
+    .toast.error {
+      border-left-color: #ef4444;
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    /* ----------------------------------------------------
+       2. HEADER NAVIGATION SYSTEM
+       ---------------------------------------------------- */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      gap: 1rem;
+    }
+
+    .brand {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .brand-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #fff 30%, var(--color-accent) 100%);
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand-subtitle {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      margin-top: 2px;
+    }
+
+    .location-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border-color);
+      border-radius: 9999px;
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      max-width: 300px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .location-badge svg {
+      color: var(--color-accent);
+      flex-shrink: 0;
+    }
+
+    .btn-settings {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      background: rgba(6, 182, 212, 0.1);
+      border: 1px solid rgba(6, 182, 212, 0.2);
+      border-radius: 16px;
+      font-weight: 500;
+      font-size: 0.875rem;
+      color: var(--color-accent);
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .btn-settings:hover {
+      background: rgba(6, 182, 212, 0.18);
+      border-color: var(--color-accent);
+    }
+
+    /* ----------------------------------------------------
+       3. THREE-SECTION LAYOUT STRUCTURE
+       ---------------------------------------------------- */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+
+    @media (min-width: 1024px) {
+      .dashboard-grid {
+        grid-template-columns: 1.6fr 1fr;
+      }
+    }
+
+    /* SECTION I: HERO DYNAMIC MONITOR */
+    .hero-panel {
+      grid-column: 1 / -1;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 2rem;
+      border: 1px solid rgba(6, 182, 212, 0.15);
+      background: radial-gradient(circle at top right, rgba(6, 182, 212, 0.08), transparent 50%), var(--bg-surface);
+    }
+
+    .hero-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .hero-meta-title {
+      font-size: 0.875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: var(--color-accent);
+      font-weight: 500;
+    }
+
+    .hero-prayer-name {
+      font-size: 3rem;
+      font-weight: 700;
+      line-height: 1.1;
+      margin-top: 4px;
+      color: #fff;
+    }
+
+    .hero-interval {
+      font-size: 1.125rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+      margin-top: 8px;
+    }
+
+    .hero-countdown-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .countdown-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      color: var(--text-muted);
+    }
+
+    .countdown-timer {
+      font-size: 4rem;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      color: var(--color-success);
+      line-height: 1;
+      text-shadow: 0 0 20px rgba(16, 185, 129, 0.15);
+    }
+
+    .hero-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      border-top: 1px solid var(--border-color);
+      padding-top: 1.25rem;
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+    }
+
+    .hero-context-meta {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .meta-pill {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border-color);
+      padding: 4px 12px;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+    }
+
+    /* SECTION II: PRAYER SCHEDULE MATRIX */
+    .schedule-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .section-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .schedule-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.75rem;
+    }
+
+    @media (min-width: 640px) {
+      .schedule-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .prayer-row-card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-color);
+      border-radius: 18px;
+      padding: 1rem 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .prayer-row-card:hover {
+      background: rgba(255, 255, 255, 0.04);
+      transform: translateY(-2px);
+    }
+
+    .prayer-row-card.active-prayer {
+      background: rgba(6, 182, 212, 0.03);
+      border-color: var(--border-active);
+      box-shadow: 0 0 16px var(--border-active-glow);
+    }
+
+    .prayer-card-details {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .prayer-card-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-secondary);
+    }
+
+    .prayer-row-card.active-prayer .prayer-card-label {
+      color: var(--color-accent);
+      font-weight: 500;
+    }
+
+    .prayer-card-name {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #fff;
+      margin-top: 2px;
+    }
+
+    .prayer-card-time {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .prayer-row-card.active-prayer .prayer-card-time {
+      color: var(--color-accent);
+    }
+
+    .active-badge {
+      position: absolute;
+      top: 0;
+      right: 0;
+      background: var(--color-accent);
+      color: var(--bg-base);
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 2px 10px;
+      border-bottom-left-radius: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    /* SECTION III: SPATIAL & ASTRONOMICAL QIBLA METRICS */
+    .metrics-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .qibla-dashboard {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+
+    @media (min-width: 640px) {
+      .qibla-dashboard {
+        grid-template-columns: 1.2fr 1.8fr;
+      }
+    }
+
+    /* Compass UI Widget */
+    .compass-box {
+      background: rgba(255, 255, 255, 0.01);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+    }
+
+    .compass-dial-container {
+      position: relative;
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.02);
+      border: 4px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .compass-dial-container::before {
+      content: '';
+      position: absolute;
+      top: -6px;
+      left: calc(50% - 6px);
+      width: 12px;
+      height: 12px;
+      background: var(--color-accent);
+      clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+      z-index: 2;
+    }
+
+    .compass-dial {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      border-radius: 50%;
+      transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .compass-label {
+      position: absolute;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+
+    .compass-label.north {
+      top: 6px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: var(--color-accent);
+    }
+
+    .compass-label.east {
+      right: 6px;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+
+    .compass-label.south {
+      bottom: 6px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .compass-label.west {
+      left: 6px;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+
+    .compass-needle {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 6px;
+      height: 70px;
+      background: linear-gradient(to bottom, var(--color-success) 50%, var(--text-muted) 50%);
+      transform-origin: 50% 50%;
+      transform: translate(-50%, -50%) rotate(0deg);
+      border-radius: 4px;
+      transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .compass-needle::after {
+      content: '';
+      position: absolute;
+      top: calc(50% - 4px);
+      left: calc(50% - 4px);
+      width: 8px;
+      height: 8px;
+      background: #fff;
+      border-radius: 50%;
+    }
+
+    .qibla-numeric-stats {
+      width: 100%;
+      display: flex;
+      justify-content: space-around;
+      text-align: center;
+      border-top: 1px solid var(--border-color);
+      padding-top: 0.75rem;
+    }
+
+    .stat-metric {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .stat-metric-val {
+      font-size: 1.125rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .stat-metric-lbl {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* Solar Alignment Events Grid */
+    .alignments-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.75rem;
+    }
+
+    @media (min-width: 480px) {
+      .alignments-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .alignment-card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .alignment-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-secondary);
+    }
+
+    .alignment-time {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    /* ----------------------------------------------------
+       4. SETTINGS DRAWER SYSTEM
+       ---------------------------------------------------- */
+    .drawer-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(3, 5, 10, 0.7);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      z-index: 40;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .drawer-backdrop.is-active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .settings-drawer {
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      right: 0;
+      width: 100%;
+      max-width: var(--sidebar-width);
+      background: var(--bg-drawer);
+      border-left: 1px solid var(--border-color);
+      box-shadow: var(--shadow-xl);
+      z-index: 50;
+      transform: translateX(100%);
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .settings-drawer.is-active {
+      transform: translateX(0);
+    }
+
+    .drawer-header {
+      padding: 1.5rem;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .drawer-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .btn-close-drawer {
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-close-drawer:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .drawer-body {
+      padding: 1.5rem;
+      overflow-y: auto;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    /* Forms and Inputs styling */
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .input-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .input-field {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 10px 14px;
+      color: var(--text-primary);
+      font-size: 0.875rem;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    .input-field:focus {
+      border-color: var(--color-accent);
+      box-shadow: 0 0 0 1px rgba(6, 182, 212, 0.2);
+    }
+
+    select.input-field {
+      appearance: none;
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      background-size: 14px;
+      padding-right: 40px;
+    }
+
+    .btn-action {
+      background: var(--color-accent);
+      color: var(--bg-base);
+      font-weight: 600;
+      font-size: 0.875rem;
+      padding: 12px;
+      border-radius: 12px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background-color 0.2s ease;
+    }
+
+    .btn-action:hover {
+      background: var(--color-accent-hover);
+    }
+
+    .btn-secondary-action {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      font-weight: 500;
+      font-size: 0.875rem;
+      padding: 10px;
+      border-radius: 12px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-secondary-action:hover {
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    /* Embedded Interactive Map */
+    .map-wrapper {
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      overflow: hidden;
+      margin-top: 4px;
+      box-shadow: var(--shadow-md);
+    }
+
+    #map {
+      height: 200px;
+      width: 100%;
+      background: #03050a;
+    }
+
+    /* Overrides for Leaflet Geocoder Box to integrate dark mode theme beautifully */
+    .leaflet-control-geocoder {
+      background: var(--bg-drawer) !important;
+      border: 1px solid var(--border-color) !important;
+      border-radius: 8px !important;
+      box-shadow: var(--shadow-lg) !important;
+    }
+
+    .leaflet-control-geocoder-icon {
+      filter: invert(1);
+    }
+
+    .leaflet-control-geocoder-form input {
+      background: transparent !important;
+      color: var(--text-primary) !important;
+      border: none !important;
+      outline: none !important;
+      font-family: var(--font-sans) !important;
+    }
+
+    .leaflet-control-geocoder-throbber {
+      filter: invert(1);
+    }
+
+    .leaflet-control-geocoder-alternatives {
+      background: var(--bg-drawer) !important;
+      border-top: 1px solid var(--border-color) !important;
+    }
+
+    .leaflet-control-geocoder-alternatives li {
+      border-bottom: 1px solid var(--border-color) !important;
+    }
+
+    .leaflet-control-geocoder-alternatives li a {
+      color: var(--text-secondary) !important;
+      font-family: var(--font-sans) !important;
+    }
+
+    .leaflet-control-geocoder-alternatives li a:hover {
+      background: var(--bg-surface-hover) !important;
+      color: var(--text-primary) !important;
+    }
+  </style>
+
+
+
+</head>
+
+<body>
+
+  <div class="app-container">
+
+    <!-- --------------------------------------------------
+         HEADER SECTION
+         -------------------------------------------------- -->
+    <header>
+      <div class="brand">
+        <h1 class="brand-title">Al-Tauqeet</h1>
+        <p class="brand-subtitle">Astrophysical Mechanics</p>
+      </div>
+
+      <div class="location-badge" id="locationBadge" title="Locating...">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z" />
+          <circle cx="12" cy="10" r="3" />
+        </svg>
+        <span id="activeLocationText">Locating...</span>
+      </div>
+
+      <button class="btn-settings" id="openSettingsBtn" type="button" aria-label="Open settings panel">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3" />
+          <path
+            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+        </svg>
+        <span>Parameters</span>
+      </button>
+    </header>
+
+    <!-- --------------------------------------------------
+         MAIN DASHBOARD GRID LAYOUT
+         -------------------------------------------------- -->
+    <main class="dashboard-grid">
+
+      <!-- SECTION I: HERO PANEL (DYNAMIC MONITOR) -->
+      <section class="glass-card hero-panel">
+        <div class="hero-header">
+          <div>
+            <span class="hero-meta-title">Current Phase</span>
+            <h2 class="hero-prayer-name" id="currentPrayerName">Fajr</h2>
+            <p class="hero-interval" id="currentPrayerInterval">--:-- - --:--</p>
+          </div>
+          <div class="hero-countdown-wrap">
+            <span class="countdown-label">Time Remaining</span>
+            <div class="countdown-timer" id="countdownTimer">00:00:00</div>
+          </div>
+        </div>
+
+        <div class="hero-footer">
+          <div class="hero-context-meta">
+            <span class="meta-pill" id="metaDatePill">Date: --</span>
+            <span class="meta-pill" id="metaTimezonePill">Timezone: --</span>
+            <span class="meta-pill" id="metaMadhabPill">Madhab: --</span>
+          </div>
+          <div id="nextPrayerNotification">Next: Fajr</div>
+        </div>
+      </section>
+
+      <!-- SECTION II: PRAYER SCHEDULE MATRIX -->
+      <section class="schedule-panel">
+        <h3 class="section-title">Schedule Matrix</h3>
+        <div class="schedule-grid" id="scheduleGrid">
+          <!-- Dynamic templates injected via JavaScript module -->
+        </div>
+      </section>
+
+      <!-- SECTION III: SPATIAL & ASTRONOMICAL QIBLA METRICS -->
+      <section class="metrics-panel">
+        <h3 class="section-title">Qibla & Solar Diagnostics</h3>
+
+        <div class="qibla-dashboard">
+          <!-- Compass visualizer container -->
+          <div class="compass-box">
+            <div class="compass-dial-container">
+              <div class="compass-dial" id="compassDial">
+                <div class="compass-label north">N</div>
+                <div class="compass-label east">E</div>
+                <div class="compass-label south">S</div>
+                <div class="compass-label west">W</div>
+                <div class="compass-needle" id="compassNeedle"></div>
+              </div>
+            </div>
+            <div class="qibla-numeric-stats">
+              <div class="stat-metric">
+                <span class="stat-metric-val" id="qiblaBearingVal">--°</span>
+                <span class="stat-metric-lbl">True Heading</span>
+              </div>
+              <div class="stat-metric">
+                <span class="stat-metric-val" id="qiblaDistanceVal">-- km</span>
+                <span class="stat-metric-lbl">Distance</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Solar Events Alignments -->
+          <div class="alignments-grid">
+            <div class="alignment-card">
+              <span class="alignment-label">Qibla Alignment</span>
+              <span class="alignment-time" id="alignQibla">--:--:--</span>
+            </div>
+            <div class="alignment-card">
+              <span class="alignment-label">Anti-Qibla Align</span>
+              <span class="alignment-time" id="alignAntiQibla">--:--:--</span>
+            </div>
+            <div class="alignment-card">
+              <span class="alignment-label">Right Perpendicular</span>
+              <span class="alignment-time" id="alignRight">--:--:--</span>
+            </div>
+            <div class="alignment-card">
+              <span class="alignment-label">Left Perpendicular</span>
+              <span class="alignment-time" id="alignLeft">--:--:--</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+  </div>
+
+  <!-- ----------------------------------------------------
+       SETTINGS DRAWER UI COMPONENT (SIDEBAR)
+       ---------------------------------------------------- -->
+  <div class="drawer-backdrop" id="drawerBackdrop"></div>
+  <aside class="settings-drawer" id="settingsDrawer" aria-hidden="true">
+    <div class="drawer-header">
+      <h3 class="drawer-title">Diagnostics Panel</h3>
+      <button class="btn-close-drawer" id="closeSettingsBtn" type="button" aria-label="Close parameters panel">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </button>
+    </div>
+
+    <div class="drawer-body">
+      <!-- Location Engine Interface -->
+      <section class="form-group">
+        <label class="input-label">Coordinate Engine</label>
+        <button class="btn-secondary-action" id="useGpsBtn" type="button">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="3 11 22 2 13 21 11 13 3 11" />
+          </svg>
+          Request Current GPS Coordinates
+        </button>
+        <div class="form-row" style="margin-top: 8px;">
+          <div class="form-group">
+            <label class="input-label" style="font-size: 0.65rem;">Latitude</label>
+            <input type="number" id="latInput" class="input-field" step="0.000001" min="-90" max="90" />
+          </div>
+          <div class="form-group">
+            <label class="input-label" style="font-size: 0.65rem;">Longitude</label>
+            <input type="number" id="lngInput" class="input-field" step="0.000001" min="-180" max="180" />
+          </div>
+        </div>
+      </section>
+
+      <!-- Embedded Leaflet Interactive Map -->
+      <section class="form-group">
+        <label class="input-label">Visual GIS Search</label>
+        <div class="map-wrapper">
+          <div id="map"></div>
+        </div>
+      </section>
+
+      <!-- Temporal Options -->
+      <section class="form-group">
+        <label class="input-label" for="dateInput">Calculation Date</label>
+        <input type="date" id="dateInput" class="input-field" />
+      </section>
+
+      <!-- Jurisprudential Options -->
+      <section class="form-group">
+        <label class="input-label" for="madhabSelect">Madhab Preference</label>
+        <select id="madhabSelect" class="input-field">
+          <option value="Hanafi">Hanafi School</option>
+          <option value="Shafi">Shafi'i / Maliki / Hanbali School</option>
+        </select>
+      </section>
+
+      <!-- Timezone Override Dropdown -->
+      <section class="form-group">
+        <label class="input-label" for="timezoneSelect">IANA Timezone Override</label>
+        <select id="timezoneSelect" class="input-field">
+          <!-- Populated dynamically via standard JS support -->
+        </select>
+      </section>
+
+      <!-- Atmospheric Variables -->
+      <section class="form-group">
+        <label class="input-label">Refraction & Altitude Parameters</label>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="input-label" style="font-size: 0.65rem;" for="elevationInput">Elevation (m)</label>
+            <input type="number" id="elevationInput" class="input-field" min="-430" value="0" />
+          </div>
+          <div class="form-group">
+            <label class="input-label" style="font-size: 0.65rem;" for="tempInput">Temperature (°C)</label>
+            <input type="number" id="tempInput" class="input-field" step="0.1" value="15" />
+          </div>
+        </div>
+        <div style="margin-top: 8px;">
+          <div class="form-group">
+            <label class="input-label" style="font-size: 0.65rem;" for="pressInput">Pressure (mbar)</label>
+            <input type="number" id="pressInput" class="input-field" step="0.1" value="1010" />
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </aside>
+
+  <!-- Non-intrusive Toast Element -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Leaflet and Geocoding control script requirements -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+
+  <!-- ----------------------------------------------------
+       5. MAIN LOGIC MODULE (TAUQEET ENGINE OVERLAY)
+       ---------------------------------------------------- */ -->
+  <script type="module">
+    import { calculatePrayerTimes, getQiblaDirection, getSunAtQibla } from 'https://esm.sh/tauqeet-js@1.1.2';
+
+    // Application state key
+    const STATE_STORAGE_KEY = 'al-tauqeet-state-v3';
+
+    // Fallback static location: Faisalabad, Pakistan [1]
+    const fallbackLocation = {
+      lat: 31.39965,
+      lng: 73.02003,
+      address: 'Faisalabad, Pakistan'
+    };
+
+    // Global application configuration reactive state
+    const state = {
+      location: { ...fallbackLocation },
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+      madhab: 'Hanafi',
+      date: new Date().toISOString().slice(0, 10),
+      elevation: 0,
+      temperatureC: 15,
+      pressureMbar: 1010
+    };
+
+    // Internal navigation nodes and controls
+    let map = null;
+    let marker = null;
+    let mapInitialized = false;
+    let activeIntervalId = null;
+    let lastCalculatedTimes = null;
+
+    // Static elements references
+    const elements = {
+      openSettingsBtn: document.getElementById('openSettingsBtn'),
+      closeSettingsBtn: document.getElementById('closeSettingsBtn'),
+      settingsDrawer: document.getElementById('settingsDrawer'),
+      drawerBackdrop: document.getElementById('drawerBackdrop'),
+      locationBadge: document.getElementById('locationBadge'),
+      activeLocationText: document.getElementById('activeLocationText'),
+      currentPrayerName: document.getElementById('currentPrayerName'),
+      currentPrayerInterval: document.getElementById('currentPrayerInterval'),
+      countdownTimer: document.getElementById('countdownTimer'),
+      nextPrayerNotification: document.getElementById('nextPrayerNotification'),
+      metaDatePill: document.getElementById('metaDatePill'),
+      metaTimezonePill: document.getElementById('metaTimezonePill'),
+      metaMadhabPill: document.getElementById('metaMadhabPill'),
+      scheduleGrid: document.getElementById('scheduleGrid'),
+      qiblaBearingVal: document.getElementById('qiblaBearingVal'),
+      qiblaDistanceVal: document.getElementById('qiblaDistanceVal'),
+      compassNeedle: document.getElementById('compassNeedle'),
+      alignQibla: document.getElementById('alignQibla'),
+      alignAntiQibla: document.getElementById('alignAntiQibla'),
+      alignRight: document.getElementById('alignRight'),
+      alignLeft: document.getElementById('alignLeft'),
+      latInput: document.getElementById('latInput'),
+      lngInput: document.getElementById('lngInput'),
+      useGpsBtn: document.getElementById('useGpsBtn'),
+      dateInput: document.getElementById('dateInput'),
+      madhabSelect: document.getElementById('madhabSelect'),
+      timezoneSelect: document.getElementById('timezoneSelect'),
+      elevationInput: document.getElementById('elevationInput'),
+      tempInput: document.getElementById('tempInput'),
+      pressInput: document.getElementById('pressInput'),
+      toastContainer: document.getElementById('toastContainer'),
+      compassDial: document.getElementById('compassDial')
+    };
+
+    // Order definition for rendering
+    const prayerOrder = ['fajr', 'sunrise', 'dhahwaKubra', 'dhuhr', 'asr', 'maghrib', 'isha'];
+
+    // Display localized labels nicely [1]
+    const labels = {
+      fajr: 'Fajr',
+      sunrise: 'Sunrise',
+      dhahwaKubra: 'Dhuhwa-Kubra',
+      dhuhr: 'Zuhr',
+      asr: 'Asr',
+      maghrib: 'Maghrib',
+      isha: 'Isha'
+    };
+
+    /* Toast Notification Trigger */
+    function triggerToast(text, isError = false) {
+      const toast = document.createElement('div');
+      toast.className = `toast ${isError ? 'error' : ''}`;
+      toast.innerHTML = `<span>${text}</span>`;
+      elements.toastContainer.appendChild(toast);
+      setTimeout(() => {
+        toast.style.animation = 'slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) reverse forwards';
+        setTimeout(() => toast.remove(), 300);
+      }, 4000);
+    }
+
+    /* Initialize and update user configuration parameters persistence */
+    function loadPersistedState() {
+      try {
+        const cached = localStorage.getItem(STATE_STORAGE_KEY);
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (parsed.location) state.location = parsed.location;
+          if (parsed.timezone) state.timezone = parsed.timezone;
+          if (parsed.madhab) state.madhab = parsed.madhab;
+          if (parsed.date) state.date = parsed.date;
+          if (parsed.elevation !== undefined) state.elevation = Number(parsed.elevation);
+          if (parsed.temperatureC !== undefined) state.temperatureC = Number(parsed.temperatureC);
+          if (parsed.pressureMbar !== undefined) state.pressureMbar = Number(parsed.pressureMbar);
+        }
+      } catch (err) {
+        console.error('Failed to parse cached state', err);
+      }
+    }
+
+    function saveActiveState() {
+      try {
+        localStorage.setItem(STATE_STORAGE_KEY, JSON.stringify(state));
+      } catch (err) {
+        console.error('Failed to preserve active state parameters', err);
+      }
+    }
+
+    /* Format epoch milliseconds to beautiful local times */
+    function formatTime(timestamp) {
+      if (!timestamp) return '--:--';
+      return new Intl.DateTimeFormat('en-US', {
+        timeZone: state.timezone,
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true
+      }).format(new Date(timestamp));
+    }
+
+    function normalizePrayerTimestamp(item) {
+      if (!item) return null;
+      if (typeof item.timestamp === 'number') {
+        // Tauqeet returns raw timestamps as UNIX seconds; convert to milliseconds.
+        return item.timestamp < 1e12 ? item.timestamp * 1000 : item.timestamp;
+      }
+      if (typeof item.timestamp === 'string') {
+        const parsed = Date.parse(item.timestamp);
+        if (!Number.isNaN(parsed)) return parsed;
+      }
+      if (typeof item.utc === 'string') {
+        const parsed = Date.parse(item.utc);
+        if (!Number.isNaN(parsed)) return parsed;
+      }
+      return null;
+    }
+
+    function getHeroTimelineSnapshot(timeline = []) {
+      const now = Date.now();
+      if (!timeline.length) return null;
+      let activeIndex = -1;
+
+      for (let i = 0; i < timeline.length - 1; i += 1) {
+        if (now >= timeline[i].time && now < timeline[i + 1].time) {
+          activeIndex = i;
+          break;
+        }
+      }
+
+      if (activeIndex === -1) {
+        if (now < timeline[0].time) {
+          activeIndex = 0;
+        } else {
+          activeIndex = Math.max(0, timeline.length - 2);
+        }
+      }
+
+      const current = timeline[activeIndex];
+      const next = timeline[activeIndex + 1] || current;
+      const remainingMs = Math.max(0, next.time - now);
+      const totalSeconds = Math.floor(remainingMs / 1000);
+      const hrs = Math.floor(totalSeconds / 3600);
+      const mins = Math.floor((totalSeconds % 3600) / 60);
+      const secs = totalSeconds % 60;
+
+      return {
+        current,
+        next,
+        countdown: `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`,
+        remainingMs
+      };
+    }
+
+    /* Compile available zone listings */
+    function renderTimezoneMenu() {
+      elements.timezoneSelect.innerHTML = '';
+      let list = [];
+      try {
+        list = Intl.supportedValuesOf('timeZone');
+      } catch (e) {
+        list = ['UTC', 'Asia/Karachi', 'Asia/Riyadh', 'Asia/Dubai', 'Europe/London', 'America/New_York'];
+      }
+      list.forEach(zone => {
+        const el = document.createElement('option');
+        el.value = zone;
+        el.textContent = zone.replace(/_/g, ' ');
+        if (zone === state.timezone) el.selected = true;
+        elements.timezoneSelect.appendChild(el);
+      });
+    }
+
+    /* Initialize Drawer Controls */
+    function toggleDrawer(isOpen) {
+      if (isOpen) {
+        elements.settingsDrawer.classList.add('is-active');
+        elements.drawerBackdrop.classList.add('is-active');
+        elements.settingsDrawer.removeAttribute('aria-hidden');
+        // Trigger Leaflet Map geometry refresh when visual container opens [1]
+        setTimeout(() => {
+          initInteractiveMap();
+        }, 150);
+      } else {
+        elements.settingsDrawer.classList.remove('is-active');
+        elements.drawerBackdrop.classList.remove('is-active');
+        elements.settingsDrawer.setAttribute('aria-hidden', 'true');
+      }
+    }
+
+    /* Geocoder and Interactive Leaflet Engine */
+    function initInteractiveMap() {
+      if (mapInitialized) {
+        map.invalidateSize();
+        return;
+      }
+
+      map = L.map('map', {
+        zoomControl: false,
+        attributionControl: false
+      }).setView([state.location.lat, state.location.lng], 10);
+
+      L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        maxZoom: 19
+      }).addTo(map);
+
+      marker = L.marker([state.location.lat, state.location.lng], { draggable: true }).addTo(map);
+
+      // Handle marker drags
+      marker.on('dragend', async () => {
+        const position = marker.getLatLng();
+        await updateLocationAndResolveName(position.lat, position.lng);
+      });
+
+      // Handle direct clicks on map geometry
+      map.on('click', async (e) => {
+        const position = e.latlng;
+        marker.setLatLng(position);
+        await updateLocationAndResolveName(position.lat, position.lng);
+      });
+
+      // Geocoding Control Integration [1]
+      const geocoder = L.Control.geocoder({
+        defaultMarkGeocode: false,
+        placeholder: "Search coordinates...",
+        errorMessage: "No results matched query."
+      })
+        .on('markgeocode', function (e) {
+          const bbox = e.geocode.bbox;
+          const center = e.geocode.center;
+          marker.setLatLng(center);
+          map.fitBounds(bbox);
+          updateLocationAndResolveName(center.lat, center.lng, e.geocode.name);
+        })
+        .addTo(map);
+
+      mapInitialized = true;
+    }
+
+    /* Location & Coordinates Syncing */
+    async function updateLocationAndResolveName(lat, lng, forcedName = null) {
+      state.location.lat = Number(parseFloat(lat).toFixed(6));
+      state.location.lng = Number(parseFloat(lng).toFixed(6));
+
+      elements.latInput.value = state.location.lat;
+      elements.lngInput.value = state.location.lng;
+
+      if (forcedName) {
+        state.location.address = forcedName;
+        syncAndRender();
+      } else {
+        // Reverse geocodes Nominatim mapping [1]
+        try {
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=12&addressdetails=1`, {
+            headers: { 'Accept-Language': 'en' }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            state.location.address = data.display_name || `Coordinate: ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+          } else {
+            state.location.address = `Coordinate: ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+          }
+        } catch (e) {
+          state.location.address = `Coordinate: ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+        }
+        syncAndRender();
+      }
+    }
+
+    /* Core Computation Engine Bridge [1] */
+    function buildPrayerTimesConfig(dateString) {
+      return {
+        lat: state.location.lat,
+        long: state.location.lng,
+        timeZone: state.timezone,
+        date: dateString,
+        madhab: state.madhab,
+        elevation: state.elevation,
+        temperatureC: state.temperatureC,
+        pressureMbar: state.pressureMbar,
+        withMetadata: false
+      };
+    }
+
+    /* Assembles and sorts events from yesterday, today, and tomorrow to determine active segments */
+    function getChronologicalPrayerSequence() {
+      const activeDate = new Date(state.date);
+
+      const yesterdayDate = new Date(activeDate);
+      yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+      const yesterdayStr = yesterdayDate.toISOString().slice(0, 10);
+
+      const tomorrowDate = new Date(activeDate);
+      tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+      const tomorrowStr = tomorrowDate.toISOString().slice(0, 10);
+
+      const configYesterday = buildPrayerTimesConfig(yesterdayStr);
+      const configToday = buildPrayerTimesConfig(state.date);
+      const configTomorrow = buildPrayerTimesConfig(tomorrowStr);
+
+      const timesYesterday = calculatePrayerTimes(configYesterday);
+      const timesToday = calculatePrayerTimes(configToday);
+      const timesTomorrow = calculatePrayerTimes(configTomorrow);
+
+      const timeline = [];
+
+      const mapTimes = (results, labelOffset) => {
+        prayerOrder.forEach(key => {
+          const item = results[key];
+          const timestamp = normalizePrayerTimestamp(item) || Date.now();
+          timeline.push({
+            key,
+            label: labels[key],
+            time: timestamp,
+            local: item?.local || '--:--',
+            dayOffset: labelOffset
+          });
+        });
+      };
+
+      mapTimes(timesYesterday, -1);
+      mapTimes(timesToday, 0);
+      mapTimes(timesTomorrow, 1);
+
+      // Chronological Sorting [1]
+      timeline.sort((a, b) => a.time - b.time);
+      return { timeline, timesToday };
+    }
+
+    /* Primary layout compilation */
+    function syncAndRender() {
+      saveActiveState();
+
+      // Form bindings updates
+      elements.activeLocationText.textContent = state.location.address;
+      elements.locationBadge.title = state.location.address;
+      elements.latInput.value = state.location.lat;
+      elements.lngInput.value = state.location.lng;
+      elements.dateInput.value = state.date;
+      elements.madhabSelect.value = state.madhab;
+      elements.elevationInput.value = state.elevation;
+      elements.tempInput.value = state.temperatureC;
+      elements.pressInput.value = state.pressureMbar;
+
+      // Map positions updates
+      if (mapInitialized && marker) {
+        const dest = [state.location.lat, state.location.lng];
+        marker.setLatLng(dest);
+        map.setView(dest, map.getZoom());
+      }
+
+      // Calculations execution
+      try {
+        const { timeline, timesToday } = getChronologicalPrayerSequence();
+        lastCalculatedTimes = timeline;
+
+        // Render Matrix Cards
+        elements.scheduleGrid.innerHTML = '';
+        prayerOrder.forEach(key => {
+          const field = timesToday[key];
+          const row = document.createElement('div');
+          row.className = 'prayer-row-card';
+          row.id = `card-${key}`;
+
+          row.innerHTML = `
+            <div class="prayer-card-details">
+              <span class="prayer-card-label">${labels[key]}</span>
+              <span class="prayer-card-name">${labels[key]}</span>
+            </div>
+            <span class="prayer-card-time">${field?.local || '--:--'}</span>
+          `;
+          elements.scheduleGrid.appendChild(row);
+        });
+
+        // Spatial Qibla Geodesic Bearing & Anti-Bearing Compass Metrics [1]
+        const qiblaResult = getQiblaDirection({ latitude: state.location.lat, longitude: state.location.lng });
+        if (qiblaResult && qiblaResult.bearing !== null) {
+          elements.qiblaBearingVal.textContent = `${qiblaResult.bearing.toFixed(1)}°`;
+          elements.qiblaDistanceValue = elements.qiblaDistanceVal.textContent = `${qiblaResult.distanceKm.toFixed(0)} km`;
+
+          // CSS rotation of the compass elements [1]
+          elements.compassDial.style.transform = `rotate(${-qiblaResult.bearing}deg)`;
+          elements.compassNeedle.style.transform = `translate(-50%, -50%) rotate(${qiblaResult.bearing}deg)`;
+        } else {
+          elements.qiblaBearingVal.textContent = '--';
+          elements.qiblaDistanceVal.textContent = '--';
+          elements.compassNeedle.style.transform = `translate(-50%, -50%) rotate(0deg)`;
+        }
+
+        // Astronomical Solar-Qibla Alignments [1]
+        const solarAligns = getSunAtQibla({
+          latitude: state.location.lat,
+          longitude: state.location.lng,
+          date: new Date(state.date),
+          timeZone: state.timezone
+        });
+
+        elements.alignQibla.textContent = solarAligns.qiblaAlignment ? formatTime(solarAligns.qiblaAlignment.time) : 'No Alignment';
+        elements.alignAntiQibla.textContent = solarAligns.antiQiblaAlignment ? formatTime(solarAligns.antiQiblaAlignment.time) : 'No Alignment';
+        elements.alignRight.textContent = solarAligns.rightPerpendicularAlignment ? formatTime(solarAligns.rightPerpendicularAlignment.time) : 'No Alignment';
+        elements.alignLeft.textContent = solarAligns.leftPerpendicularAlignment ? formatTime(solarAligns.leftPerpendicularAlignment.time) : 'No Alignment';
+
+        // Set diagnostic UI badges
+        elements.metaDatePill.textContent = `Date: ${state.date}`;
+        elements.metaTimezonePill.textContent = `Timezone: ${state.timezone}`;
+        elements.metaMadhabPill.textContent = `Madhab: ${state.madhab}`;
+
+        updateDynamicClock();
+
+      } catch (err) {
+        console.error('Calculation parameters error', err);
+        triggerToast('Could not compute values with existing parameters', true);
+      }
+    }
+
+    /* Core ticking calculations thread */
+    function updateHeroSection() {
+      if (!lastCalculatedTimes || !lastCalculatedTimes.length) return;
+
+      const snapshot = getHeroTimelineSnapshot(lastCalculatedTimes);
+      if (!snapshot) return;
+
+      const { current, next, countdown } = snapshot;
+      const displayCurrentLabel = current.label || 'Unknown';
+      const currentInterval = `${current.local || '--:--'} - ${next.local || '--:--'}`;
+      const nextPhaseText = next && next.label ? `${next.label} (${next.local || '--:--'})` : 'Unavailable';
+
+      // Highlight Active Matrix element
+      document.querySelectorAll('.prayer-row-card').forEach(el => el.classList.remove('active-prayer'));
+      const activeCard = document.getElementById(`card-${current.key}`);
+      if (activeCard) {
+        activeCard.classList.add('active-prayer');
+        if (!activeCard.querySelector('.active-badge')) {
+          const badge = document.createElement('span');
+          badge.className = 'active-badge';
+          badge.textContent = 'Active';
+          activeCard.appendChild(badge);
+        }
+      }
+
+      elements.currentPrayerName.textContent = displayCurrentLabel;
+      elements.currentPrayerInterval.textContent = currentInterval;
+      elements.nextPrayerNotification.textContent = `Next Phase: ${nextPhaseText}`;
+      elements.countdownTimer.textContent = countdown;
+    }
+
+    function updateDynamicClock() {
+      updateHeroSection();
+    }
+
+    /* Geolocation browser hook trigger */
+    function triggerDeviceGeolocation() {
+      if (!navigator.geolocation) {
+        triggerToast('Your web browser does not support Geolocation diagnostics.', true);
+        return;
+      }
+
+      triggerToast('Requesting satellite tracking vectors...');
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const { latitude, longitude } = position.coords;
+          triggerToast('Vector locked. Calculating reverse mapping...');
+          await updateLocationAndResolveName(latitude, longitude);
+          triggerToast('Location resolved.');
+        },
+        (error) => {
+          console.error(error);
+          triggerToast(`Permission denied or offline: ${error.message}`, true);
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      );
+    }
+
+    /* ----------------------------------------------------
+       6. INTERFACES & DOM EVENT ROUTERS
+       ---------------------------------------------------- */
+    elements.openSettingsBtn.addEventListener('click', () => toggleDrawer(true));
+    elements.closeSettingsBtn.addEventListener('click', () => toggleDrawer(false));
+    elements.drawerBackdrop.addEventListener('click', () => toggleDrawer(false));
+
+    // Handle Escape key to close drawer close mechanics
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') toggleDrawer(false);
+    });
+
+    // Form inputs and selection controls event routers
+    elements.useGpsBtn.addEventListener('click', triggerDeviceGeolocation);
+
+    elements.latInput.addEventListener('change', (e) => {
+      const lat = parseFloat(e.target.value);
+      if (!isNaN(lat) && lat >= -90 && lat <= 90) {
+        updateLocationAndResolveName(lat, state.location.lng);
+      } else {
+        triggerToast('Latitude must be between -90 and 90 degrees', true);
+      }
+    });
+
+    elements.lngInput.addEventListener('change', (e) => {
+      const lng = parseFloat(e.target.value);
+      if (!isNaN(lng) && lng >= -180 && lng <= 180) {
+        updateLocationAndResolveName(state.location.lat, lng);
+      } else {
+        triggerToast('Longitude must be between -180 and 180 degrees', true);
+      }
+    });
+
+    elements.dateInput.addEventListener('change', (e) => {
+      state.date = e.target.value;
+      syncAndRender();
+    });
+
+    elements.madhabSelect.addEventListener('change', (e) => {
+      state.madhab = e.target.value;
+      syncAndRender();
+    });
+
+    elements.timezoneSelect.addEventListener('change', (e) => {
+      state.timezone = e.target.value;
+      syncAndRender();
+    });
+
+    elements.elevationInput.addEventListener('change', (e) => {
+      state.elevation = Number(e.target.value) || 0;
+      syncAndRender();
+    });
+
+    elements.tempInput.addEventListener('change', (e) => {
+      state.temperatureC = Number(e.target.value) || 15;
+      syncAndRender();
+    });
+
+    elements.pressInput.addEventListener('change', (e) => {
+      state.pressureMbar = Number(e.target.value) || 1010;
+      syncAndRender();
+    });
+
+    /* Application Initial Boot thread */
+    function boot() {
+      loadPersistedState();
+      renderTimezoneMenu();
+      syncAndRender();
+
+      // Run dynamic ticking clock
+      if (activeIntervalId) clearInterval(activeIntervalId);
+      activeIntervalId = setInterval(updateDynamicClock, 1000);
+
+      // Do not request location on every refresh.
+      // Restored location from localStorage is used automatically.
+    }
+
+    boot();
+  </script>
+</body>
+
+</html>

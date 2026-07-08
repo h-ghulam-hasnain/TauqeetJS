@@ -8,6 +8,7 @@ export default defineConfig({
     'src/moon/index.ts',               // tauqeet-js/moon
     'src/hijri/index.ts',              // tauqeet-js/hijri
     'src/solar-alignment/index.ts',    // tauqeet-js/solar-alignment
+    'src/astronomy/index.ts',          // tauqeet-js/astronomy
   ],
   outDir: 'dist',
   format: ['esm', 'cjs'],

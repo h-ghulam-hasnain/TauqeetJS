@@ -6,6 +6,7 @@ import { ConjunctionCalendar } from '../methods/astronomical/ConjunctionCalendar
 import { VisibilityCalendar } from '../methods/sighting/VisibilityCalendar.js';
 import { UmmAlQuraCalendar } from '../methods/ummalqura/UmmAlQuraCalendar.js';
 import { getCivilMonthLength } from '../core/HijriMonthLength.js';
+import { HijriConfigurationError } from '../errors.js';
 
 interface CalendarLike {
   toHijri(date: Date): HijriDate;
@@ -94,7 +95,7 @@ export class HijriEngine {
       case HijriMethod.VISIBILITY: {
         const loc = this.options.location;
         if (!loc) {
-          throw new Error(
+          throw new HijriConfigurationError(
             'HijriEngine: HijriMethod.VISIBILITY requires a location (latitude, longitude).'
           );
         }

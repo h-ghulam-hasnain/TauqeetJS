@@ -27,11 +27,14 @@ export function calculatePrayerTimes(config: PrayerConfig): PrayerTimesResult {
  * Supports async timezone resolution via resolveTimezoneAsync hook.
  * Throws a PrayerCalculationError if configuration validation fails.
  */
+import { getVSOP87Tables } from '../astronomy/loader.js';
+
 export async function calculatePrayerTimesAsync(config: PrayerConfig): Promise<PrayerTimesResult> {
   const validation = validatePrayerConfig(config);
   if (!validation.success) {
     throw new PrayerCalculationError(validation.error);
   }
+  await getVSOP87Tables();
 
   const validatedConfig = validation.config;
   if (validatedConfig.resolveTimezoneAsync) {

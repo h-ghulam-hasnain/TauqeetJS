@@ -2,7 +2,7 @@ import { atand2, asind, cosd, sind, tand } from '../../../internal/trig.js';
 import { normalizeDegrees, radiansToDegrees } from '../../../internal/angles.js';
 import { timeArguments } from '../../time/JulianDate.js';
 import { computeEarthHeliocentricState } from '../../theories/vsop87/vsop87.js';
-import { computeNutation } from '../../theories/nutation/iau1980.js';
+import { computeNutation } from '../../theories/nutation/iau2000b.js';
 import { computeSolarAberration } from '../../earth/Aberration.js';
 import type { SolarPositionResult } from '../../types/ephemeris.js';
 
@@ -184,13 +184,34 @@ export class SolarEphemeris {
 
   get equationOfTime() {
     if (this._equationOfTime === undefined) {
-      let value = 4 * (this.gha + 180 - 15 * this.ut);
-      if (value > 20) {
-        value -= 1440;
-      } else if (value < -20) {
-        value += 1440;
-      }
-      this._equationOfTime = value;
+      // Equation of Time (Meeus, "Astronomical Algorithms" §13, eq. 13.3)
+      //
+      // EoT = Mean_Sun_longitude − Apparent_RA
+      //
+      // where Mean_Sun_longitude (L0) is the geometric mean longitude of the Sun
+      // referred to the mean equinox of date (degrees), computed from UT centuries (t).
+      //
+      // Sign convention (nautical / Bowditch):
+      //   EoT > 0  → apparent sun transits BEFORE 12:00 UT (add EoT to get UT of transit)
+      //   EoT < 0  → apparent sun transits AFTER  12:00 UT
+      //
+      // Practical range: −14.3 min (mid-February) … +16.4 min (early November)
+
+      // t = Julian centuries from J2000.0 based on UT (not TT) — correct for EoT
+      const t = this.timeArgs.t;
+
+      // Geometric mean longitude of the Sun (degrees), normalized 0–360
+      const L0 = ((280.46646 + 36000.76983 * t) % 360 + 360) % 360;
+
+      // EoT in degrees: positive when mean sun is east of apparent sun
+      let eotDeg = L0 - this.rightAscension;
+
+      // Normalize to ±180°
+      if (eotDeg > 180)  eotDeg -= 360;
+      if (eotDeg < -180) eotDeg += 360;
+
+      // Convert degrees → minutes of time  (1° = 4 min)
+      this._equationOfTime = eotDeg * 4;
     }
     return this._equationOfTime;
   }
@@ -212,6 +233,10 @@ export class SolarEphemeris {
   get distanceAu() {
     return this.earthState.radius;
   }
+
+  get apparentLatitude() {
+    return this.B_corr;
+  }
 }
 
 export function computeSolarPosition(j: number, ut: number, deltaT: number): SolarPositionResult {
@@ -228,5 +253,6 @@ export function computeSolarPosition(j: number, ut: number, deltaT: number): Sol
     equationOfTime: engine.equationOfTime,
     distanceAu: engine.distanceAu,
     apparentLongitude: engine.apparentLongitude,
+    apparentLatitude: engine.apparentLatitude,
   };
 }

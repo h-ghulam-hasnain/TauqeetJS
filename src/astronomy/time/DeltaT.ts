@@ -1,4 +1,7 @@
 export const calculateDeltaT = (year: number): number => {
+  if (year < -2000 || year > 3000) {
+    throw new RangeError('Year out of range. Astronomical models are only valid between years -2000 and 3000.');
+  }
   if (year < -500) {
     const u = (year - 1820) / 100;
     return -20 + 32 * u * u;
@@ -87,7 +90,42 @@ export const calculateDeltaT = (year: number): number => {
       0.0000237359 * Math.pow(t, 5)
     );
   }
+  if (year < 2033) {
+    // ── IERS Bulletin A measured & predicted ΔT (seconds) ──────────────────────
+    // Source: IERS Bulletin A + USNO measurements (updated 2026-07)
+    // Annual values at January 1 of each year.
+    // 2005–2025: measured values (±0.1 s accuracy)
+    // 2026–2032: IERS Bulletin A predictions (±0.5 s accuracy)
+    const TABLE: readonly [number, number][] = [
+      [2005, 64.69], [2006, 64.85], [2007, 65.15], [2008, 65.46],
+      [2009, 65.78], [2010, 66.07], [2011, 66.32], [2012, 66.60],
+      [2013, 66.91], [2014, 67.28], [2015, 67.64], [2016, 68.10],
+      [2017, 68.59], [2018, 68.97], [2019, 69.22], [2020, 69.36],
+      [2021, 69.36], [2022, 69.29], [2023, 69.22], [2024, 69.18],
+      [2025, 69.87], [2026, 70.50], [2027, 71.10], [2028, 71.70],
+      [2029, 72.30], [2030, 72.90], [2031, 73.40], [2032, 74.00],
+    ];
+
+    const yearFloor = Math.floor(year);
+    const frac     = year - yearFloor;
+
+    // Find the entry for yearFloor
+    const i0 = TABLE.findIndex(([y]) => y === yearFloor);
+    if (i0 !== -1) {
+      // Assign to local first so TypeScript can narrow away `| undefined`
+      const entry = TABLE[i0]!;
+      const dT0   = entry[1];
+      // Linearly interpolate to the next year if available
+      if (i0 + 1 < TABLE.length) {
+        const nextEntry = TABLE[i0 + 1]!;
+        const dT1       = nextEntry[1];
+        return dT0 + frac * (dT1 - dT0);
+      }
+      return dT0;
+    }
+  }
   if (year < 2050) {
+    // Espenak & Meeus (2006) predictive polynomial — fallback for 2033–2049
     const t = year - 2000;
     return 62.92 + 0.32217 * t + 0.005589 * t * t;
   }

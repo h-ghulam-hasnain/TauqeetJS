@@ -6,6 +6,7 @@ import type {
 } from '../types/index.js';
 import { BUILT_IN_METHODS } from '../config/methodRegistry.js';
 import { Madhab } from '../config/madhabs.js';
+import { ConfigurationError } from '../errors.js';
 
 export interface ValidatedPrayerConfig {
   readonly latitude: number;
@@ -74,33 +75,36 @@ function parseCoordinate(input: CoordinateInput | undefined, isLat: boolean): nu
 function parseDate(dateInput?: Date | number | string): Date {
   if (!dateInput) return new Date();
   if (dateInput instanceof Date) {
-    if (isNaN(dateInput.getTime())) throw new Error('Invalid Date object');
+    if (isNaN(dateInput.getTime())) throw new ConfigurationError('Invalid Date object');
     return dateInput;
   }
   if (typeof dateInput === 'number') {
     // If it's a UNIX timestamp in seconds (e.g. less than 10000000000), convert to ms
     const ms = dateInput < 10000000000 ? dateInput * 1000 : dateInput;
     const d = new Date(ms);
-    if (isNaN(d.getTime())) throw new Error('Invalid timestamp');
+    if (isNaN(d.getTime())) throw new ConfigurationError('Invalid timestamp');
     return d;
   }
   if (typeof dateInput === 'string') {
+    if (!/^\d{4}-\d{2}-\d{2}/.test(dateInput)) {
+      throw new ConfigurationError('String dates must be in ISO 8601 format (YYYY-MM-DD...)');
+    }
     const d = new Date(dateInput);
-    if (isNaN(d.getTime())) throw new Error('Invalid date string');
+    if (isNaN(d.getTime())) throw new ConfigurationError('Invalid date string');
     return d;
   }
-  throw new Error('Unsupported date format');
+  throw new ConfigurationError('Unsupported date format');
 }
 
 function parseElevation(elev?: number | ElevationInput): number {
   if (elev === undefined || elev === null) return 0;
   if (typeof elev === 'number') {
-    if (isNaN(elev)) throw new Error('Elevation cannot be NaN');
+    if (isNaN(elev) || !isFinite(elev)) throw new ConfigurationError('Elevation must be a finite number');
     return elev;
   }
   if (typeof elev === 'object' && 'value' in elev && 'unit' in elev) {
-    if (typeof elev.value !== 'number' || isNaN(elev.value)) {
-      throw new Error('Elevation value must be a number');
+    if (typeof elev.value !== 'number' || isNaN(elev.value) || !isFinite(elev.value)) {
+      throw new ConfigurationError('Elevation value must be a finite number');
     }
     if (elev.unit === 'feet') {
       return elev.value * 0.3048;
@@ -109,7 +113,7 @@ function parseElevation(elev?: number | ElevationInput): number {
       return elev.value;
     }
   }
-  throw new Error('Unsupported elevation format');
+  throw new ConfigurationError('Unsupported elevation format');
 }
 
 export type ValidationResult =

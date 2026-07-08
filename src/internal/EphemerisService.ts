@@ -1,4 +1,5 @@
 import { computeSolarPosition, dateToJulianDay, calculateDeltaT } from '../astronomy/index.js';
+import { ChebyshevInterpolator } from './interpolation.js';
 
 export interface SolarEphemeris {
   readonly declination: number; // degrees
@@ -7,11 +8,18 @@ export interface SolarEphemeris {
   readonly horizontalParallax: number; // degrees
 }
 
+export interface SolarInterpolators {
+  readonly declination: ChebyshevInterpolator;
+  readonly equationOfTime: ChebyshevInterpolator;
+  readonly semidiameter: ChebyshevInterpolator;
+  readonly horizontalParallax: ChebyshevInterpolator;
+}
+
 export class EphemerisService {
   private static instance: EphemerisService | null = null;
 
-  // Cache stores pre-sampled points for a julianDay (start of day)
-  private readonly solarCache = new Map<number, SolarEphemeris[]>();
+  // Cache stores Chebyshev interpolators for a julianDay (start of day)
+  private readonly solarCache = new Map<number, SolarInterpolators>();
   private readonly cacheKeys: number[] = [];
   private readonly MAX_CACHE_SIZE = 10;
 
@@ -25,11 +33,9 @@ export class EphemerisService {
   }
 
   /**
-   * Pre-samples solar ephemeris for a given day at 13 points (every 2 hours).
-   * Samples span -2h to +26h to safely support iterative solver probes
-   * that drift slightly outside the [0, 24] range.
+   * Pre-samples solar ephemeris at Chebyshev nodes and creates interpolators.
    */
-  private getOrComputeDaySamples(jdStart: number, year: number): SolarEphemeris[] {
+  private getOrComputeDayInterpolators(jdStart: number, year: number): SolarInterpolators {
     if (this.solarCache.has(jdStart)) {
       return this.solarCache.get(jdStart)!;
     }
@@ -43,23 +49,35 @@ export class EphemerisService {
     }
 
     const deltaT = calculateDeltaT(year);
-    const samples: SolarEphemeris[] = [];
+    const a = -2;
+    const b = 26;
+    const n = 8; // 8 Chebyshev nodes for optimal precision/performance
 
-    // 15 points: -2h, 0h, 2h, ... 24h, 26h  (every 2 hours)
-    // Spans -2 to +26 to handle solver probes outside [0,24]
-    for (let h = -2; h <= 26; h += 2) {
+    const declinationSamples: number[] = [];
+    const eotSamples: number[] = [];
+    const sdSamples: number[] = [];
+    const hpSamples: number[] = [];
+
+    for (let k = 1; k <= n; k++) {
+      const nodeNormalized = Math.cos(((2 * k - 1) / (2 * n)) * Math.PI);
+      const h = ((b - a) / 2) * nodeNormalized + (a + b) / 2;
       const pos = computeSolarPosition(jdStart, h, deltaT);
-      samples.push({
-        declination: pos.declination,
-        equationOfTime: pos.equationOfTime,
-        semidiameter: pos.semidiameter,
-        horizontalParallax: pos.horizontalParallax,
-      });
+      declinationSamples.push(pos.declination);
+      eotSamples.push(pos.equationOfTime);
+      sdSamples.push(pos.semidiameter);
+      hpSamples.push(pos.horizontalParallax);
     }
 
-    this.solarCache.set(jdStart, samples);
+    const interpolators: SolarInterpolators = {
+      declination: new ChebyshevInterpolator(a, b, declinationSamples),
+      equationOfTime: new ChebyshevInterpolator(a, b, eotSamples),
+      semidiameter: new ChebyshevInterpolator(a, b, sdSamples),
+      horizontalParallax: new ChebyshevInterpolator(a, b, hpSamples),
+    };
+
+    this.solarCache.set(jdStart, interpolators);
     this.cacheKeys.push(jdStart);
-    return samples;
+    return interpolators;
   }
 
   /**
@@ -87,7 +105,7 @@ export class EphemerisService {
       jdStart = dateToJulianDay(year, month, day);
     }
 
-    const samples = this.getOrComputeDaySamples(jdStart, year);
+    const interpolators = this.getOrComputeDayInterpolators(jdStart, year);
 
     // Compute continuous UT from the date object relative to jdStart
     const actualJd = dateToJulianDay(
@@ -105,51 +123,11 @@ export class EphemerisService {
       date.getUTCMilliseconds() / 3600000;
 
     return {
-      declination: this.interpolate(ut, samples),
-      equationOfTime: this.interpolate(ut, samples, 'equationOfTime'),
-      semidiameter: this.interpolate(ut, samples, 'semidiameter'),
-      horizontalParallax: this.interpolate(ut, samples, 'horizontalParallax'),
+      declination: interpolators.declination.evaluate(ut),
+      equationOfTime: interpolators.equationOfTime.evaluate(ut),
+      semidiameter: interpolators.semidiameter.evaluate(ut),
+      horizontalParallax: interpolators.horizontalParallax.evaluate(ut),
     };
-  }
-
-  /**
-   * Lagrange 3-point interpolation over 15 samples spanning -2h to +26h.
-   * Sample index i corresponds to hour = i*2 - 2.
-   */
-  private interpolate(
-    ut: number,
-    samples: SolarEphemeris[],
-    key: keyof SolarEphemeris = 'declination'
-  ): number {
-    // samples[0] = -2h, samples[1] = 0h, ..., samples[14] = 26h
-    // Convert ut to fractional index in this extended array
-    // hour = i*2 - 2  =>  i = (hour + 2) / 2
-    const fracIdx = (ut + 2) / 2;
-
-    // Pick the bracket: p2 is the floor of fracIdx, clamped to [1, length-2]
-    const p2 = Math.min(Math.max(Math.floor(fracIdx), 1), samples.length - 2);
-    const p1 = p2 - 1;
-    const p3 = p2 + 1;
-
-    // Guard: if any index is out of range, fall back to nearest sample value
-    if (p1 < 0 || p3 >= samples.length) {
-      const clamped = Math.min(Math.max(Math.round(fracIdx), 0), samples.length - 1);
-      return samples[clamped]![key];
-    }
-
-    const x1 = p1 * 2 - 2; // actual hour of sample p1
-    const x2 = p2 * 2 - 2; // actual hour of sample p2
-    const x3 = p3 * 2 - 2; // actual hour of sample p3
-
-    const y1 = samples[p1]![key];
-    const y2 = samples[p2]![key];
-    const y3 = samples[p3]![key];
-
-    const term1 = (y1 * ((ut - x2) * (ut - x3))) / ((x1 - x2) * (x1 - x3));
-    const term2 = (y2 * ((ut - x1) * (ut - x3))) / ((x2 - x1) * (x2 - x3));
-    const term3 = (y3 * ((ut - x1) * (ut - x2))) / ((x3 - x1) * (x3 - x2));
-
-    return term1 + term2 + term3;
   }
 }
 

@@ -17,3 +17,18 @@ export {
 } from './phenomena/LunarEvents.js';
 export { dateToJulianDay, julianDayToDate, timeArguments } from './time/JulianDate.js';
 export { calculateDeltaT } from './time/DeltaT.js';
+export { computeSeasons, searchSeasonEvent, type SeasonInfo } from './phenomena/Seasons.js';
+export {
+  EclipseKind,
+  searchLunarEclipse,
+  searchGlobalSolarEclipse,
+  nextLunarEclipse,
+  nextGlobalSolarEclipse,
+  searchLocalSolarEclipse,
+  nextLocalSolarEclipse,
+  type LunarEclipseInfo,
+  type GlobalSolarEclipseInfo,
+  type EclipseEvent,
+  type LocalSolarEclipseInfo,
+} from './phenomena/Eclipse.js';
+

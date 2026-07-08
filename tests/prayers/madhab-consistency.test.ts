@@ -1,0 +1,29 @@
+import { describe, it, expect } from 'vitest';
+import { getPrayerTimes } from '../../src/prayers/index.js';
+
+describe('Extended Test: Madhab Consistency (Asr Calculation)', () => {
+  const lat = 24.8607;
+  const long = 67.0011; // Karachi
+  const date = new Date(Date.UTC(2024, 3, 27));
+
+  it('should ensure Hanafi Asr is always later than Shafi Asr', () => {
+    // Shafi uses shadow factor 1 (length of shadow = length of object + noon shadow)
+    const shafiResult = getPrayerTimes({ lat, long, madhab: 'Shafi', date });
+    const hanafiResult = getPrayerTimes({ lat, long, madhab: 'Hanafi', date });
+
+    expect(shafiResult.success).toBe(true);
+    expect(hanafiResult.success).toBe(true);
+
+    if (shafiResult.success && hanafiResult.success) {
+      const shafiAsr = shafiResult.data.asr.timestamp! * 1000;
+      const hanafiAsr = hanafiResult.data.asr.timestamp! * 1000;
+
+      // Because the shadow must be longer, the sun must be lower, thus later in the day.
+      expect(hanafiAsr).toBeGreaterThan(shafiAsr);
+
+      // Let's verify it's a significant difference (usually 45-60 mins depending on latitude/season)
+      const diffMinutes = (hanafiAsr - shafiAsr) / 60000;
+      expect(diffMinutes).toBeGreaterThan(30);
+    }
+  });
+});
