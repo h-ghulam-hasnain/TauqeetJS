@@ -21,15 +21,19 @@ export class PrayerCalculationError extends Error {
 /**
  * Resolves the timezone cascade.
  */
-export function resolveTimeZoneSync(explicitTimeZone?: string | number): string | number {
+export function resolveTimeZoneSync(
+  explicitTimeZone?: string | number,
+  onFallback?: (reason: string) => void
+): string | number {
   if (explicitTimeZone !== undefined && explicitTimeZone !== null) {
     return explicitTimeZone;
   }
   if (typeof Intl !== 'undefined') {
     try {
       return Intl.DateTimeFormat().resolvedOptions().timeZone;
-    } catch {
-      // Fallback
+    } catch (err: unknown) {
+      const reason = err instanceof Error ? err.message : String(err);
+      onFallback?.(`Intl timezone detection failed (${reason}); using UTC`);
     }
   }
   return 'UTC';
@@ -42,7 +46,8 @@ export function formatTimeField(
   val: Date | null,
   status: PrayerStatus,
   timeZone: string | number,
-  adjustmentMinutes: number
+  adjustmentMinutes: number,
+  onFallback?: (reason: string) => void
 ): TimeField {
   if (!val || isNaN(val.getTime())) {
     return {
@@ -73,14 +78,17 @@ export function formatTimeField(
         }).format(rounded);
       }
     }
-  } catch {
+  } catch (err: unknown) {
+    const reason = err instanceof Error ? err.message : String(err);
     if (typeof timeZone === 'string') {
       const parsedOffset = parseFloat(timeZone);
       if (!isNaN(parsedOffset)) {
+        onFallback?.(`Intl format failed (${reason}); using numeric offset fallback`);
         local = formatManualOffset(rounded, parsedOffset);
       }
     }
     if (!local) {
+      onFallback?.(`Intl format failed (${reason}); using ISO string fallback`);
       local = rounded.toISOString();
     }
   }
@@ -109,7 +117,8 @@ function formatManualOffset(date: Date, offsetHours: number): string {
  */
 function calculateRawTimes(
   config: ValidatedPrayerConfig,
-  latToUse: number
+  latToUse: number,
+  precomputedDhuhr?: IterativeSolverResult | null
 ): {
   fajr: { time: Date | null; status: PrayerStatus; metadata: IterativeSolverResult | null };
   sunrise: { time: Date | null; status: PrayerStatus; metadata: IterativeSolverResult | null };
@@ -123,8 +132,11 @@ function calculateRawTimes(
   const { date, longitude, method, madhab, elevationMeters, temperatureC, pressureMbar } = config;
   const sf = ASR_SHADOW_FACTOR[madhab];
 
-  // 1. Dhuhr (Transit)
-  const dhuhrRes = calculateDhuhr(date, latToUse, longitude);
+  // 1. Dhuhr (Transit) — reuse precomputed result when latitude matches
+  const dhuhrRes =
+    precomputedDhuhr !== undefined
+      ? precomputedDhuhr
+      : calculateDhuhr(date, latToUse, longitude);
   if (!dhuhrRes) {
     throw new PrayerCalculationError('Failed to calculate solar transit');
   }
@@ -337,7 +349,7 @@ export function calculatePrayerTimesInternal(config: ValidatedPrayerConfig): Pra
     const anchorLat = sign * config.regionalFallbackLatitude;
     rawResults = calculateRawTimes(config, anchorLat);
   } else {
-    rawResults = calculateRawTimes(config, latitude);
+    rawResults = calculateRawTimes(config, latitude, dhuhrTransit);
   }
 
   // Format outputs into TimeFields

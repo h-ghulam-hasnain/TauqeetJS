@@ -4,6 +4,7 @@ import { normalizeAngle } from '../internal/normalize.js';
 import { toDegrees, toRadians } from '../internal/math.js';
 import { getQiblaDirection } from '../qibla/index.js';
 import { computeSolarPosition, dateToJulianDay, calculateDeltaT } from '../astronomy/index.js';
+import type { SolarPositionResult } from '../astronomy/types/ephemeris.js';
 
 /**
  * Solves the PZX spherical triangle for the Polar Angle P (Hour Angle).
@@ -81,13 +82,24 @@ export function getSunAtQibla(config: SunAlignmentConfig): SunAtQiblaResult {
   const j0 = dateToJulianDay(year, month, day);
   const deltaT = calculateDeltaT(year);
 
+  const solarCache = new Map<number, SolarPositionResult>();
+  const getCachedSolar = (ut: number): SolarPositionResult => {
+    const key = Math.round(ut * 1e6);
+    let pos = solarCache.get(key);
+    if (!pos) {
+      pos = computeSolarPosition(j0, ut, deltaT);
+      solarCache.set(key, pos);
+    }
+    return pos;
+  };
+
   // Initial estimate of noon UT
   let transitUt = 12 - longitude / 15;
-  let solarTransit;
+  let solarTransit: SolarPositionResult;
 
   // Iterate to find exact solar transit based on Equation of Time
   for (let i = 0; i < 3; i++) {
-    solarTransit = computeSolarPosition(j0, transitUt, deltaT);
+    solarTransit = getCachedSolar(transitUt);
     transitUt = 12 - longitude / 15 - solarTransit.equationOfTime / 60;
   }
 
@@ -136,7 +148,7 @@ export function getSunAtQibla(config: SunAlignmentConfig): SunAtQiblaResult {
       eventUt = currentDir > 180 ? baseNoonUt + timeOffset : baseNoonUt - timeOffset;
 
       // Re-evaluate solar position exactly at the newly estimated event time
-      const eventSolar = computeSolarPosition(j0, eventUt, deltaT);
+      const eventSolar = getCachedSolar(eventUt);
       currentDec = eventSolar.declination;
       currentEqT = eventSolar.equationOfTime;
     }
@@ -159,10 +171,15 @@ export function getSunAtQibla(config: SunAlignmentConfig): SunAtQiblaResult {
     }
   });
 
+  solarCache.clear();
   return result as unknown as SunAtQiblaResult;
 }
 
-function formatLocalTime(date: Date, timeZone?: string | number): string {
+function formatLocalTime(
+  date: Date,
+  timeZone?: string | number,
+  onFallback?: (reason: string) => void
+): string {
   if (timeZone === undefined) {
     return date.toISOString();
   }
@@ -182,7 +199,9 @@ function formatLocalTime(date: Date, timeZone?: string | number): string {
     } else {
       return formatManualOffset(date, timeZone);
     }
-  } catch {
+  } catch (err: unknown) {
+    const reason = err instanceof Error ? err.message : String(err);
+    onFallback?.(`Intl format failed (${reason}); using ISO string fallback`);
     return date.toISOString();
   }
 }

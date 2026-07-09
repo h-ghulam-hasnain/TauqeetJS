@@ -1,59 +1,59 @@
-# Using `tauqeet-js` from a Browser CDN
+# Using tauqeet-js from a Browser CDN
 
-This package is built as a pure ESM library and can be used directly in browsers without installation.
+tauqeet-js can be used directly in browser applications via modern ESM CDNs. The package is published as an ESM-first library and exposes subpath imports for tree-shakable module loading.
 
 ## Recommended CDN URLs
 
 ### esm.sh
-- Main import: `https://esm.sh/tauqeet-js@1.1.3`
-- Subpath import: `https://esm.sh/tauqeet-js@1.1.3/prayers`
+- Main entry: `https://esm.sh/tauqeet-js@1.1.3`
+- Subpath entry: `https://esm.sh/tauqeet-js@1.1.3/prayers`
 
 ### jsDelivr
-- Main import: `https://cdn.jsdelivr.net/npm/tauqeet-js@1.1.3/+esm`
-- Subpath import: `https://cdn.jsdelivr.net/npm/tauqeet-js@1.1.3/prayers/+esm`
-
-> Note: `Skypack` currently returns 404 for `tauqeet-js`, so it is not reliable until the package is indexed there.
+- Main entry: `https://cdn.jsdelivr.net/npm/tauqeet-js@1.1.3/+esm`
+- Subpath entry: `https://cdn.jsdelivr.net/npm/tauqeet-js@1.1.3/prayers/+esm`
 
 ## Example HTML
 
 ```html
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>TauqeetJS CDN Example</title>
-</head>
-<body>
-  <script type="module">
-    import {
-      calculatePrayerTimes,
-      getQiblaDirection,
-      getMoonPhase,
-      getMoonAge,
-      toHijri,
-      HijriMethod
-    } from 'https://esm.sh/tauqeet-js@1.1.3';
+  <head>
+    <meta charset="UTF-8" />
+    <title>tauqeet-js CDN Example</title>
+  </head>
+  <body>
+    <script type="module">
+      import {
+        calculatePrayerTimes,
+        getQiblaDirection,
+        getMoonPhase,
+        toHijri,
+        HijriMethod,
+      } from 'https://esm.sh/tauqeet-js@1.1.3';
 
-    console.log('calculatePrayerTimes', calculatePrayerTimes);
-    console.log('getQiblaDirection', getQiblaDirection);
-    console.log('getMoonPhase', getMoonPhase);
-    console.log('toHijri', toHijri);
-  </script>
-</body>
+      const prayerTimes = calculatePrayerTimes({
+        lat: 51.5074,
+        long: -0.1278,
+        timeZone: 'Europe/London',
+      });
+
+      console.log(prayerTimes.fajr.local);
+    </script>
+  </body>
 </html>
 ```
 
-## Subpath example
+## Subpath Example
 
 ```html
 <script type="module">
   import * as prayers from 'https://esm.sh/tauqeet-js@1.1.3/prayers';
-  console.log(prayers.calculatePrayerTimes);
+  console.log(typeof prayers.calculatePrayerTimes);
 </script>
 ```
 
 ## Notes
 
-- `esm.sh` is the best-supported ESM CDN for this package today.
-- `jsDelivr` works for the bundled `dist` ESM build with `+esm`.
-- `Skypack` is currently unavailable for this package and may require waiting for indexing or requesting package support.
+- `esm.sh` is the most reliable ESM CDN for this package.
+- `jsDelivr` works well for the published ESM build.
+- For production apps that need low startup overhead, prefer subpath imports and cache the computed results where appropriate.

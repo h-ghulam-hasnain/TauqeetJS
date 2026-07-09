@@ -1,7 +1,13 @@
 import type { HijriDate } from '../../types/HijriDate.js';
 import type { HijriLocationOptions } from '../../types/HijriCalendarResult.js';
 import { checkVisibility, VisibilityMethod } from '../../../moon/index.js';
+import { SearchConvergenceError } from '../../../astronomy/errors.js';
 import { ConjunctionCalendar } from '../astronomical/ConjunctionCalendar.js';
+
+/** Astronomical boundary failures where sighting cannot be evaluated. */
+function isExpectedVisibilityFailure(err: unknown): boolean {
+  return err instanceof RangeError || err instanceof SearchConvergenceError;
+}
 
 /**
  * Crescent-visibility-based Hijri calendar.
@@ -78,8 +84,11 @@ export class VisibilityCalendar {
         method: VisibilityMethod.ODEH,
       });
       return result.visible;
-    } catch {
-      return false;
+    } catch (err: unknown) {
+      if (isExpectedVisibilityFailure(err)) {
+        return false;
+      }
+      throw err;
     }
   }
 }

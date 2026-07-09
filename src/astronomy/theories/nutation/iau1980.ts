@@ -1,7 +1,6 @@
 import { cosd, sind } from '../../../internal/trig.js';
 import { timeArguments } from '../../time/JulianDate.js';
 import { normalizeDegrees } from '../../../internal/angles.js';
-import { kahanSum } from '../../../internal/polynomial.js';
 import type { NutationResult } from '../../types/ephemeris.js';
 
 const cfD = [
@@ -67,18 +66,36 @@ export function computeNutation(j: number, ut: number, deltaT: number): Nutation
   let Omega = 125.04452 - te * (1934.136261 + te * (0.0020708 + te / 450000));
   Omega = normalizeDegrees(Omega);
 
-  const sinTerms = cfD.map((d, i) =>
-    sind(d * D + cfM[i]! * M + cfMprime[i]! * Mprime + cfF[i]! * F + cfOmega[i]! * Omega)
-  );
-  const cosTerms = cfD.map((d, i) =>
-    cosd(d * D + cfM[i]! * M + cfMprime[i]! * Mprime + cfF[i]! * F + cfOmega[i]! * Omega)
-  );
+  let dpsiSum = 0;
+  let dpsiC = 0;
+  let depsSum = 0;
+  let depsC = 0;
 
-  const dpsiTerms = sinTerms.map((term, i) => term * (cfDpsi[i]! + te * t1[i]!));
-  const depsTerms = cosTerms.map((term, i) => term * (cfDeps[i]! + te * t2[i]!));
+  for (let i = 0; i < cfD.length; i++) {
+    const arg =
+      cfD[i]! * D +
+      cfM[i]! * M +
+      cfMprime[i]! * Mprime +
+      cfF[i]! * F +
+      cfOmega[i]! * Omega;
+    const sinTerm = sind(arg);
+    const cosTerm = cosd(arg);
 
-  const deltaPsi = kahanSum(dpsiTerms) / 36000000;
-  const deltaEps = kahanSum(depsTerms) / 36000000;
+    const dVal = sinTerm * (cfDpsi[i]! + te * t1[i]!);
+    const dY = dVal - dpsiC;
+    const dT = dpsiSum + dY;
+    dpsiC = dT - dpsiSum - dY;
+    dpsiSum = dT;
+
+    const eVal = cosTerm * (cfDeps[i]! + te * t2[i]!);
+    const eY = eVal - depsC;
+    const eT = depsSum + eY;
+    depsC = eT - depsSum - eY;
+    depsSum = eT;
+  }
+
+  const deltaPsi = dpsiSum / 36000000;
+  const deltaEps = depsSum / 36000000;
   const eps0 = 23.4392911111111 + (te * (te * (te * 0.001813 - 0.00059) - 46.815)) / 3600;
   const eps = eps0 + deltaEps;
 

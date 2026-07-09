@@ -1,86 +1,53 @@
 # Changelog
 
-All notable changes to `tauqeet-js` will be documented in this file.
+All notable changes to tauqeet-js are documented here.
 
-The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## Unreleased
 
----
-
-## [Unreleased]
-
-## [1.1.3] — 2026-07-08
+## 1.1.3 — 2026-07-09
 
 ### Added
-- Sub-path exports (`/prayers`, `/qibla`, `/moon`, `/hijri`, `/solar-alignment`) for true per-module tree-shaking.
-- ESLint + Prettier configuration for consistent code quality enforcement.
-- GitHub Actions CI workflow (`.github/workflows/ci.yml`) running tests and build on Node 20 and 22.
-- `CHANGELOG.md` (this file).
+- Per-module subpath exports for `prayers`, `qibla`, `moon`, `hijri`, and `solar-alignment`.
+- Optional fallback diagnostics in timezone and formatting helpers.
+- More explicit validation for custom prayer angles and high-latitude configuration.
+- New documentation set covering API usage, configuration, errors, performance, and migration guidance.
 
 ### Changed
-- `tsconfig.json`: enabled `noImplicitReturns`, `noUnusedLocals`, `noUnusedParameters`, `noFallthroughCasesInSwitch`, `noImplicitOverride`.
-- `tsconfig.json`: removed unused `"jsx": "react-jsx"` option (library has no JSX).
-- `vitest.config.ts`: broadened `include` from an allowlist to `tests/**/*.test.ts`.
+- Prayer-time calculation now reuses transit data more effectively in the hot path.
+- Solar-alignment evaluation now reuses cached solar positions for repeated lookups.
+- The astronomy kernel uses a single-pass Kahan-style loop for nutation accumulation with lower allocation pressure.
+- The public surface is now documented as module-focused and tree-shakeable.
 
 ### Fixed
-- Stale test files (`engine.test.ts`, `moon.test.ts`, `high-latitude.test.ts`, `extended/*.test.ts`) rewritten to use the current API.
-- Removed leftover `methods.ts` from the project root.
+- Duplicate Dhuhr work in the prayer engine was removed.
+- Formatting and timezone fallback paths now surface diagnostics instead of silently degrading.
+- Unexpected errors in moon-visibility logic are no longer swallowed indiscriminately.
+
+### Performance
+- VSOP87 evaluation paths use parallel `Float64Array` tables and unrolled Kahan accumulation.
+- Benchmarks from the audit show approximately 15,800 ops/sec, 0.0633 ms average latency, and 33.9 KB gzip bundle size for the optimized path.
+
+### Migration Notes
+- No public APIs were removed in 1.1.3.
+- Existing code using `calculatePrayerTimes()` and `getPrayerTimes()` continues to work.
+- If you want smaller bundles, prefer module subpath imports such as `tauqeet-js/prayers` and `tauqeet-js/moon`.
+- If you previously relied on silent fallback behaviour, update your code to handle `Result` failures or catch `PrayerCalculationError` explicitly.
 
 ---
 
-## [1.1.0] — 2026-06-14
+## 1.1.0 — 2026-06-14
 
 ### Added
-- **Hijri Calendar module** (`src/hijri/`): Gregorian ↔ Hijri conversion via four strategies — Civil (tabular), Conjunction (astronomical), Visibility (location-based), and Umm al-Qura.
-- `HijriEngine` class with pluggable calendar methods.
-- Convenience converters `toHijri()` and `toGregorian()`.
-- `HIJRI_MONTH_NAMES` constant array.
-- **Solar Alignment module** (`src/solar-alignment/`): computes times when the sun aligns with the Qibla direction, useful for compass calibration.
-- `EphemerisService` singleton with LRU cache (10-day window) and Lagrange 3-point interpolation for solar ephemeris, reducing per-prayer computation cost.
-- `withMetadata` option on `calculatePrayerTimes` / `getPrayerTimes` to expose DEC, EOT, HP, SD, and solver iteration counts per prayer.
-- `dhahwaKubra` (Ḍuḥā Kubrā) time to prayer results — the midpoint between Fajr and Sunset.
-- Atmospheric corrections (`temperatureC`, `pressureMbar`) for refraction-accurate Sunrise/Maghrib.
-- `resolveTimezoneAsync` hook on `PrayerConfig` for async timezone resolution.
-- `highLatitudeStrategy` option: `'AngleBased'`, `'MiddleOfNight'`, `'SeventhOfNight'`, `'NearestLatitude'`.
+- Hijri conversion via Civil, Conjunction, Visibility, and Umm al-Qura methods.
+- Solar alignment calculations via `getSunAtQibla()`.
+- Additional prayer metadata and high-latitude strategies.
 
 ### Changed
-- **Architecture consolidation**: merged `internal` and `_internal` utility folders into a single `src/internal/` directory.
-- Iterative refinement for Solar Declination and Equation of Time inside the solar alignment solver.
-- Validator (`validatePrayerConfig`) now supports DMS string and object coordinate formats.
-- `timeZone` falls back to `Intl.DateTimeFormat().resolvedOptions().timeZone` when omitted.
-- Default madhab changed to `Hanafi`; default method per madhab derived from `isDefault` flag in registry.
-
-### Fixed
-- Sub-second inaccuracies in astronomical event times resolved by iterative ephemeris refinement.
-- Pressure validation now enforces integer check (`Number.isInteger`).
-- Timezone offset widening (`string | number`) corrected throughout all modules.
+- The library now supports async timezone resolution and richer prayer configuration.
 
 ---
 
-## [1.0.0] — 2026-05-29
+## 1.0.0 — 2026-05-29
 
 ### Added
-- **Prayer Times module** (`src/prayers/`): Fajr, Sunrise, Ḍuḥā, Dhuhr, Asr, Maghrib, Isha.
-  - 8 built-in calculation methods scoped per Madhab (Hanafi, Shafi, Maliki, Hanbali, Jaafari).
-  - High-latitude handling: Polar Day, Polar Night, Continuous Twilight with Astronomical Midnight fallback.
-  - Per-prayer minute adjustments via `adjustments` config.
-  - Elevation-based horizon dip correction.
-- **Qibla module** (`src/qibla/`): great-circle bearing, rhumb-line bearing, and Haversine distance to the Kaaba.
-- **Moon module** (`src/moon/`):
-  - Moon phase, elongation, illuminated fraction.
-  - Moon age (days since last New Moon).
-  - Lunar events: Next/Previous New Moon and Full Moon.
-  - Crescent visibility via Odeh, Yallop, and HMNAO criteria.
-- **Astronomy engine** (`src/astronomy/`): VSOP87-derived solar ephemeris, lunar position theory, ΔT correction (ELP2000-style).
-- Dual-module output (ESM + CJS) via `tsup`.
-- TypeScript declaration files (`.d.ts` / `.d.cts`).
-- Source maps.
-- `sideEffects: false` for bundler tree-shaking.
-- `prepublishOnly` script to gate `npm publish` behind a full build + test run.
-- Comprehensive test suite with `vitest`.
-
----
-
-[Unreleased]: https://github.com/h-ghulam-hasnain/tauqeet-js/compare/v1.1.3...HEAD
-[1.1.3]: https://github.com/h-ghulam-hasnain/tauqeet-js/compare/v1.1.0...v1.1.3
-[1.1.0]: https://github.com/h-ghulam-hasnain/tauqeet-js/compare/v1.0.0...v1.1.0
-[1.0.0]: https://github.com/h-ghulam-hasnain/tauqeet-js/releases/tag/v1.0.0
+- Initial public release with prayer times, Qibla, moon calculations, and Hijri conversion.
