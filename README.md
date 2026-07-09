@@ -1,160 +1,103 @@
 # tauqeet-js
 
-**A high-precision TypeScript library for Islamic astronomical calculations.**
+A high-precision TypeScript library for Islamic astronomical calculations, covering prayer times, Qibla direction, lunar events, Hijri conversion, and solar alignment.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5%2B-blue.svg)](https://www.typescriptlang.org/)
+[![Node.js](https://img.shields.io/badge/Node-%3E%3D18-brightgreen.svg)](https://nodejs.org/)
+[![Version](https://img.shields.io/badge/version-1.1.3-blue.svg)](CHANGELOG.md)
 
-> 📖 **Interactive documentation & live API explorer:** [https://tauqeet-js.web.app](https://tauqeet-js.web.app)
+> Interactive reference: [https://tauqeet-js.web.app](https://tauqeet-js.web.app)
 
-`tauqeet-js` (تَوقِيت — Arabic for "timing") provides high-fidelity Islamic astronomical computation powered by a full VSOP87-derived solar ephemeris, lunar theory, and ΔT correction. It is modular by design — import only the feature you need.
-
----
-
-## Table of Contents
-
-- [Features](#features)
-- [Prerequisites](#prerequisites)
-- [Installation](#installation)
-- [Quick Start](#quick-start)
-- [Documentation](#documentation)
-- [Limitations & Performance](#limitations--performance)
-- [Modules Overview](#modules-overview)
-- [License](#license)
-- [Author](#author)
+tauqeet-js provides numerically precise astronomical calculations using a VSOP87-based solar ephemeris, lunar theory, and ΔT corrections. The package is modular and tree-shakeable, so Node.js and browser applications can import only the modules they need.
 
 ---
 
-## Features
+## What is tauqeet-js?
 
-| Module | Capability |
-|---|---|
-| **Prayers** | Fajr, Sunrise, Ḍuḥā, Dhuhr, Asr, Maghrib, Isha with 8 built-in calculation methods |
-| **Qibla** | Great-circle bearing, rhumb-line bearing, and distance to the Kaaba |
-| **Moon** | Phase, illumination, age, lunar events, crescent visibility (Odeh / Yallop / HMNAO) |
-| **Hijri** | Gregorian ↔ Hijri conversion via Civil, Conjunction, Visibility, or Umm al-Qura methods |
-| **Solar Alignment** | Times when the sun aligns with the Qibla direction (useful for compass calibration) |
+tauqeet-js is a TypeScript-first library for Islamic astronomy. It helps applications compute:
 
----
+- Prayer times for major prayer events such as Fajr, Sunrise, Dhuhr, Asr, Maghrib, and Isha.
+- Qibla direction and distance to Mecca.
+- Moon phase, moon age, lunar events, and visibility heuristics.
+- Hijri calendar conversions and calendar-method helpers.
+- Solar alignment events relative to the Qibla bearing.
 
-## Prerequisites
-
-- **Node.js** ≥ 18
-- **TypeScript** ≥ 5 (for source usage)
-- ESM-first; CJS bundle also provided.
+The current release, v1.1.3, focuses on stable public exports, stronger validation, better diagnostics around timezone and formatting fallbacks, and measurable runtime improvements.
 
 ---
 
 ## Installation
 
+Install with your preferred package manager:
+
 ```bash
 npm install tauqeet-js
 ```
 
-> **Note:** The package is currently in active development. See [CONTRIBUTING.md](CONTRIBUTING.md) for building from source.
+```bash
+yarn add tauqeet-js
+```
+
+```bash
+pnpm add tauqeet-js
+```
+
+The package ships ESM and CommonJS entry points, with per-module subpath exports for selective bundling.
 
 ---
 
 ## Quick Start
 
-### Prayer Times
-
 ```ts
-import { calculatePrayerTimes, BUILT_IN_METHODS } from 'tauqeet-js';
+import { calculatePrayerTimes } from 'tauqeet-js';
 
-// London, UK – today
 const result = calculatePrayerTimes({
   lat: 51.5074,
   long: -0.1278,
   timeZone: 'Europe/London',
-  method: 'MWL',         // Muslim World League
+  method: 'MWL',
   madhab: 'Shafi',
 });
 
-console.log(result.fajr.local);    // e.g. "03:41 AM"
-console.log(result.dhuhr.local);   // e.g. "01:05 PM"
-console.log(result.isha.local);    // e.g. "10:52 PM"
+console.log(result.fajr.local);
+console.log(result.dhuhr.local);
+console.log(result.isha.local);
 ```
 
-### Qibla Direction
-
-```ts
-import { getQiblaDirection } from 'tauqeet-js';
-
-const qibla = getQiblaDirection({ latitude: 51.5074, longitude: -0.1278 });
-console.log(`Bearing to Kaaba: ${qibla.bearing?.toFixed(2)}°`);
-console.log(`Distance: ${qibla.distanceKm.toFixed(0)} km`);
-```
-
-### Moon Phase
-
-```ts
-import { getMoonPhase, getMoonAge } from 'tauqeet-js';
-
-const phase = getMoonPhase(new Date());
-console.log(`Phase: ${phase.phaseName}`);           // e.g. "Waxing Crescent"
-console.log(`Illumination: ${(phase.illuminatedFraction * 100).toFixed(1)}%`);
-
-const age = getMoonAge(new Date());
-console.log(`Moon age: ${age.ageDays.toFixed(1)} days`);
-```
-
-### Hijri Date Conversion
-
-```ts
-import { toHijri, HijriMethod, HIJRI_MONTH_NAMES } from 'tauqeet-js';
-
-const hijri = toHijri(new Date(), HijriMethod.CIVIL);
-console.log(`${hijri.day} ${HIJRI_MONTH_NAMES[hijri.month - 1]} ${hijri.year} AH`);
-```
+For a more resilient integration, see [API.md](API.md) and [ERROR_HANDLING.md](ERROR_HANDLING.md).
 
 ---
 
-## Documentation
+## Core Modules
 
-| File | Description |
+| Module | What it provides |
 |---|---|
-| [API.md](API.md) | API reference index to all modules, types, and classes |
-| [docs/](docs/) | Detailed module-specific API documentation (Prayers, Qibla, Moon, Hijri) |
-| [USAGE.md](USAGE.md) | Practical code guides with real-world examples |
-| [MODULES.md](MODULES.md) | Architecture overview and module import guide |
-| [CONTRIBUTING.md](CONTRIBUTING.md) | Build, test, and contribution guidelines |
-
-For the most up-to-date, interactive reference visit **[https://tauqeet-js.web.app](https://tauqeet-js.web.app)**.
+| Prayers | Prayer-time calculations, formatting helpers, config validation, high-latitude handling |
+| Qibla | Bearing and distance to the Kaaba |
+| Moon | Phase, age, lunar events, crescent visibility heuristics |
+| Hijri | Gregorian/Hijri conversion and calendar methods |
+| Solar Alignment | Sun-at-Qibla alignment times |
 
 ---
 
-## Limitations & Performance
+## Documentation Set
 
-This library prioritizes numerical precision and scientific correctness. A few important limitations and runtime considerations you should know before integrating `tauqeet-js` into production systems:
-
-- ΔT model year range: the internal ΔT model is valid for years in the approximate range -2000..3000. Calls that request ephemerides or event searches outside this range will throw a `RangeError`. If you need values outside this range, pre-warn users and validate inputs.
-
-- Heavy numerical work: functions that evaluate full ephemerides (VSOP87 series, lunar theory) and global/local eclipse searches perform significant floating-point work and are synchronous. Run these calls off the main event loop (worker threads / web workers) in latency-sensitive applications.
-
-- Search convergence: several search routines (eclipse finders, lunar event searches) use iterative searches with configurable limits (e.g., `maxMoons`). When a search does not converge within the configured limit the function throws a `SearchConvergenceError`. You should catch this error or use the `get*` Result-style APIs where available.
-
-- Bundle size & coefficients: the VSOP87 coefficient tables are intentionally large to retain full precision. Importing the astronomy internals can increase bundle size and memory usage. For browser usage, consider server-side precomputation or dynamically importing astronomy modules only when needed.
-
-- Timezone & Intl: named timezone formatting depends on Node's ICU data. On some CI or minimal Node builds, Intl may not support IANA timezone names; to avoid discrepancies provide a `resolveTimezoneAsync` hook or run tests/environments with full-icu support.
-
-Refer to `API.md` and `docs/` for error types, configuration knobs, and recommended usage patterns for heavy computations.
+- [API.md](API.md) — comprehensive API reference for public exports.
+- [ERROR_HANDLING.md](ERROR_HANDLING.md) — error classes, Result wrappers, and diagnostics.
+- [CONFIGURATION.md](CONFIGURATION.md) — prayer configuration, methods, high-latitude strategies, and timezone hooks.
+- [PERFORMANCE.md](PERFORMANCE.md) — ephemerides, models, optimisations, and benchmarks.
+- [CHANGELOG.md](CHANGELOG.md) — release notes and migration guidance.
 
 ---
 
-## Modules Overview
+## Highlights in v1.1.3
 
-```
-tauqeet-js
-├── prayers/          Prayer time engine (8 methods, high-latitude strategies)
-├── qibla/            Qibla bearing & distance to Mecca
-├── moon/             Moon phase, age, events, crescent visibility
-├── hijri/            Gregorian ↔ Hijri calendar conversion
-├── solar-alignment/  Sun-at-Qibla times
-└── astronomy/        Internal ephemeris (VSOP87, lunar theory, ΔT) — private
-```
-
-See [MODULES.md](MODULES.md) for a detailed dependency graph and tree-shaking guide.
+- Per-module exports for tree-shaking: [API.md](API.md)
+- Optional fallback diagnostics for timezone and formatting issues
+- More explicit validation for custom prayer angles
+- Performance improvements in the astronomy hot path
+- Improved error handling around timezone formatting and visibility calculations
 
 ---
 

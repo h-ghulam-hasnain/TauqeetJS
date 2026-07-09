@@ -63,8 +63,11 @@ export function formatPrayerTimes<T extends 'iso8601' | 'unix' | '12h' | '24h'>(
       }
       try {
         formatted[key] = new Intl.DateTimeFormat('en-US', options).format(d);
-      } catch {
-        formatted[key] = null;
+      } catch (err: unknown) {
+        const reason = err instanceof Error ? err.message : String(err);
+        return Failure(
+          `Invalid timeZone "${timeZone ?? 'default'}" while formatting ${String(key)}: ${reason}`
+        );
       }
     }
   }

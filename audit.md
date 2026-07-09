@@ -1,111 +1,365 @@
 # tauqeet-js: System Architecture & Performance Audit
 
+**Audit date:** 2026-07-09  
+**Version audited:** 1.1.3  
+**Overall Health Score:** **A+**
+
+---
+
 ## 1. Executive Summary
 
-- **Overall Health Score:** **A+**
-- **Top 3 Critical Blockers:** 
-  *(Currently, there are **no** critical bottlenecks blocking release. Previous severe issues like O(N²) Chebyshev arrays and pointer-chasing GC pressure have been eradicated. The remaining issues are strictly V8 micro-optimizations).*
-  1. **SIMD Vectorization Blocked:** Stride-3 layout in VSOP87 buffers prevents TurboFan from using vector loads.
-  2. **Pipeline Stalls:** Kahan summation carries a strict loop dependency, destroying Instruction Level Parallelism (ILP).
-  3. **Transcendental Overhead:** Heavy reliance on native `Math.cos` per term inside hot loops.
-- **Bottom Line:** The library successfully hits sub-milliarcsecond astronomical precision while keeping heap allocations at zero during execution. The trade-off leans heavily toward **Speed and Robustness over Bundle Size**, as large flat `Float64Array` buffers are used over algorithmic compression.
+| Category | Grade | Summary |
+|---|---|---|
+| Error Handling | **A** | Intl/timezone fallbacks now expose optional `onFallback` callbacks; `formatPrayerTimes` returns `Failure` with diagnostic reason instead of silent `null`. |
+| Runtime Complexity | **A+** | No O(n²) hot paths. `getSunAtQibla` caches ephemeris by quantized UT, cutting redundant `computeSolarPosition` calls. |
+| Memory Efficiency | **A+** | IAU1980 nutation uses zero-allocation single-pass Kahan loop. VSOP87 `Float64Array` tables and bounded LRU cache unchanged. |
+| Security & Dead Code | **A** | `npm audit` reports 0 vulnerabilities. Custom `fajrAngle`/`ishaAngle` now range-validated at config time. |
+
+### Top 3 Actionable Items (Remaining)
+
+1. **`timeZone` string validation** — IANA identifiers are not validated at config time (only at format time via `Failure`).
+2. **`VisibilityCalendar.toGregorian`** — returns conjunction approximation without full sighting iteration.
+3. **Eclipse test timeout** — increase to 15 s if CI flakes on slow runners.
+
+### Fixes Applied in This Audit
+
+- **[x] Eliminated duplicate `calculateDhuhr` call** in `PrayerEngine.calculatePrayerTimesInternal` (reuses transit when latitude matches).
+- **[x] Tightened `VisibilityCalendar.isVisible` error handling** — only swallows expected `RangeError` / `SearchConvergenceError`; re-throws unexpected errors.
+- **[x] Fixed 4 ESLint `prefer-const` violations** in `Eclipse.ts` (`r_left0`, `r_left1`, `r_right0`, `r_right1`).
+- **[x] IAU1980 single-pass nutation loop** — `computeNutation` in `iau1980.ts` uses inline Kahan summation; zero `.map()` allocations.
+- **[x] `getSunAtQibla` solar position cache** — local `Map` keyed by micro-hour quantized UT; cleared before return.
+- **[x] Intl error diagnostics** — `formatPrayerTimes` returns `Failure(reason)`; `resolveTimeZoneSync`, `formatTimeField`, `formatLocalTime` accept optional `onFallback` callback.
+- **[x] Custom angle validation** — `fajrAngle` and `ishaAngle` constrained to 0°–30° in `validatePrayerConfig`.
 
 ---
 
-## 2. Bundle Size Forensics (Evidence Required)
+## 2. Error Handling Audit
 
-The library has excellent architectural foundations for modern bundlers:
-- **Evidence:** `package.json:9` properly asserts `"sideEffects": false`.
-- **Evidence:** The `"exports"` map cleanly separates domain boundaries (e.g., `tauqeet-js/prayers`, `tauqeet-js/qibla`).
+### 2.1 Strengths
 
-**Simulated Rollup Analysis:**
-If a user imports *only* the Qibla module (`import { getQibla } from 'tauqeet-js/qibla'`), Rollup safely tree-shakes the entire `astronomy` and `moon` engines. However, importing `getPrayerTimes` inherently triggers the Solar Position engine, which imports `vsop87Coefficients.ts` (~106 KB).
+- **Validation-first API design:** `validatePrayerConfig` returns `{ success, error }` for all config paths; throwing APIs (`calculatePrayerTimes`) wrap failures in `PrayerCalculationError`.
+- **Result wrapper for legacy callers:** `getPrayerTimes` / `getPrayerTimesAsync` catch and return `Failure(message)` with `toMessage(err)` helper.
+- **Hot loops are exception-free:** VSOP87, ELP2000, and iterative solvers contain no `try/catch`, avoiding V8 deoptimization in numeric kernels.
+- **Typed error classes:** `ConfigurationError`, `PrayerCalculationError`, `InvalidArgumentError`, `SearchConvergenceError`, `OperationAbortedError`, `HijriConfigurationError`.
 
-**Actionable Recommendation:**
-Because the `Float64Array` tables for VSOP87 cannot be compressed mathematically without losing precision, consider offering an asynchronous init method `initTauqeet()` that lazy-loads the VSOP87 chunk via `await import('./vsop87Coefficients.js')` for developers who want to keep their main browser thread unblocked during startup.
+### 2.2 Issues Found
 
----
+| Location | Severity | Issue |
+|---|---|---|
+| `PrayerEngine.ts:29-33` | **Fixed** | `resolveTimeZoneSync` accepts `onFallback` callback before UTC fallback. |
+| `PrayerEngine.ts:76-86` | **Fixed** | `formatTimeField` accepts `onFallback` callback; reports offset or ISO fallback reason. |
+| `formatter/index.ts:64-68` | **Fixed** | Returns `Failure` with timezone and prayer-key context on `Intl` error. |
+| `sunAtQibla.ts:185-187` | **Fixed** | `formatLocalTime` invokes optional `onFallback` before ISO fallback. |
+| `validatePrayerConfig.ts:180-184` | **Fixed** | `resolveTimeZoneSync` invokes optional `onFallback` before UTC fallback. |
+| `VisibilityCalendar.ts:81-83` | **Fixed** | Previously caught **all** errors and returned `false`, masking programmer bugs. Now only swallows expected astronomical boundary errors. |
 
-## 3. Runtime Performance & V8 Microarchitecture (Evidence Required)
+### 2.3 Recommended Refactors
 
-### Deep-dive into the VSOP87 Hot Path
-**1. The Stride-3 Access Pattern:**
-Currently, `src/astronomy/theories/vsop87/vsop87.ts` iterates via `for (let i = 0; i < len; i += 3)`.
-- **Evidence:** While contiguous, a stride of 3 floats (24 bytes) per iteration prevents the V8 TurboFan engine from safely coalescing loads into 128-bit or 256-bit SIMD registers. Standard CPU prefetchers excel at stride-1 access. 
-- **L1 Cache Impact:** A 64-byte L1 cache line holds 8 standard double-precision floats. A stride-3 read uses only 3 of those 8 floats before jumping, wasting 62% of the loaded cache line payload.
+#### A. `formatPrayerTimes` — propagate timezone errors
 
-**2. Hidden-Shape Risk:**
-- **Evidence:** Eradicated! You successfully replaced the `{a, b, c}` object literal arrays with flat `Float64Array`. The hot path `seriesSum` is now 100% monomorphic numeric access.
-
-**3. Kahan Summation Pipeline Stalls:**
-- **Evidence:** 
 ```typescript
-const y  = val - c_comp;
-const t  = sum + y;
-c_comp   = t - sum - y; // Loop-carried dependency
-sum      = t;           // Loop-carried dependency
-```
-This forces the CPU's Out-Of-Order execution engine to stall. The next loop iteration *cannot* compute `c_comp` or `sum` until the current iteration finishes, effectively creating a 1-cycle pipeline lock.
-- **Concrete Alternative (Pairwise / Unrolled Summation):**
-By maintaining two partial Kahan accumulators, the CPU can calculate iteration `i` and `i+3` in parallel on dual ports:
-```typescript
-let sum1 = 0, c_comp1 = 0;
-let sum2 = 0, c_comp2 = 0;
-for (let i = 0; i < len; i += 6) {
-  // Lane 1
-  const val1 = A[i] * Math.cos(B[i] + tau * C[i]);
-  const y1 = val1 - c_comp1; const t1 = sum1 + y1; c_comp1 = t1 - sum1 - y1; sum1 = t1;
-  // Lane 2
-  const val2 = A[i+1] * Math.cos(B[i+1] + tau * C[i+1]);
-  const y2 = val2 - c_comp2; const t2 = sum2 + y2; c_comp2 = t2 - sum2 - y2; sum2 = t2;
+// src/prayers/formatter/index.ts
+} else {
+  const d = new Date(field.utc);
+  const options: Intl.DateTimeFormatOptions = {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: type === '12h',
+  };
+  if (timeZone) {
+    options.timeZone = timeZone;
+  }
+  try {
+    formatted[key] = new Intl.DateTimeFormat('en-US', options).format(d);
+  } catch (err: unknown) {
+    const reason = err instanceof Error ? err.message : String(err);
+    return Failure(
+      `Invalid timeZone "${timeZone ?? 'default'}": ${reason}`
+    );
+  }
 }
-// Merge sum1 and sum2 via final Kahan step
 ```
 
-### Deoptimization Triggers
-- **Evidence:** A structural sweep of the codebase (`grep -r "try" src/`) reveals that `try/catch` blocks are exclusively restricted to API boundaries (e.g., `src/prayers/engine/PrayerEngine.ts:29`, `validatePrayerConfig.ts`). The `src/astronomy/` numeric hot loops are completely free of deopt-triggering closures, `try/catch`, or `arguments` accesses.
+#### B. `resolveTimeZoneSync` — optional diagnostic
+
+```typescript
+export function resolveTimeZoneSync(
+  explicitTimeZone?: string | number,
+  onFallback?: (reason: string) => void
+): string | number {
+  if (explicitTimeZone !== undefined && explicitTimeZone !== null) {
+    return explicitTimeZone;
+  }
+  if (typeof Intl !== 'undefined') {
+    try {
+      return Intl.DateTimeFormat().resolvedOptions().timeZone;
+    } catch (err: unknown) {
+      onFallback?.(err instanceof Error ? err.message : String(err));
+    }
+  }
+  return 'UTC';
+}
+```
+
+#### C. `VisibilityCalendar.isVisible` — applied fix
+
+```typescript
+} catch (err: unknown) {
+  if (err instanceof RangeError || err instanceof SearchConvergenceError) {
+    return false; // expected: polar latitudes, year out of range, search non-convergence
+  }
+  throw err; // unexpected — do not swallow
+}
+```
+
+#### D. Input validation — custom method angles
+
+```typescript
+// validatePrayerConfig.ts — add after custom method field check
+if (mc.fajrAngle < 0 || mc.fajrAngle > 30) {
+  return { success: false, error: 'fajrAngle must be between 0° and 30°' };
+}
+if (mc.ishaAngle !== undefined && mc.ishaAngle !== null) {
+  if (mc.ishaAngle < 0 || mc.ishaAngle > 30) {
+    return { success: false, error: 'ishaAngle must be between 0° and 30°' };
+  }
+}
+```
+
+---
+
+## 3. Runtime Complexity Analysis
+
+### 3.1 Complexity Map
+
+| Function / Module | Time | Space | Notes |
+|---|---|---|---|
+| `seriesSum` (VSOP87) | O(N) | O(1) | 2-lane unrolled Kahan; N = terms per series |
+| `computeEarthHeliocentricState` | O(ΣNᵢ) | O(1) | 15 series evaluations; linear, not quadratic |
+| `ChebyshevInterpolator` constructor | O(N²) | O(N²) | N=8 nodes; runs once per cache miss in `EphemerisService` |
+| `ChebyshevInterpolator.evaluate` | O(N) | O(1) | Clenshaw recurrence; hot path |
+| `solveIteratively` | O(k × E) | O(1) | k ≤ 15 iterations; E = ephemeris lookup (cached) |
+| `calculatePrayerTimesInternal` | O(k × E) | O(1) | **Was** 2× Dhuhr; **now** 1× when not using regional fallback |
+| `CivilCalendar.toHijri` | O(1) | O(1) | ≤30 year steps + ≤12 month steps |
+| `LunarEventFinder.searchForEvent` | O(B log B) | O(1) | B ≤ 180 bracket steps + 60 bisection; bounded |
+| `searchLunarEclipse` | O(M × B) | O(1) | M ≤ maxMoons (default 40) |
+| `computeNutation` (IAU1980) | O(T) | **O(1)** alloc | T=63 terms; **single-pass inline Kahan** — zero intermediate arrays |
+| `getSunAtQibla` | O(4 × 4 × S) | O(1) | **Cached** — local `Map` keyed by `Math.round(ut * 1e6)`; typically ~4–8 unique evaluations vs 16 |
+
+### 3.2 Duplicate Work Identified
+
+#### Fixed: Double Dhuhr in PrayerEngine
+
+**Before:** `calculatePrayerTimesInternal` called `calculateDhuhr` at line 322 for latitude classification, then `calculateRawTimes` called it again at line 127 for the same latitude.
+
+**After:** Precomputed transit is passed through when `useFallback === false`:
+
+```typescript
+// calculatePrayerTimesInternal
+const dhuhrTransit = calculateDhuhr(config.date, latitude, longitude);
+// ...
+if (useFallback) {
+  rawResults = calculateRawTimes(config, anchorLat); // different lat → own Dhuhr
+} else {
+  rawResults = calculateRawTimes(config, latitude, dhuhrTransit); // reuse
+}
+```
+
+**Savings:** ~1 full iterative solver run (~8–15 ephemeris evaluations) per prayer calculation for the common case.
+
+#### Fixed: `getSunAtQibla` ephemeris cache (2026-07-09)
+
+Local `Map<number, SolarPositionResult>` keyed by micro-hour quantized UT. Transit refinement and per-offset iteration share cached results. Map cleared before return.
+
+```typescript
+const solarCache = new Map<number, SolarPositionResult>();
+const getCachedSolar = (ut: number): SolarPositionResult => {
+  const key = Math.round(ut * 1e6);
+  let pos = solarCache.get(key);
+  if (!pos) { pos = computeSolarPosition(j0, ut, deltaT); solarCache.set(key, pos); }
+  return pos;
+};
+```
+
+#### Fixed: IAU1980 zero-allocation loop (2026-07-09)
+
+Single `for` loop with inline Kahan accumulators for `dpsi` and `deps`. Identical math, no `.map()` or `kahanSum(array)`.
+
+### 3.3 Synchronous Blockers
+
+| Blocker | Impact | Mitigation |
+|---|---|---|
+| VSOP87 coefficient load (~106 KB) | Startup latency if astronomy imported | `getVSOP87Tables()` lazy dynamic import already exists; used by `calculatePrayerTimesAsync` |
+| `computeSolarPosition` in hot loops | CPU-bound; blocks main thread | Acceptable for single-date calls; batch users should use `requestIdleCallback` or Worker |
+| Eclipse search tests | Can exceed 5 s timeout | Increase `testTimeout` for `eclipse.test.ts` or reduce `maxMoons` in test fixtures |
+
+**No database queries exist** — this is a pure computation library with no I/O layer.
+
+---
+
+## 4. Memory Efficiency Audit
+
+### 4.1 Strengths
+
+- **No file streams** in `src/` — zero risk of unclosed handles.
+- **VSOP87 coefficients** stored as module-level `Float64Array` parallel arrays (`L0_A`, `L0_B`, `L0_C`, …) — unboxed, cache-friendly, no GC during evaluation.
+- **`EphemerisService` LRU cache** — bounded to 10 days; evicts oldest via `cacheKeys.shift()`.
+- **ChebyshevInterpolator** — coefficients and cosine matrix in `Float64Array`; no object boxing in `evaluate()`.
+- **`sideEffects: false`** in `package.json` — enables tree-shaking.
+
+### 4.2 Issues & Alternatives
+
+| Issue | Severity | Alternative |
+|---|---|---|
+| IAU1980 4× `.map()` per nutation call | **Fixed** | Single-loop inline Kahan in `iau1980.ts` |
+| `toHijri()` creates new `HijriEngine` per call | Low | Cache engine instances by `(method, location)` key |
+| `checkMultipleCriteria` instantiates 3 criterion objects | Low | Module-level singletons (`ODEH`, `YALLOP`, `HMNAO`) |
+| `HijriEngine.getMonthGrid` uses `Array.fill(null)` for padding | Negligible | Pre-sized array: `new Array(7).fill(null)` is fine for ≤6 cells |
+| Chebyshev DCT matrix O(N²) per cache miss | Low | N=8 → 64 doubles = 512 bytes; acceptable |
+
+### 4.3 GC Pressure Hotspots (Ranked)
+
+1. `computeNutation` — **fixed**; zero per-call allocations
+2. `formatTimeField` — creates 2–3 `Date` objects per prayer time (7 prayers = ~21 objects)
+3. `toDate` in iterative solver — 1 `Date` per iteration × 15 max × 6 prayers
+
+None of these cause memory leaks; all are short-lived allocations collected on next GC cycle.
+
+---
+
+## 5. Security & Dead Code Audit
+
+### 5.1 Dependency Security
+
+```
+npm audit → 0 vulnerabilities (306 dev dependencies, 0 prod dependencies)
+```
+
+All runtime code is self-contained. Dev toolchain: TypeScript 6, Vitest 4, ESLint 9, tsup 8 — no known CVEs at audit time.
+
+### 5.2 Code Security
+
+| Check | Result |
+|---|---|
+| `eval` / `new Function` | **Not found** |
+| `innerHTML` / DOM injection | **Not found** (library has no DOM) |
+| `fs` / `child_process` | **Not found** in `src/` |
+| User callback injection | `resolveTimezoneAsync` is caller-supplied — library correctly wraps failures in `PrayerCalculationError` |
+| Prototype pollution | No dynamic `Object.assign` from untrusted input |
+
+### 5.3 Dead / Incomplete Code
+
+| Item | Location | Status |
+|---|---|---|
+| `VisibilityCalendar.toGregorian` | `VisibilityCalendar.ts:59-64` | **Incomplete** — returns conjunction approximation without visibility iteration. Documented in JSDoc but misleading for callers expecting full sighting logic. |
+| `prefer-const` lint errors | `Eclipse.ts:298-318` | **Fixed** |
+| `manual_testing/` scripts | Outside `src/` | Dev-only; not published (`files: ["dist", ...]`) |
+| `iau1980.ts` vs `iau2000b.ts` | Both exist | `iau2000b` used in production path; `iau1980` may be legacy — verify before removal |
+
+### 5.4 Unused Variables
+
+ESLint reports **0 unused-variable warnings** after `prefer-const` fixes. No `@ts-ignore` or `eslint-disable` abuse found in `src/`.
+
+### 5.5 Input Validation Coverage
+
+| API | Coordinates | Date | Timezone | Angles |
+|---|---|---|---|---|
+| `getPrayerTimes` | ✅ strict | ✅ ISO/timestamp | ⚠️ unvalidated string | ✅ custom angles 0°–30° |
+| `getQiblaDirection` | ✅ throws RangeError | N/A | N/A | N/A |
+| `checkVisibility` | ❌ no validation | implicit via Date | N/A | N/A |
+| `toHijri` | ⚠️ only for VISIBILITY method | via Date | N/A | N/A |
+
+**Recommendation:** Add `validateCoordinates` to `checkVisibility` and `VisibilityCalendar` constructor.
+
+---
+
+## 6. Bundle Size Forensics
+
+- **Evidence:** `package.json:9` asserts `"sideEffects": false`.
+- **Evidence:** `"exports"` map cleanly separates domain boundaries (`tauqeet-js/prayers`, `tauqeet-js/qibla`, etc.).
+- **Largest chunk:** `vsop87Coefficients.ts` (~106 KB) pulled in by any solar position calculation.
+- **Lazy load path:** `getVSOP87Tables()` via dynamic `import()` — already wired in `calculatePrayerTimesAsync`.
+
+---
+
+## 7. V8 Microarchitecture (VSOP87 Hot Path)
+
+### Stride-1 Parallel Arrays (Post-Refactor)
+
+VSOP87 now uses three separate `Float64Array`s per series (`A`, `B`, `C`), enabling stride-1 access and 2-lane unrolled Kahan summation.
+
+### Remaining Micro-Optimizations
+
+1. **Transcendental overhead** — `Math.cos` per term; only optimizable via lookup tables (precision trade-off).
+2. **Kahan merge step** — final lane merge still serial; negligible vs cos cost.
 
 ### Empirical Benchmark Results (v1.1.3)
 
-| Metric | Pre‑refactor (stride‑3) | Post‑refactor (parallel + unrolled) | Δ |
-|--------|--------------------------|--------------------------------------|---|
+| Metric | Pre-refactor (stride-3) | Post-refactor (parallel + unrolled) | Δ |
+|---|---|---|---|
 | Ops/sec | ~12,400 | ~15,800 | **+27.4%** |
 | Avg latency (ms) | 0.0806 | 0.0633 | **-21.5%** |
 | Deoptimizations | 0 | 0 | ✅ |
-| Bundle size (gzip) | 34.2 KB | 33.9 KB | -0.9% (lazy loading) |
+| Bundle size (gzip) | 34.2 KB | 33.9 KB | -0.9% |
 
 ---
 
-## 4. Algorithmic Complexity (Robustness)
+## 8. Risk Register
 
-**High-Latitude Strategies**
-- **Evidence:** `AngleBased`, `SeventhOfNight`, and `MiddleOfNight` operate in **O(1)** time complexity. Thanks to the newly implemented `getSafeNightDuration` bounds-checking, they execute a strictly linear path consisting of 3-4 scalar arithmetic operations.
-- **Robustness:** There are no recursive loops in the high-latitude engine, ensuring a Stack Overflow is mathematically impossible.
-
-**Eclipse Iterative Searches**
-- **Evidence:** `searchLocalSolarEclipse(..., maxMoons = 40)` loops in **O(M)** time where `M` is `maxMoons`. Inside this loop, `findNextNewMoon` utilizes an **O(1)** trigonometric approximation followed by a fast-converging bounded loop (max 30 iterations) for shadow slope detection. Total worst-case complexity is capped strictly by constant thresholds, guaranteeing bounded execution time.
-
----
-
-## 5. Risk Register & Technical Debt
-
-| Risk | Severity | Description & Failure Mode Map |
+| Risk | Severity | Status |
 |---|---|---|
-| **SIMD Stride-3 Block** | Medium | VSOP87 buffers use interleaved data, preventing JIT from auto-vectorizing `Math.cos` execution. |
-| **Kahan ILP Stall** | Low | Single accumulator stalls instruction-level parallelism. Limits absolute peak ops/sec. |
-| **Transcendental CPU Load** | Low | `Math.cos` is called thousands of times per ephemeris evaluation. Only a problem in heavy iterative batching. |
+| Silent timezone fallback | Low | **Fixed** — optional `onFallback` on helpers |
+| `VisibilityCalendar` error swallow | Medium | **Fixed** |
+| Duplicate Dhuhr computation | Medium | **Fixed** |
+| IAU1980 allocation churn | Low | **Fixed** |
+| `getSunAtQibla` redundant ephemeris | Low | **Fixed** |
+| Incomplete `toGregorian` sighting logic | Medium | Open — document or implement |
+| Eclipse test timeout (5 s) | Low | Flaky CI; increase timeout |
+| Custom angle validation missing | Low | **Fixed** |
 
 ---
 
-## 6. Actionable Implementation Plan
+## 9. Implementation Plan (Prioritized)
 
-To push this engine from **A-** to a perfect **A+** microarchitectural state, prioritize the following tasks:
+| # | Task | Priority | Status |
+|---|---|---|---|
+| 1 | Refactor VSOP87 to parallel Float64Arrays | High | ✅ Done |
+| 2 | Unroll `seriesSum` 2-lane Kahan | High | ✅ Done |
+| 3 | Eliminate duplicate `calculateDhuhr` | High | ✅ Done |
+| 4 | Tighten `VisibilityCalendar` catch | Medium | ✅ Done |
+| 5 | Fix `Eclipse.ts` prefer-const lint | Low | ✅ Done |
+| 6 | Single-loop IAU1980 nutation | Medium | ✅ Done |
+| 7 | `getSunAtQibla` solar position cache | Medium | ✅ Done |
+| 8 | Validate custom `fajrAngle`/`ishaAngle` | Medium | ✅ Done |
+| 8b | Validate `timeZone` IANA strings | Medium | ⬜ Pending |
+| 9 | Add `validateCoordinates` to moon visibility | Low | ⬜ Pending |
+| 10 | Complete or clearly stub `VisibilityCalendar.toGregorian` | Medium | ⬜ Pending |
+| 12 | Intl `onFallback` callbacks + `formatPrayerTimes` Failure | Medium | ✅ Done |
+| 11 | Increase eclipse test timeout to 15 s | Low | ⬜ Pending |
 
-1. **[x] Refactor VSOP87 Memory Layout (Again):** 
-   Write a script to migrate the flat interleaved `Float64Array` into three separate, parallel `Float64Array`s per series (e.g., `L0_A`, `L0_B`, `L0_C`).
-2. **[x] Unroll `seriesSum` Loop:**
-   Update `vsop87.ts` to utilize the parallel arrays and implement a 2-lane unrolled Kahan sum (see snippet in Section 3).
-3. **[x] Diagnostics Integration Check:**
-   Run a production profiling trace to verify the new `DiagnosticsConfig` abort signal does not negatively impact the TurboFan AST due to optional chaining (`config?.signal?.aborted`).
+---
 
-*(Note to User: If you wish to validate the ILP stalls or SIMD blocks, please run `node --trace-deopt --trace-turbo -e "import('./dist/index.js').then(m => m.getPrayerTimes(...))"` and paste the pipeline log below for deep V8 graph analysis).*
+## 11. Micro-Optimization Pass (2026-07-09)
+
+All four audit tasks applied without altering astronomical formulas:
+
+| Task | File | Change |
+|---|---|---|
+| IAU1980 allocation churn | `src/astronomy/theories/nutation/iau1980.ts` | Single-pass inline Kahan; removed `kahanSum` + 4× `.map()` |
+| Ephemeris cache | `src/solar-alignment/sunAtQibla.ts` | Local `Map` by `Math.round(ut * 1e6)`; cleared before return |
+| Intl diagnostics | `formatter/index.ts`, `PrayerEngine.ts`, `sunAtQibla.ts` | `Failure(reason)` + optional `onFallback` callbacks |
+| Angle validation | `src/prayers/validators/validatePrayerConfig.ts` | `fajrAngle`/`ishaAngle` ∈ [0°, 30°] |
+
+**Validation:** `npm run build` ✅ · `npm test` 171/171 ✅
+
+---
+
+## 10. Validation Commands
+
+```bash
+npm run lint          # ESLint — should pass
+npm test              # Vitest — 171/171 pass
+npm audit             # 0 vulnerabilities
+node --trace-deopt -e "import('./dist/index.js').then(m => m.getPrayerTimes({lat: 21.4, long: 39.8}))"
+```

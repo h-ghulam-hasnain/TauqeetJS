@@ -295,8 +295,8 @@ function getShadowSemiDuration(peakJd: number, radiusLimit: number, windowMinute
   // Search backward
   let left0 = peakJd - windowDays;
   let left1 = peakJd;
-  let r_left0 = getEarthShadow(left0, 0, deltaT).r - radiusLimit;
-  let r_left1 = getEarthShadow(left1, 0, deltaT).r - radiusLimit;
+  const r_left0 = getEarthShadow(left0, 0, deltaT).r - radiusLimit;
+  const r_left1 = getEarthShadow(left1, 0, deltaT).r - radiusLimit;
   if (r_left0 * r_left1 > 0) {
     return 0;
   }
@@ -314,8 +314,8 @@ function getShadowSemiDuration(peakJd: number, radiusLimit: number, windowMinute
   // Search forward
   let right0 = peakJd;
   let right1 = peakJd + windowDays;
-  let r_right0 = getEarthShadow(right0, 0, deltaT).r - radiusLimit;
-  let r_right1 = getEarthShadow(right1, 0, deltaT).r - radiusLimit;
+  const r_right0 = getEarthShadow(right0, 0, deltaT).r - radiusLimit;
+  const r_right1 = getEarthShadow(right1, 0, deltaT).r - radiusLimit;
   if (r_right0 * r_right1 > 0) {
     return 0;
   }

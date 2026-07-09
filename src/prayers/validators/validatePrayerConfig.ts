@@ -233,6 +233,17 @@ export function validatePrayerConfig(config: PrayerConfig): ValidationResult {
       ) {
         return { success: false, error: 'Custom method config is missing required fields' };
       }
+      if (mc.fajrAngle < 0 || mc.fajrAngle > 30) {
+        return { success: false, error: 'fajrAngle must be between 0° and 30°' };
+      }
+      if (mc.ishaAngle !== undefined && mc.ishaAngle !== null) {
+        if (typeof mc.ishaAngle !== 'number' || isNaN(mc.ishaAngle)) {
+          return { success: false, error: 'ishaAngle must be a valid number when provided' };
+        }
+        if (mc.ishaAngle < 0 || mc.ishaAngle > 30) {
+          return { success: false, error: 'ishaAngle must be between 0° and 30°' };
+        }
+      }
       methodConfig = {
         id: mc.id,
         name: mc.name,
