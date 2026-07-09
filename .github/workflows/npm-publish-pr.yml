@@ -1,5 +1,10 @@
-name: CI & NPM Publish (PR)
+name: CI (Pull Request)
 
+# ─────────────────────────────────────────────────────────────────────────────
+# TRIGGER: Every PR opened / updated against main or master.
+# PURPOSE: Lint, build, test. Post a clear status comment.
+#          Never publishes to NPM — that is release.yml's job on merge.
+# ─────────────────────────────────────────────────────────────────────────────
 on:
   pull_request:
     branches:
@@ -10,92 +15,105 @@ on:
       - synchronize
       - reopened
 
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
-  build-and-publish:
+  ci:
+    name: 🧪 Lint, Build & Test
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-      pull-requests: write
 
     steps:
-      # 1. Checkout with full history (needed to diff against base)
-      - name: Checkout code
+      - name: Checkout (full history for version diff)
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      # 2. Setup Node.js + NPM registry
-      - name: Setup Node.js
+      - name: Setup Node.js 20
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          registry-url: 'https://registry.npmjs.org'
+          cache: 'npm'
 
-      # 3. Install dependencies (fast, deterministic)
       - name: Install dependencies
         run: npm ci
 
-      # 4. Build the library (run your build script)
+      - name: Lint
+        run: npm run lint
+
       - name: Build
         run: npm run build
 
-      # 5. Run tests (fail fast if something breaks)
       - name: Test
         run: npm test
 
-      # 6. Get version from base branch (e.g., main)
-      - name: Get base version
-        id: base_ver
+      # ── Check whether this PR bumps the version ───────────────────────────
+      - name: Check version bump
+        id: version
+        if: always()
         run: |
-          BASE_VERSION=$(git show origin/${{ github.base_ref }}:package.json | jq -r '.version')
-          echo "version=$BASE_VERSION" >> $GITHUB_OUTPUT
-
-      # 7. Get version from PR branch (current HEAD)
-      - name: Get head version
-        id: head_ver
-        run: |
-          HEAD_VERSION=$(jq -r '.version' package.json)
-          echo "version=$HEAD_VERSION" >> $GITHUB_OUTPUT
-
-      # 8. Compare versions
-      - name: Check if version changed
-        id: version_check
-        run: |
-          BASE="${{ steps.base_ver.outputs.version }}"
-          HEAD="${{ steps.head_ver.outputs.version }}"
+          BASE=$(git show origin/${{ github.base_ref }}:package.json | jq -r '.version')
+          HEAD=$(jq -r '.version' package.json)
+          echo "base=$BASE" >> "$GITHUB_OUTPUT"
+          echo "head=$HEAD" >> "$GITHUB_OUTPUT"
           if [ "$BASE" != "$HEAD" ]; then
-            echo "✅ Version changed: $BASE → $HEAD"
-            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "bumped=true"  >> "$GITHUB_OUTPUT"
           else
-            echo "⏭️ No version change (docs-only PR). Skipping NPM publish."
-            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "bumped=false" >> "$GITHUB_OUTPUT"
           fi
 
-      # 9. Publish to NPM (only if version changed AND PR is NOT from a fork)
-      - name: Publish to NPM with PR tag
-        if: |
-          steps.version_check.outputs.changed == 'true' &&
-          github.event.pull_request.head.repo.full_name == github.repository
-        run: npm publish --tag pr-${{ github.event.number }}
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-      # 10. (Optional) Comment on PR to confirm publish status
-      - name: Comment PR on publish
-        if: steps.version_check.outputs.changed == 'true'
+      # ── Post (or update) a single clean status comment on the PR ─────────
+      - name: Comment CI status
+        if: always()
         uses: actions/github-script@v7
         with:
           script: |
-            const status = "${{ steps.version_check.outputs.changed }}";
-            const headVer = "${{ steps.head_ver.outputs.version }}";
-            const baseVer = "${{ steps.base_ver.outputs.version }}";
-            const msg = status === 'true'
-              ? `🚀 **Published v${headVer}** to NPM under the tag \`pr-${{ github.event.number }}\`! (was v${baseVer})`
-              : `📝 Docs-only update. No version bump needed.`;
-            github.rest.issues.createComment({
+            const status  = "${{ job.status }}";
+            const bumped  = "${{ steps.version.outputs.bumped }}";
+            const base    = "${{ steps.version.outputs.base }}";
+            const head    = "${{ steps.version.outputs.head }}";
+
+            const icon = status === 'success' ? '✅' : '❌';
+
+            const versionBlock = bumped === 'true'
+              ? [
+                  `> 📦 **Version bump:** \`${base}\` → \`${head}\``,
+                  `> When this PR is merged, **release.yml** will build, publish \`v${head}\` to NPM, and create a GitHub Release automatically.`,
+                ].join('\n')
+              : `> ℹ️ No version bump — this looks like a docs / config update. Merging will **not** trigger an NPM release.`;
+
+            const body = [
+              `## ${icon} CI — \`${status}\``,
+              '',
+              '| Step | Result |',
+              '|------|--------|',
+              `| 🔍 Lint  | ${status === 'success' ? '✅ Passed' : '❌ Failed'} |`,
+              `| 🏗️ Build | ${status === 'success' ? '✅ Passed' : '❌ Failed'} |`,
+              `| 🧪 Test  | ${status === 'success' ? '✅ Passed' : '❌ Failed'} |`,
+              '',
+              versionBlock,
+            ].join('\n');
+
+            // Delete previous bot comments to keep the PR thread clean
+            const { data: comments } = await github.rest.issues.listComments({
+              owner:        context.repo.owner,
+              repo:         context.repo.repo,
               issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: msg
+            });
+            for (const c of comments) {
+              if (c.user.type === 'Bot' && c.body.startsWith('## ')) {
+                await github.rest.issues.deleteComment({
+                  owner:      context.repo.owner,
+                  repo:       context.repo.repo,
+                  comment_id: c.id,
+                });
+              }
+            }
+
+            github.rest.issues.createComment({
+              owner:        context.repo.owner,
+              repo:         context.repo.repo,
+              issue_number: context.issue.number,
+              body,
             });

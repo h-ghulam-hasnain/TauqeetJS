@@ -1,0 +1,33 @@
+# GitHub auto-generated release notes configuration.
+# This controls how PRs are grouped in the auto-generated changelog
+# when `generate_release_notes: true` is used in release.yml.
+#
+# Apply labels to your PRs to get beautifully organized release notes.
+changelog:
+  categories:
+    - title: 🚀 Features
+      labels:
+        - enhancement
+        - feature
+    - title: 🐛 Bug Fixes
+      labels:
+        - bug
+        - fix
+        - bugfix
+    - title: ⚡ Performance
+      labels:
+        - performance
+        - optimization
+    - title: 📖 Documentation
+      labels:
+        - documentation
+        - docs
+    - title: 🔧 Maintenance
+      labels:
+        - chore
+        - dependencies
+        - ci
+        - refactor
+    - title: ⚠️ Breaking Changes
+      labels:
+        - breaking-change
