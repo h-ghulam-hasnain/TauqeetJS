@@ -2,6 +2,7 @@ name: Release & NPM Publish
 
 # ─────────────────────────────────────────────────────────────────────────────
 # TRIGGER: Every push (or merged PR) to main / master.
+# Node.js: 24 (GitHub Actions deprecated Node 20 as of 2025-09-19)
 #
 # LOGIC:
 #   new_version == old_version  →  Skip NPM (docs / config update only)
@@ -33,10 +34,10 @@ jobs:
           fetch-depth: 2
 
       # ── 2. Setup Node ────────────────────────────────────────────────────────
-      - name: Setup Node.js 20
+      - name: Setup Node.js 24
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
           registry-url: 'https://registry.npmjs.org'
           cache: 'npm'
 
@@ -62,7 +63,7 @@ jobs:
 
       - name: Install dependencies
         if: steps.version.outputs.changed == 'true'
-        run: npm ci
+        run: npm ci --prefer-offline
 
       - name: Build
         if: steps.version.outputs.changed == 'true'
