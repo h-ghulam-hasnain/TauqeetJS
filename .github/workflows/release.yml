@@ -1,0 +1,100 @@
+name: Release & NPM Publish
+
+# ─────────────────────────────────────────────────────────────────────────────
+# TRIGGER: Every push (or merged PR) to main / master.
+#
+# LOGIC:
+#   new_version == old_version  →  Skip NPM (docs / config update only)
+#   new_version != old_version  →  Build, Test, Publish to NPM, Create Release
+#
+# You bump the version in package.json manually — this workflow reads it.
+# No git tag pushing required from your side.
+# ─────────────────────────────────────────────────────────────────────────────
+on:
+  push:
+    branches:
+      - main
+      - master
+
+permissions:
+  contents: write  # needed to push the git tag and create the GitHub Release
+  id-token: write  # needed for npm provenance attestation
+
+jobs:
+  release:
+    name: Release & Publish
+    runs-on: ubuntu-latest
+
+    steps:
+      # ── 1. Checkout with depth 2 so we can read the previous commit ─────────
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      # ── 2. Setup Node ────────────────────────────────────────────────────────
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+          cache: 'npm'
+
+      # ── 3. Compare versions: current commit vs previous commit ───────────────
+      - name: Check if version changed
+        id: version
+        run: |
+          OLD=$(git show HEAD~1:package.json 2>/dev/null | jq -r '.version' || echo "0.0.0")
+          NEW=$(jq -r '.version' package.json)
+
+          echo "old=$OLD" >> "$GITHUB_OUTPUT"
+          echo "new=$NEW" >> "$GITHUB_OUTPUT"
+
+          if [ "$OLD" = "$NEW" ]; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "⏭️  Version unchanged ($NEW). This looks like a docs-only update — skipping NPM publish."
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "🚀 Version changed: $OLD → $NEW. Will build, test, publish, and release."
+          fi
+
+      # ── 4-6. Only run when version actually changed ──────────────────────────
+
+      - name: Install dependencies
+        if: steps.version.outputs.changed == 'true'
+        run: npm ci
+
+      - name: Build
+        if: steps.version.outputs.changed == 'true'
+        run: npm run build
+
+      - name: Test
+        if: steps.version.outputs.changed == 'true'
+        run: npm test
+
+      # ── 7. Push a git tag so the GitHub Release has something to point to ────
+      #       (We do this so you never have to push tags manually.)
+      - name: Create & push git tag
+        if: steps.version.outputs.changed == 'true'
+        run: |
+          TAG="v${{ steps.version.outputs.new }}"
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag "$TAG"
+          git push origin "$TAG"
+
+      # ── 8. Publish to NPM with provenance ────────────────────────────────────
+      - name: Publish to NPM
+        if: steps.version.outputs.changed == 'true'
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      # ── 9. Create GitHub Release with auto-generated notes ───────────────────
+      - name: Create GitHub Release
+        if: steps.version.outputs.changed == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.new }}
+          name: "tauqeet-js v${{ steps.version.outputs.new }}"
+          generate_release_notes: true

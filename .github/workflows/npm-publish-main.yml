@@ -1,71 +1,28 @@
-name: NPM Publish (Production)
+name: NPM Publish (Production — Legacy)
 
+# ─────────────────────────────────────────────────────────────────────────────
+# ⚠️  DEPRECATED — this file is kept for reference only.
+#
+#    The production publish pipeline has been replaced by `release.yml`.
+#    `release.yml` is triggered by pushing a git tag (e.g. `v1.1.4`) and
+#    handles version validation, NPM publish with provenance, and GitHub
+#    Release creation in separate, well-scoped jobs.
+#
+#    DO NOT enable this workflow. It has no triggers.
+# ─────────────────────────────────────────────────────────────────────────────
 on:
-  push:
-    branches:
-      - main
-      - master
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type "i-know-what-i-am-doing" to run the legacy path'
+        required: true
 
 jobs:
-  publish-latest:
+  legacy-publish:
+    name: ⚠️ Legacy publish (disabled)
     runs-on: ubuntu-latest
-    permissions:
-      contents: write # Needed to create GitHub Releases
-      packages: write
-
+    if: github.event.inputs.confirm == 'i-know-what-i-am-doing'
     steps:
-      # 1. Checkout with depth 2 to diff against the previous commit
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 2
-
-      # 2. Setup Node.js + NPM registry
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          registry-url: 'https://registry.npmjs.org'
-
-      # 3. Install dependencies
-      - name: Install dependencies
-        run: npm ci
-
-      # 4. Build the library
-      - name: Build
-        run: npm run build
-
-      # 5. Run tests
-      - name: Test
-        run: npm test
-
-      # 6. Check if version was bumped in the merged commit
-      - name: Check if version changed
-        id: version_check
-        run: |
-          PREV_VERSION=$(git show HEAD~1:package.json | jq -r '.version')
-          CURR_VERSION=$(jq -r '.version' package.json)
-          if [ "$PREV_VERSION" != "$CURR_VERSION" ]; then
-            echo "✅ Version bumped: $PREV_VERSION → $CURR_VERSION"
-            echo "changed=true" >> $GITHUB_OUTPUT
-            echo "version=$CURR_VERSION" >> $GITHUB_OUTPUT
-          else
-            echo "⏭️ No version change. Skipping NPM publish."
-            echo "changed=false" >> $GITHUB_OUTPUT
-          fi
-
-      # 7. Publish to the official NPM "latest" tag
-      - name: Publish to NPM (Latest)
-        if: steps.version_check.outputs.changed == 'true'
-        run: npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-      # 8. Create an official GitHub Release automatically
-      - name: Create GitHub Release
-        if: steps.version_check.outputs.changed == 'true'
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v${{ steps.version_check.outputs.version }}
-          name: v${{ steps.version_check.outputs.version }}
-          generate_release_notes: true
+      - run: |
+          echo "::error::This workflow is deprecated. Use release.yml instead."
+          exit 1
