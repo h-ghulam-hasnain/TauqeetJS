@@ -3,6 +3,7 @@ src/
 tests/
 manual_testing/
 helpers/
+logic/
 coverage/
 
 # Config files

@@ -204,7 +204,7 @@ const result = calculatePrayerTimes({
 });
 ```
 
-Set `withMetadata: true` to receive solver diagnostics for each prayer.
+Set `withMetadata: true` to receive solver diagnostics for each prayer. This exposes the internal calculation parameters used by the astronomical engine for that specific prayer.
 
 ```ts
 const result = calculatePrayerTimes({
@@ -215,6 +215,35 @@ const result = calculatePrayerTimes({
 
 console.log(result.metadata?.fajr?.iterations);
 ```
+
+The metadata object conforms to the `PrayerMetadata` type and contains fields for each prayer:
+
+```ts
+interface PrayerMetadata {
+  readonly fajr?: { DEC: number; EOT_min: number; angle: number; iterations: number };
+  readonly sunrise?: { DEC: number; EOT_min: number; HP_arcmin: number; SD_arcmin: number; elevationMeters: number; refraction_deg: number; iterations: number };
+  readonly dhuha?: { fajrTime: string; maghribTime: string };
+  readonly dhuhr?: { EOT_min: number; iterations: number };
+  readonly asr?: { DEC_of_Dhuhr: number; DEC_of_Asr: number; EOT_min: number; SD_of_Dhuhr_arcmin: number; SD_of_Asr_arcmin: number; refraction_of_Dhuhr_deg: number; refraction_of_Asr_deg: number; asrAngle: number; iterations: number };
+  readonly maghrib?: { DEC: number; EOT_min: number; HP_arcmin: number; SD_arcmin: number; refraction_deg: number; iterations: number };
+  readonly isha?: {
+    DEC?: number;
+    EOT_min?: number;
+    angle?: number;
+    iterations?: number;
+    highLatitudeSelectedDateMaghribTime?: string;
+    highLatitudeFajrNextDay?: string;
+    highLatitudeIshaSelectedDate?: string;
+  };
+}
+```
+
+- **DEC**: Solar Declination.
+- **EOT**: Equation of Time.
+- **HP**: Horizontal Parallax.
+- **SD**: Semi-Diameter of the sun.
+- **angle/asrAngle**: The specific angle used for the calculation.
+- **iterations**: The number of iterations the root-finding algorithm took to converge.
 
 ---
 

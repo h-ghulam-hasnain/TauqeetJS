@@ -31,6 +31,7 @@ const config = {
   // date: new Date('2027-01-01'),
 
   timeZone: 5,
+  withMetadata: true
 };
 
 // console.log(`Config inputs:`);
@@ -46,8 +47,8 @@ try {
     console.log(`   ${key.padEnd(15)}: ${value.local} (UTC: ${value.utc}) [Status: ${value.status}]`);
   }
 
-  // console.log(`\nMetadata (Astronomical details):`);
-  // console.log(JSON.stringify(times.metadata, null, 2));
+  console.log(`\nMetadata (Astronomical details):`);
+  console.log(JSON.stringify(times.metadata, null, 2));
 
 } catch (err) {
   console.error(`Calculation Failed:`, err);

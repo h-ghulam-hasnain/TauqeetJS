@@ -10,6 +10,8 @@ import { calculateMaghrib, calculateSunset } from '../calculations/Maghrib.js';
 import { calculateIsha } from '../calculations/Isha.js';
 import { calculateAstronomicalMidnight } from '../calculations/AstronomicalMidnight.js';
 import type { IterativeSolverResult } from '../solvers/IterativeSolver.js';
+import { computeRefraction } from '../corrections/HorizonCorrections.js';
+import { tand, atand } from '../../internal/trig.js';
 
 export class PrayerCalculationError extends Error {
   constructor(message: string) {
@@ -409,59 +411,155 @@ export function calculatePrayerTimesInternal(config: ValidatedPrayerConfig): Pra
 
   if (config.withMetadata) {
     const meta: Partial<{ -readonly [K in keyof PrayerMetadata]: PrayerMetadata[K] }> = {};
+    const { temperatureC, pressureMbar, elevationMeters } = config;
 
-    if (rawResults.fajr.metadata) {
+    // 1. Fajr Metadata
+    if (rawResults.fajr.status === 'SUCCESS' && rawResults.fajr.metadata) {
       meta.fajr = {
         DEC: rawResults.fajr.metadata.declination,
-        EOT: rawResults.fajr.metadata.equationOfTime,
+        EOT_min: rawResults.fajr.metadata.equationOfTime,
         angle: method.fajrAngle,
         iterations: rawResults.fajr.metadata.iterations,
       };
     }
-    if (rawResults.sunrise.metadata) {
+
+    // 2. Sunrise Metadata
+    if (rawResults.sunrise.status === 'SUCCESS' && rawResults.sunrise.metadata) {
       meta.sunrise = {
         DEC: rawResults.sunrise.metadata.declination,
-        EOT: rawResults.sunrise.metadata.equationOfTime,
-        HP: rawResults.sunrise.metadata.horizontalParallax,
-        SD: rawResults.sunrise.metadata.semidiameter,
+        EOT_min: rawResults.sunrise.metadata.equationOfTime,
+        HP_arcmin: rawResults.sunrise.metadata.horizontalParallax,
+        SD_arcmin: rawResults.sunrise.metadata.semidiameter,
+        elevationMeters,
+        refraction_deg: computeRefraction(0, temperatureC, pressureMbar),
         iterations: rawResults.sunrise.metadata.iterations,
       };
     }
-    if (rawResults.dhuhr.metadata) {
+
+    // 3. Dhuha Metadata
+    if (
+      rawResults.dhahwaKubra.status === 'SUCCESS' &&
+      result.fajr.utc !== null &&
+      result.maghrib.utc !== null
+    ) {
+      meta.dhuha = {
+        fajrTime: result.fajr.utc,
+        maghribTime: result.maghrib.utc,
+      };
+    }
+
+    // 4. Dhuhr Metadata
+    if (rawResults.dhuhr.status === 'SUCCESS' && rawResults.dhuhr.metadata) {
       meta.dhuhr = {
-        DEC: rawResults.dhuhr.metadata.declination,
-        EOT: rawResults.dhuhr.metadata.equationOfTime,
-        SD: rawResults.dhuhr.metadata.semidiameter,
+        EOT_min: rawResults.dhuhr.metadata.equationOfTime,
         iterations: rawResults.dhuhr.metadata.iterations,
       };
     }
-    if (rawResults.asr.metadata) {
+
+    // 5. Asr Metadata
+    if (
+      rawResults.asr.status === 'SUCCESS' &&
+      rawResults.asr.metadata &&
+      rawResults.dhuhr.metadata
+    ) {
+      const dhuhrMeta = rawResults.dhuhr.metadata;
+      const asrMeta = rawResults.asr.metadata;
+      const sign = latitude < 0 ? -1 : 1;
+      const latUsed = useFallback ? sign * config.regionalFallbackLatitude : latitude;
+
+      const zZuhr = Math.abs(latUsed - dhuhrMeta.declination);
+      const sdZuhr = dhuhrMeta.semidiameter / 60;
+      const refrZuhr = computeRefraction(90 - zZuhr, temperatureC, pressureMbar);
+      const zZuhrVisual = zZuhr - refrZuhr - sdZuhr;
+
+      const sf = ASR_SHADOW_FACTOR[config.madhab];
+      const zAsrVisual = atand(tand(zZuhrVisual) + sf);
+      const refrAsr = computeRefraction(90 - zAsrVisual, temperatureC, pressureMbar);
+
+      const targetZenith = zAsrVisual + refrAsr + asrMeta.semidiameter / 60;
+      const asrAngle = 90 - targetZenith;
+
       meta.asr = {
-        DEC: rawResults.asr.metadata.declination,
-        EOT: rawResults.asr.metadata.equationOfTime,
-        HP: rawResults.asr.metadata.horizontalParallax,
-        SD: rawResults.asr.metadata.semidiameter,
-        asrAngle: 0, // Angle is not readily available here
-        iterations: rawResults.asr.metadata.iterations,
+        DEC_of_Dhuhr: dhuhrMeta.declination,
+        DEC_of_Asr: asrMeta.declination,
+        EOT_min: asrMeta.equationOfTime,
+        SD_of_Dhuhr_arcmin: dhuhrMeta.semidiameter,
+        SD_of_Asr_arcmin: asrMeta.semidiameter,
+        refraction_of_Dhuhr_deg: refrZuhr,
+        refraction_of_Asr_deg: refrAsr,
+        asrAngle,
+        iterations: asrMeta.iterations,
       };
     }
-    if (rawResults.maghrib.metadata) {
+
+    // 6. Maghrib Metadata
+    if (rawResults.maghrib.status === 'SUCCESS' && rawResults.maghrib.metadata) {
+      let altitude = 0;
+      if (method.maghribAngle !== undefined && method.maghribAngle !== null) {
+        altitude = -method.maghribAngle;
+      }
       meta.maghrib = {
         DEC: rawResults.maghrib.metadata.declination,
-        EOT: rawResults.maghrib.metadata.equationOfTime,
-        HP: rawResults.maghrib.metadata.horizontalParallax,
-        SD: rawResults.maghrib.metadata.semidiameter,
+        EOT_min: rawResults.maghrib.metadata.equationOfTime,
+        HP_arcmin: rawResults.maghrib.metadata.horizontalParallax,
+        SD_arcmin: rawResults.maghrib.metadata.semidiameter,
+        refraction_deg: computeRefraction(altitude, temperatureC, pressureMbar),
         iterations: rawResults.maghrib.metadata.iterations,
       };
     }
-    if (rawResults.isha.metadata) {
+
+    // 7. Isha Metadata
+    if (rawResults.isha.status === 'SUCCESS' && rawResults.isha.metadata) {
       meta.isha = {
         DEC: rawResults.isha.metadata.declination,
-        EOT: rawResults.isha.metadata.equationOfTime,
+        EOT_min: rawResults.isha.metadata.equationOfTime,
         iterations: rawResults.isha.metadata.iterations,
         ...(method.ishaAngle !== null && method.ishaAngle !== undefined
           ? { angle: method.ishaAngle }
           : {}),
+      };
+    }
+
+    // High Latitude Isha/Fajr Context injection
+    if (
+      latCase !== LatitudeCase.NORMAL &&
+      (highLatitudeStrategy === 'MiddleOfNight' ||
+        highLatitudeStrategy === 'SeventhOfNight' ||
+        highLatitudeStrategy === 'AngleBased' ||
+        highLatitudeStrategy === 'NearestLatitude')
+    ) {
+      const sign = latitude < 0 ? -1 : 1;
+      const latUsed = useFallback ? sign * config.regionalFallbackLatitude : latitude;
+
+      // Maghrib/Sunset on selected date:
+      let highLatitudeSelectedDateMaghribTime: string;
+      if (result.maghrib.utc) {
+        highLatitudeSelectedDateMaghribTime = result.maghrib.utc;
+      } else {
+        const dhuhrTime = result.dhuhr.utc
+          ? new Date(result.dhuhr.utc)
+          : new Date(config.date.getTime() + (12 - longitude / 15) * 3600000);
+        const fallbackMaghrib = new Date(dhuhrTime.getTime() + 6 * 3600000);
+        highLatitudeSelectedDateMaghribTime = fallbackMaghrib.toISOString();
+      }
+
+      // Fajr on the next day:
+      const nextDayDate = new Date(config.date.getTime() + 24 * 3600000);
+      const nextDayFajrRes = calculateFajr(nextDayDate, latUsed, longitude, method);
+      let highLatitudeFajrNextDay: string;
+      if (nextDayFajrRes && nextDayFajrRes.time) {
+        highLatitudeFajrNextDay = nextDayFajrRes.time.toISOString();
+      } else {
+        const nextDhuhr = new Date(nextDayDate.getTime() + (12 - longitude / 15) * 3600000);
+        const fallbackFajr = new Date(nextDhuhr.getTime() - 6 * 3600000);
+        highLatitudeFajrNextDay = fallbackFajr.toISOString();
+      }
+
+      meta.isha = {
+        ...(meta.isha || {}),
+        highLatitudeSelectedDateMaghribTime,
+        highLatitudeIshaSelectedDate: highLatitudeSelectedDateMaghribTime,
+        highLatitudeFajrNextDay,
       };
     }
 
