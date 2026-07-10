@@ -32,7 +32,6 @@ describe('Lunar and Solar Eclipses Validation', () => {
 
     // Next lunar eclipse
     const eclipse2 = nextLunarEclipse(eclipse1.peak.julianDay);
-    console.log('2026 Second Lunar Eclipse:', eclipse2);
 
     // August 28, 2026 Partial Lunar Eclipse
     expect(eclipse2.kind).toBe(EclipseKind.Partial);
@@ -55,8 +54,6 @@ describe('Lunar and Solar Eclipses Validation', () => {
     const startJd = dateToJulianDay(2026, 1, 1);
     const eclipse1 = searchGlobalSolarEclipse(startJd);
 
-    console.log('2026 First Solar Eclipse:', eclipse1);
-
     // Feb 17, 2026 Annular Solar Eclipse
     expect(eclipse1.kind).toBe(EclipseKind.Annular);
     expect(eclipse1.peak.year).toBe(2026);
@@ -70,7 +67,6 @@ describe('Lunar and Solar Eclipses Validation', () => {
 
     // Next solar eclipse
     const eclipse2 = nextGlobalSolarEclipse(eclipse1.peak.julianDay);
-    console.log('2026 Second Solar Eclipse:', eclipse2);
 
     // August 12, 2026 Total Solar Eclipse
     expect(eclipse2.kind).toBe(EclipseKind.Total);

@@ -24,7 +24,6 @@ describe('ChebyshevInterpolator', () => {
       const exact = Math.sin(x);
       const approx = interpolator.evaluate(x);
       const diff = Math.abs(exact - approx);
-      console.log(`x: ${x.toFixed(4)} | Exact: ${exact.toFixed(8)} | Approx: ${approx.toFixed(8)} | Diff: ${diff.toExponential(4)}`);
       expect(diff).toBeLessThan(1e-7);
     }
   });
