@@ -20,6 +20,8 @@ describe('High Latitude Adjustment Tests', () => {
     expect(result.success).toBe(true);
     if (result.success) {
       expect(result.data.sunrise.status).toBe('POLAR_NIGHT');
+      expect(result.data.dhuhr.status).toBe('POLAR_NIGHT');
+      expect(result.data.dhuhr.timestamp).toBeNull();
     }
   });
 

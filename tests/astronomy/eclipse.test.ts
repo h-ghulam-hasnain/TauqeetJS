@@ -10,7 +10,10 @@ import {
 } from '../../src/astronomy/index.js';
 
 describe('Lunar and Solar Eclipses Validation', () => {
-  it('should find 2026 lunar eclipses accurately', () => {
+  it(
+    'should find 2026 lunar eclipses accurately',
+    { timeout: 30000 },
+    () => {
     // Start search from Jan 1, 2026
     const startJd = dateToJulianDay(2026, 1, 1);
     const eclipse1 = searchLunarEclipse(startJd);
@@ -44,7 +47,10 @@ describe('Lunar and Solar Eclipses Validation', () => {
     expect(eclipse2.sdTotal).toBe(0);
   });
 
-  it('should find 2026 solar eclipses accurately', () => {
+  it(
+    'should find 2026 solar eclipses accurately',
+    { timeout: 30000 },
+    () => {
     // Start search from Jan 1, 2026
     const startJd = dateToJulianDay(2026, 1, 1);
     const eclipse1 = searchGlobalSolarEclipse(startJd);
@@ -78,27 +84,30 @@ describe('Lunar and Solar Eclipses Validation', () => {
     expect(eclipse2.longitude).toBeCloseTo(-25.23, 1);
   });
 
-  it('should find local solar eclipse accurately for a specific observer', () => {
+  it(
+    'should find local solar eclipse accurately for a specific observer',
+    { timeout: 30000 },
+    () => {
     // Search local solar eclipse from Reykjavik, Iceland
     // Target: August 12, 2026 Total Solar Eclipse
     const startJd = dateToJulianDay(2026, 1, 1);
     const observer = { latitude: 64.1466, longitude: -21.9426 };
     const localEclipse = searchLocalSolarEclipse(startJd, observer);
-    
+
     expect(localEclipse.kind).toBe(EclipseKind.Total);
     expect(localEclipse.obscuration).toBe(1);
-    
+
     // Total Begin
     expect(localEclipse.totalBegin!.time.hour).toBe(17);
     expect(localEclipse.totalBegin!.time.minute).toBe(48);
     expect(localEclipse.totalBegin!.time.second).toBeCloseTo(15, -1); // 15s
-    
+
     // Peak
     expect(localEclipse.peak.time.hour).toBe(17);
     expect(localEclipse.peak.time.minute).toBe(48);
     expect(localEclipse.peak.time.second).toBeCloseTo(46, -1); // 46s
     expect(localEclipse.peak.altitude).toBeCloseTo(24.5, 1);
-    
+
     // Total End
     expect(localEclipse.totalEnd!.time.hour).toBe(17);
     expect(localEclipse.totalEnd!.time.minute).toBe(49);

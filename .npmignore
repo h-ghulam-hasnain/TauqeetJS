@@ -2,6 +2,7 @@
 src/
 tests/
 manual_testing/
+helpers/
 coverage/
 
 # Config files

@@ -1,4 +1,6 @@
 dist/
 node_modules/
+helpers/
+scripts/
 package-lock.json
 *.md

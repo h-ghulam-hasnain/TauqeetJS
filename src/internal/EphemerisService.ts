@@ -1,4 +1,6 @@
-import { computeSolarPosition, dateToJulianDay, calculateDeltaT } from '../astronomy/index.js';
+import { computeSolarPositionSubset } from '../astronomy/bodies/sun/SolarEphemeris.js';
+import { calculateDeltaT } from '../astronomy/time/DeltaT.js';
+import { dateToJulianDay } from '../astronomy/time/JulianDate.js';
 import { ChebyshevInterpolator } from './interpolation.js';
 
 export interface SolarEphemeris {
@@ -61,7 +63,7 @@ export class EphemerisService {
     for (let k = 1; k <= n; k++) {
       const nodeNormalized = Math.cos(((2 * k - 1) / (2 * n)) * Math.PI);
       const h = ((b - a) / 2) * nodeNormalized + (a + b) / 2;
-      const pos = computeSolarPosition(jdStart, h, deltaT);
+      const pos = computeSolarPositionSubset(jdStart, h, deltaT);
       declinationSamples.push(pos.declination);
       eotSamples.push(pos.equationOfTime);
       sdSamples.push(pos.semidiameter);
