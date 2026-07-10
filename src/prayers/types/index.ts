@@ -86,48 +86,66 @@ export interface PrayerMetadata {
   readonly fajr?: {
     readonly DEC: number;
     readonly EOT_min: number;
+    readonly EOT?: number;
     readonly angle: number;
     readonly iterations: number;
   };
   readonly sunrise?: {
     readonly DEC: number;
     readonly EOT_min: number;
+    readonly EOT?: number;
     readonly HP_arcmin: number;
+    readonly HP?: number;
     readonly SD_arcmin: number;
+    readonly SD?: number;
     readonly elevationMeters: number;
     readonly refraction_deg: number;
+    readonly refraction?: number;
     readonly iterations: number;
   };
   readonly dhuha?: {
     readonly fajrTime: string;
     readonly maghribTime: string;
+    readonly fajrTimestamp?: number;
+    readonly maghribTimestamp?: number;
   };
   readonly dhuhr?: {
     readonly EOT_min: number;
+    readonly EOT?: number;
     readonly iterations: number;
   };
   readonly asr?: {
     readonly DEC_of_Dhuhr: number;
     readonly DEC_of_Asr: number;
     readonly EOT_min: number;
+    readonly EOT?: number;
     readonly SD_of_Dhuhr_arcmin: number;
     readonly SD_of_Asr_arcmin: number;
+    readonly SD_of_Dhuhr?: number;
+    readonly SD_of_Asr?: number;
     readonly refraction_of_Dhuhr_deg: number;
     readonly refraction_of_Asr_deg: number;
+    readonly refraction_of_Dhuhr?: number;
+    readonly refraction_of_Asr?: number;
     readonly asrAngle: number;
     readonly iterations: number;
   };
   readonly maghrib?: {
     readonly DEC: number;
     readonly EOT_min: number;
+    readonly EOT?: number;
     readonly HP_arcmin: number;
+    readonly HP?: number;
     readonly SD_arcmin: number;
+    readonly SD?: number;
     readonly refraction_deg: number;
+    readonly refraction?: number;
     readonly iterations: number;
   };
   readonly isha?: {
     readonly DEC?: number;
     readonly EOT_min?: number;
+    readonly EOT?: number;
     readonly angle?: number;
     readonly iterations?: number;
     // High latitude contextual fields:
