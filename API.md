@@ -331,13 +331,21 @@ interface TimeField {
 
 ```ts
 interface PrayerMetadata {
-  readonly fajr?: { readonly DEC: number; readonly EOT: number; readonly angle: number; readonly iterations: number };
-  readonly sunrise?: { readonly DEC: number; readonly EOT: number; readonly HP: number; readonly SD: number; readonly iterations: number };
-  readonly dhuha?: { readonly DEC: number; readonly EOT: number; readonly iterations: number };
-  readonly dhuhr?: { readonly DEC: number; readonly EOT: number; readonly SD: number; readonly iterations: number };
-  readonly asr?: { readonly DEC: number; readonly EOT: number; readonly HP: number; readonly SD: number; readonly asrAngle: number; readonly iterations: number };
-  readonly maghrib?: { readonly DEC: number; readonly EOT: number; readonly HP: number; readonly SD: number; readonly iterations: number };
-  readonly isha?: { readonly DEC: number; readonly angle?: number; readonly iterations: number };
+  readonly fajr?: { readonly DEC: number; readonly EOT_min: number; readonly angle: number; readonly iterations: number };
+  readonly sunrise?: { readonly DEC: number; readonly EOT_min: number; readonly HP_arcmin: number; readonly SD_arcmin: number; readonly elevationMeters: number; readonly refraction_deg: number; readonly iterations: number };
+  readonly dhuha?: { readonly fajrTime: string; readonly maghribTime: string };
+  readonly dhuhr?: { readonly EOT_min: number; readonly iterations: number };
+  readonly asr?: { readonly DEC_of_Dhuhr: number; readonly DEC_of_Asr: number; readonly EOT_min: number; readonly SD_of_Dhuhr_arcmin: number; readonly SD_of_Asr_arcmin: number; readonly refraction_of_Dhuhr_deg: number; readonly refraction_of_Asr_deg: number; readonly asrAngle: number; readonly iterations: number };
+  readonly maghrib?: { readonly DEC: number; readonly EOT_min: number; readonly HP_arcmin: number; readonly SD_arcmin: number; readonly refraction_deg: number; readonly iterations: number };
+  readonly isha?: {
+    readonly DEC?: number;
+    readonly EOT_min?: number;
+    readonly angle?: number;
+    readonly iterations?: number;
+    readonly highLatitudeSelectedDateMaghribTime?: string;
+    readonly highLatitudeFajrNextDay?: string;
+    readonly highLatitudeIshaSelectedDate?: string;
+  };
 }
 ```
 
