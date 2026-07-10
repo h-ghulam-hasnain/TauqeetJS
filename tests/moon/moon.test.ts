@@ -176,11 +176,6 @@ describe('Moon Module: Phase, Events & Visibility', () => {
       // distanceKm = 368409.7 km
       // apparentLongitude (with nutation) = 133.183170 deg
 
-      console.log('ELP2000 apparentLongitude:', res.apparentLongitude);
-      console.log('ELP2000 rightAscension:', res.rightAscension);
-      console.log('ELP2000 declination:', res.declination);
-      console.log('ELP2000 distanceKm:', res.distanceKm);
-
       expect(res.apparentLongitude).toBeCloseTo(133.166924, 4); // within 0.0001 deg (0.36 arcseconds)
       expect(res.distanceKm).toBeCloseTo(368405.6, 1);          // within 1 km
       expect(res.rightAscension).toBeCloseTo(134.688111, 4);    // within 0.0001 deg

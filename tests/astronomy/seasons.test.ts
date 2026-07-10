@@ -11,11 +11,6 @@ describe('Equinoxes and Solstices (Seasons) Validation', () => {
     // Sept Equinox:  2026-09-23 00:05 UTC
     // Dec Solstice:   2026-12-21 20:50 UTC
 
-    console.log('2026 March Equinox:', seasons.marchEquinox);
-    console.log('2026 June Solstice:', seasons.juneSolstice);
-    console.log('2026 September Equinox:', seasons.septemberEquinox);
-    console.log('2026 December Solstice:', seasons.decemberSolstice);
-
     // Assert March Equinox
     expect(seasons.marchEquinox.year).toBe(2026);
     expect(seasons.marchEquinox.month).toBe(3);
