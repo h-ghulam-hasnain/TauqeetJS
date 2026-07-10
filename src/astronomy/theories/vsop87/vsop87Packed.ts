@@ -12,8 +12,8 @@ export interface ParallelSeries {
  * Bypasses V8 AST array parsing, reducing TTI significantly.
  */
 export function decodeBase64Series(base64: string): ParallelSeries {
-  // Use atob if in browser, or Buffer in Node for compatibility
-  const binaryString = typeof atob === 'function' ? atob(base64) : Buffer.from(base64, 'base64').toString('binary');
+  // atob is available in Node.js 18+ and all modern browsers
+  const binaryString = atob(base64);
   const len = binaryString.length;
   const bytes = new Uint8Array(len);
   
@@ -29,9 +29,13 @@ export function decodeBase64Series(base64: string): ParallelSeries {
   const C = new Float64Array(terms);
   
   for (let i = 0; i < terms; i++) {
-    A[i] = interleaved[i * 3];
-    B[i] = interleaved[i * 3 + 1];
-    C[i] = interleaved[i * 3 + 2];
+    const aVal = interleaved[i * 3];
+    const bVal = interleaved[i * 3 + 1];
+    const cVal = interleaved[i * 3 + 2];
+    // Type guards for strict noUncheckedIndexedAccess
+    if (typeof aVal === 'number') A[i] = aVal;
+    if (typeof bVal === 'number') B[i] = bVal;
+    if (typeof cVal === 'number') C[i] = cVal;
   }
   
   return { A, B, C };
