@@ -3,7 +3,7 @@ import { normalizeDegrees } from '../../../internal/angles.js';
 import { timeArguments } from '../../time/JulianDate.js';
 import { computeNutation } from '../nutation/iau2000b.js';
 import { computeSolarPosition } from '../../bodies/sun/SolarPosition.js';
-import { elp2000Data } from './elp2000Data.js';
+import { elp2000Data } from './elp2000Packed.js';
 import type { LunarPositionResult } from '../../types/ephemeris.js';
 
 const argumentPolynomialCoefficients = [

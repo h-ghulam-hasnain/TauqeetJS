@@ -1,7 +1,7 @@
 import { ephemerisService } from '../../internal/EphemerisService.js';
 import type { SolarEphemeris } from '../../internal/EphemerisService.js';
 import { solveHourAngle } from './HourAngleSolver.js';
-import { dateToJulianDay } from '../../astronomy/index.js';
+import { dateToJulianDay } from '../../astronomy/time/JulianDate.js';
 
 export interface IterativeSolverResult {
   readonly time: Date;

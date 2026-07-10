@@ -16,8 +16,9 @@ import {
   R3,
   R4,
   R5,
-} from './vsop87Coefficients.js';
-import type { ParallelSeries } from './vsop87Coefficients.js';
+  type ParallelSeries
+} from './vsop87Packed.js';
+
 
 export interface EarthHeliocentricState {
   readonly longitude: number;

@@ -147,19 +147,20 @@ function calculateRawTimes(
   // Initialize raw structure
   let fajrTime: Date | null = null;
   let sunriseTime: Date | null = null;
-  const dhuhrTime: Date = dhuhrRes.time;
+  let dhuhrTime: Date | null = dhuhrRes.time;
   let asrTime: Date | null = null;
   let maghribTime: Date | null = null;
   let ishaTime: Date | null = null;
 
   let fajrStatus: PrayerStatus = 'SUCCESS';
   let sunriseStatus: PrayerStatus = 'SUCCESS';
-  const dhuhrStatus: PrayerStatus = 'SUCCESS';
+  let dhuhrStatus: PrayerStatus = 'SUCCESS';
   let asrStatus: PrayerStatus = 'SUCCESS';
   let maghribStatus: PrayerStatus = 'SUCCESS';
   let ishaStatus: PrayerStatus = 'SUCCESS';
 
   let resFajr: IterativeSolverResult | null = null;
+  let dhuhrMetadata: IterativeSolverResult | null = dhuhrRes;
   let resSunrise: IterativeSolverResult | null = null;
   let resSunset: IterativeSolverResult | null = null;
   let resAsr: IterativeSolverResult | null = null;
@@ -169,6 +170,9 @@ function calculateRawTimes(
   if (latCase === LatitudeCase.POLAR_NIGHT) {
     fajrStatus = 'POLAR_NIGHT';
     sunriseStatus = 'POLAR_NIGHT';
+    dhuhrTime = null;
+    dhuhrStatus = 'POLAR_NIGHT';
+    dhuhrMetadata = null;
     asrStatus = 'POLAR_NIGHT';
     maghribStatus = 'POLAR_NIGHT';
     ishaStatus = 'POLAR_NIGHT';
@@ -316,7 +320,7 @@ function calculateRawTimes(
     fajr: { time: fajrTime, status: fajrStatus, metadata: resFajr },
     sunrise: { time: sunriseTime, status: sunriseStatus, metadata: resSunrise },
     dhahwaKubra: { time: dhahwaKubraTime, status: dhahwaKubraStatus, metadata: null },
-    dhuhr: { time: dhuhrTime, status: dhuhrStatus, metadata: dhuhrRes },
+    dhuhr: { time: dhuhrTime, status: dhuhrStatus, metadata: dhuhrMetadata },
     asr: { time: asrTime, status: asrStatus, metadata: resAsr },
     maghrib: { time: maghribTime, status: maghribStatus, metadata: resMaghrib },
     isha: { time: ishaTime, status: ishaStatus, metadata: resIsha },
