@@ -418,6 +418,7 @@ export function calculatePrayerTimesInternal(config: ValidatedPrayerConfig): Pra
       meta.fajr = {
         DEC: rawResults.fajr.metadata.declination,
         EOT_min: rawResults.fajr.metadata.equationOfTime,
+        EOT: rawResults.fajr.metadata.equationOfTime,
         angle: method.fajrAngle,
         iterations: rawResults.fajr.metadata.iterations,
       };
@@ -425,13 +426,18 @@ export function calculatePrayerTimesInternal(config: ValidatedPrayerConfig): Pra
 
     // 2. Sunrise Metadata
     if (rawResults.sunrise.status === 'SUCCESS' && rawResults.sunrise.metadata) {
+      const sunriseRefraction = computeRefraction(0, temperatureC, pressureMbar);
       meta.sunrise = {
         DEC: rawResults.sunrise.metadata.declination,
         EOT_min: rawResults.sunrise.metadata.equationOfTime,
+        EOT: rawResults.sunrise.metadata.equationOfTime,
         HP_arcmin: rawResults.sunrise.metadata.horizontalParallax,
+        HP: rawResults.sunrise.metadata.horizontalParallax,
         SD_arcmin: rawResults.sunrise.metadata.semidiameter,
+        SD: rawResults.sunrise.metadata.semidiameter,
         elevationMeters,
-        refraction_deg: computeRefraction(0, temperatureC, pressureMbar),
+        refraction_deg: sunriseRefraction,
+        refraction: sunriseRefraction,
         iterations: rawResults.sunrise.metadata.iterations,
       };
     }
@@ -445,6 +451,8 @@ export function calculatePrayerTimesInternal(config: ValidatedPrayerConfig): Pra
       meta.dhuha = {
         fajrTime: result.fajr.utc,
         maghribTime: result.maghrib.utc,
+        fajrTimestamp: result.fajr.timestamp ?? new Date(result.fajr.utc).getTime(),
+        maghribTimestamp: result.maghrib.timestamp ?? new Date(result.maghrib.utc).getTime(),
       };
     }
 
@@ -452,6 +460,7 @@ export function calculatePrayerTimesInternal(config: ValidatedPrayerConfig): Pra
     if (rawResults.dhuhr.status === 'SUCCESS' && rawResults.dhuhr.metadata) {
       meta.dhuhr = {
         EOT_min: rawResults.dhuhr.metadata.equationOfTime,
+        EOT: rawResults.dhuhr.metadata.equationOfTime,
         iterations: rawResults.dhuhr.metadata.iterations,
       };
     }
@@ -483,10 +492,15 @@ export function calculatePrayerTimesInternal(config: ValidatedPrayerConfig): Pra
         DEC_of_Dhuhr: dhuhrMeta.declination,
         DEC_of_Asr: asrMeta.declination,
         EOT_min: asrMeta.equationOfTime,
+        EOT: asrMeta.equationOfTime,
         SD_of_Dhuhr_arcmin: dhuhrMeta.semidiameter,
         SD_of_Asr_arcmin: asrMeta.semidiameter,
+        SD_of_Dhuhr: dhuhrMeta.semidiameter,
+        SD_of_Asr: asrMeta.semidiameter,
         refraction_of_Dhuhr_deg: refrZuhr,
         refraction_of_Asr_deg: refrAsr,
+        refraction_of_Dhuhr: refrZuhr,
+        refraction_of_Asr: refrAsr,
         asrAngle,
         iterations: asrMeta.iterations,
       };
@@ -498,12 +512,17 @@ export function calculatePrayerTimesInternal(config: ValidatedPrayerConfig): Pra
       if (method.maghribAngle !== undefined && method.maghribAngle !== null) {
         altitude = -method.maghribAngle;
       }
+      const maghribRefraction = computeRefraction(altitude, temperatureC, pressureMbar);
       meta.maghrib = {
         DEC: rawResults.maghrib.metadata.declination,
         EOT_min: rawResults.maghrib.metadata.equationOfTime,
+        EOT: rawResults.maghrib.metadata.equationOfTime,
         HP_arcmin: rawResults.maghrib.metadata.horizontalParallax,
+        HP: rawResults.maghrib.metadata.horizontalParallax,
         SD_arcmin: rawResults.maghrib.metadata.semidiameter,
-        refraction_deg: computeRefraction(altitude, temperatureC, pressureMbar),
+        SD: rawResults.maghrib.metadata.semidiameter,
+        refraction_deg: maghribRefraction,
+        refraction: maghribRefraction,
         iterations: rawResults.maghrib.metadata.iterations,
       };
     }
@@ -513,6 +532,7 @@ export function calculatePrayerTimesInternal(config: ValidatedPrayerConfig): Pra
       meta.isha = {
         DEC: rawResults.isha.metadata.declination,
         EOT_min: rawResults.isha.metadata.equationOfTime,
+        EOT: rawResults.isha.metadata.equationOfTime,
         iterations: rawResults.isha.metadata.iterations,
         ...(method.ishaAngle !== null && method.ishaAngle !== undefined
           ? { angle: method.ishaAngle }
