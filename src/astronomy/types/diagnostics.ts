@@ -1,3 +1,18 @@
+/**
+ * Configuration options for detailed calculation diagnostics.
+ *
+ * @remarks
+ * Used in long-running phenomena algorithms, such as eclipse searching,
+ * to log progress or cancel execution via an AbortSignal.
+ *
+ * @example
+ * ```typescript
+ * const config: DiagnosticsConfig = {
+ *   logger: (msg, level) => console.log(`[${level}] ${msg}`),
+ *   signal: AbortSignal.timeout(5000)
+ * };
+ * ```
+ */
 export interface DiagnosticsConfig {
   /**
    * Optional logger callback to trace execution and diagnostics.
