@@ -5,7 +5,22 @@ import type { PrayerMethodConfig } from '../types/index.js';
 import type { SolarEphemeris } from '../../internal/EphemerisService.js';
 
 /**
- * Calculates Maghrib (sunset or method-based Maghrib) time.
+ * Calculates the exact time of Maghrib.
+ *
+ * @remarks
+ * Typically, Maghrib matches the time of sunset. However, some methods (like the Shia/Jaafari
+ * methods) define Maghrib based on a specific twilight angle below the eastern horizon
+ * after sunset, or apply a fixed minute offset.
+ *
+ * @param date - The target date for calculation.
+ * @param latitude - Observer's latitude in decimal degrees.
+ * @param longitude - Observer's longitude in decimal degrees.
+ * @param _elevationMeters - Observer's elevation (unused directly here, but kept for interface consistency).
+ * @param _temperatureC - Ambient temperature (unused directly here).
+ * @param _pressureMbar - Atmospheric pressure (unused directly here).
+ * @param method - The prayer method configuration.
+ * @param sunsetResult - The previously calculated astronomical sunset time.
+ * @returns The calculated `IterativeSolverResult` for Maghrib.
  */
 export function calculateMaghrib(
   date: Date,
@@ -39,7 +54,19 @@ export function calculateMaghrib(
 }
 
 /**
- * Helper to calculate the astronomical Sunset.
+ * Calculates the exact astronomical time of sunset iteratively.
+ *
+ * @remarks
+ * Sunset occurs when the upper limb of the solar disk geometrically crosses the horizon,
+ * taking into account atmospheric refraction, solar semidiameter, and observer elevation (dip angle).
+ *
+ * @param date - The target date for calculation.
+ * @param latitude - Observer's latitude in decimal degrees.
+ * @param longitude - Observer's longitude in decimal degrees.
+ * @param elevationMeters - Elevation above sea level in meters to account for horizon dip.
+ * @param temperatureC - Ambient temperature in Celsius.
+ * @param pressureMbar - Atmospheric pressure in millibars.
+ * @returns The calculated `IterativeSolverResult` for sunset, or null if the sun does not set.
  */
 export function calculateSunset(
   date: Date,

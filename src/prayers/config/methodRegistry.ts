@@ -451,6 +451,14 @@ export function getJaafariConfiguration(): Record<string, PrayerMethodConfig> {
   };
 }
 
+/**
+ * A comprehensive registry of built-in calculation methods, categorized by Madhab.
+ *
+ * @remarks
+ * These configurations define the specific twilight angles and shadow multipliers
+ * required to calculate prayer times according to various Islamic institutions
+ * and historical legal schools (Hanafi, Shafi'i, Maliki, Hanbali, Ja'fari).
+ */
 export const BUILT_IN_METHODS: Record<Madhab, Record<string, PrayerMethodConfig>> = {
   [Madhab.HANAFI]: getHanafiConfiguration(),
   [Madhab.SHAFI]: getShafiConfiguration(),

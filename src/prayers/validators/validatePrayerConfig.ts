@@ -8,6 +8,13 @@ import { BUILT_IN_METHODS } from '../config/methodRegistry.js';
 import { Madhab } from '../config/madhabs.js';
 import { ConfigurationError } from '../errors.js';
 
+/**
+ * The normalized, internally-validated configuration object used by the prayer engine.
+ *
+ * @remarks
+ * Contains concrete, safe values for coordinates, dates, and parsed methods.
+ * Optional inputs from the user are resolved to their defaults here.
+ */
 export interface ValidatedPrayerConfig {
   readonly latitude: number;
   readonly longitude: number;
@@ -116,10 +123,23 @@ function parseElevation(elev?: number | ElevationInput): number {
   throw new ConfigurationError('Unsupported elevation format');
 }
 
+/**
+ * Represents the outcome of the configuration validation process.
+ */
 export type ValidationResult =
   | { success: true; config: ValidatedPrayerConfig }
   | { success: false; error: string };
 
+/**
+ * Validates and normalizes user-provided prayer configuration.
+ *
+ * @remarks
+ * Ensures coordinates are within bounds, resolves timezone and method defaults,
+ * normalizes elevation, and prepares the configuration for the calculation engine.
+ *
+ * @param config - The raw, partial configuration provided by the user.
+ * @returns A structured `ValidationResult` indicating success or detailing the error.
+ */
 export function validatePrayerConfig(config: PrayerConfig): ValidationResult {
   try {
     if (!config) {
