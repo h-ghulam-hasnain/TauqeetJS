@@ -51,11 +51,16 @@ function calculatePolarAngleP(PZdeg: number, PSdeg: number, Zdeg: number): numbe
 }
 
 /**
- * Returns the UTC times on `date` when the sun aligns with the Qibla
- * direction and its three 90°/180° offsets.
+ * Calculates the exact UTC times when the sun aligns with the Qibla direction,
+ * as well as its three 90°/180° perpendicular offsets.
  *
- * Calculates the exact analytical intersection using the PZX spherical triangle
- * and the high-precision internal ephemeris.
+ * @remarks
+ * Uses an analytical intersection of the PZX spherical triangle combined with
+ * high-precision internal ephemeris to determine when the sun's azimuth matches
+ * the direction of the Kaaba from the observer's location.
+ *
+ * @param config - The configuration object containing location and date.
+ * @returns The precise times of alignment, or null if the sun never reaches that azimuth.
  */
 export function getSunAtQibla(config: SunAlignmentConfig): SunAtQiblaResult {
   const { latitude, longitude, date = new Date(), timeZone } = config;

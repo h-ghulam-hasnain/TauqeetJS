@@ -9,6 +9,9 @@ import type { GeographicPosition } from '../types/observer.js';
 import type { EventTime } from '../types/phenomena.js';
 import { SearchConvergenceError, InvalidArgumentError, OperationAbortedError } from '../errors.js';
 import type { DiagnosticsConfig } from '../types/diagnostics.js';
+/**
+ * Represents the type or magnitude of a lunar or solar eclipse.
+ */
 export enum EclipseKind {
   Penumbral = 0,
   Partial = 1,
@@ -16,6 +19,9 @@ export enum EclipseKind {
   Annular = 3,
 }
 
+/**
+ * Detailed information about a global lunar eclipse event.
+ */
 export interface LunarEclipseInfo {
   readonly kind: EclipseKind;
   readonly obscuration: number;
@@ -25,6 +31,9 @@ export interface LunarEclipseInfo {
   readonly sdTotal: number;     // semi-duration in minutes
 }
 
+/**
+ * Detailed information about a global solar eclipse event as seen from the Earth's center.
+ */
 export interface GlobalSolarEclipseInfo {
   readonly kind: EclipseKind;
   readonly obscuration?: number | undefined;
@@ -34,11 +43,17 @@ export interface GlobalSolarEclipseInfo {
   readonly longitude?: number | undefined; // geodetic longitude at peak
 }
 
+/**
+ * A specific contact event during an eclipse, noting the time and solar altitude.
+ */
 export interface EclipseEvent {
   readonly time: EventTime;
   readonly altitude: number;
 }
 
+/**
+ * Detailed information about a solar eclipse as seen from a specific geographic location.
+ */
 export interface LocalSolarEclipseInfo {
   readonly kind: EclipseKind;
   readonly obscuration: number;
@@ -417,6 +432,15 @@ function geoidIntersect(shadow: ShadowInfo, deltaT: number): GlobalSolarEclipseI
   };
 }
 
+/**
+ * Searches forward in time to find the next lunar eclipse.
+ *
+ * @param startTimeJd - The Julian Date from which to begin the search.
+ * @param maxMoons - Maximum number of full moons to iterate over (default is 12).
+ * @param config - Optional diagnostics configuration.
+ * @returns Details of the found lunar eclipse.
+ * @throws {SearchConvergenceError} If no eclipse is found within the specified limit.
+ */
 export function searchLunarEclipse(startTimeJd: number, maxMoons: number = 12, config?: DiagnosticsConfig): LunarEclipseInfo {
   const { year } = julianDayToDate(startTimeJd);
   const deltaT = calculateDeltaT(year);
@@ -471,6 +495,15 @@ export function searchLunarEclipse(startTimeJd: number, maxMoons: number = 12, c
   throw new SearchConvergenceError(`Failed to find lunar eclipse within ${maxMoons} full moons.`);
 }
 
+/**
+ * Searches forward in time to find the next global solar eclipse.
+ *
+ * @param startTimeJd - The Julian Date from which to begin the search.
+ * @param maxMoons - Maximum number of new moons to iterate over (default is 12).
+ * @param config - Optional diagnostics configuration.
+ * @returns Details of the found global solar eclipse.
+ * @throws {SearchConvergenceError} If no eclipse is found within the specified limit.
+ */
 export function searchGlobalSolarEclipse(startTimeJd: number, maxMoons: number = 12, config?: DiagnosticsConfig): GlobalSolarEclipseInfo {
   const { year } = julianDayToDate(startTimeJd);
   const deltaT = calculateDeltaT(year);
@@ -500,14 +533,37 @@ export function searchGlobalSolarEclipse(startTimeJd: number, maxMoons: number =
   throw new SearchConvergenceError(`Failed to find solar eclipse within ${maxMoons} new moons.`);
 }
 
+/**
+ * Finds the immediate next lunar eclipse following a known eclipse date.
+ *
+ * @param prevEclipseJd - The Julian Date of the previous eclipse.
+ * @param config - Optional diagnostics configuration.
+ * @returns Details of the next lunar eclipse.
+ */
 export function nextLunarEclipse(prevEclipseJd: number, config?: DiagnosticsConfig): LunarEclipseInfo {
   return searchLunarEclipse(prevEclipseJd + 10.0, 12, config);
 }
 
+/**
+ * Finds the immediate next global solar eclipse following a known eclipse date.
+ *
+ * @param prevEclipseJd - The Julian Date of the previous eclipse.
+ * @param config - Optional diagnostics configuration.
+ * @returns Details of the next global solar eclipse.
+ */
 export function nextGlobalSolarEclipse(prevEclipseJd: number, config?: DiagnosticsConfig): GlobalSolarEclipseInfo {
   return searchGlobalSolarEclipse(prevEclipseJd + 10.0, 12, config);
 }
 
+/**
+ * Calculates the local geometric properties of the Moon's shadow relative to an observer.
+ *
+ * @internal
+ * @param jd - The Julian Date of observation.
+ * @param observer - The geographic location of the observer.
+ * @param deltaT - Delta-T correction in seconds.
+ * @returns Internal shadow calculation parameters.
+ */
 export function localMoonShadow(jd: number, observer: GeographicPosition, deltaT: number): ShadowInfo {
   const solar = new SolarEphemeris(jd, 0, deltaT);
   const st = solar.gast;
@@ -734,6 +790,16 @@ function calculateLocalEclipse(
   };
 }
 
+/**
+ * Searches forward in time to find the next solar eclipse visible from a specific location.
+ *
+ * @param startTimeJd - The Julian Date from which to begin the search.
+ * @param observer - The observer's geographic coordinates.
+ * @param maxMoons - Maximum number of new moons to iterate over (default is 40).
+ * @param config - Optional diagnostics configuration.
+ * @returns Contact times and obscuration data for the local eclipse.
+ * @throws {SearchConvergenceError} If no local eclipse is found within the specified limit.
+ */
 export function searchLocalSolarEclipse(
   startTimeJd: number,
   observer: GeographicPosition,
@@ -771,6 +837,15 @@ export function searchLocalSolarEclipse(
   throw new SearchConvergenceError(`Failed to find local solar eclipse within ${maxMoons} new moons.`);
 }
 
+/**
+ * Finds the immediate next local solar eclipse visible from the specified location
+ * following a known eclipse date.
+ *
+ * @param prevEclipseJd - The Julian Date of the previous eclipse.
+ * @param observer - The observer's geographic coordinates.
+ * @param config - Optional diagnostics configuration.
+ * @returns Details of the next local solar eclipse.
+ */
 export function nextLocalSolarEclipse(
   prevEclipseJd: number,
   observer: GeographicPosition,

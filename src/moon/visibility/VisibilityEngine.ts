@@ -13,6 +13,9 @@ import { OdehCriterion } from './OdehCriterion.js';
 import { YallopCriterion } from './YallopCriterion.js';
 import { HMNAOCriterion } from './HMNAOCriterion.js';
 
+/**
+ * Input parameters required to calculate lunar visibility.
+ */
 export interface CheckVisibilityParams {
   date: Date;
   latitude: number;
@@ -35,7 +38,10 @@ function asind(val: number) {
 }
 
 /**
- * Main engine to check moon visibility at a given date and location.
+ * Evaluates lunar visibility for a specific date and location using the selected criterion.
+ *
+ * @param params - The input parameters containing date, location, and the chosen astronomical method.
+ * @returns A result object indicating whether the moon is visible, alongside supporting astronomical data.
  */
 export function checkVisibility(params: CheckVisibilityParams): VisibilityResult {
   const input = buildVisibilityInput(params.date, params.latitude, params.longitude);
@@ -52,7 +58,14 @@ export function checkVisibility(params: CheckVisibilityParams): VisibilityResult
 }
 
 /**
- * Checks multiple criteria at once.
+ * Evaluates lunar visibility across multiple established criteria simultaneously.
+ *
+ * @remarks
+ * Useful for comparative analysis or when the specific standard to follow is undecided.
+ * Currently evaluates Odeh, Yallop, and HMNAO criteria.
+ *
+ * @param params - The input parameters excluding the method choice.
+ * @returns An array of results, one for each evaluated visibility criterion.
  */
 export function checkMultipleCriteria(
   params: Omit<CheckVisibilityParams, 'method'>

@@ -13,6 +13,9 @@ import type { IterativeSolverResult } from '../solvers/IterativeSolver.js';
 import { computeRefraction } from '../corrections/HorizonCorrections.js';
 import { tand, atand } from '../../internal/trig.js';
 
+/**
+ * Custom error thrown when a prayer calculation fails due to invalid parameters or unconverged calculations.
+ */
 export class PrayerCalculationError extends Error {
   constructor(message: string) {
     super(message);
@@ -21,7 +24,15 @@ export class PrayerCalculationError extends Error {
 }
 
 /**
- * Resolves the timezone cascade.
+ * Synchronously resolves the target timezone for prayer calculations.
+ *
+ * @remarks
+ * If an explicit timezone is not provided, this attempts to detect the system timezone
+ * via `Intl.DateTimeFormat`. Falls back to 'UTC' if detection fails.
+ *
+ * @param explicitTimeZone - An optional IANA timezone string or numeric offset.
+ * @param onFallback - Optional callback triggered if timezone detection falls back.
+ * @returns The resolved timezone string or numeric offset.
  */
 export function resolveTimeZoneSync(
   explicitTimeZone?: string | number,
@@ -42,7 +53,14 @@ export function resolveTimeZoneSync(
 }
 
 /**
- * Formats a raw Date object into a TimeField.
+ * Formats a raw astronomical Date object into a final TimeField.
+ *
+ * @param val - The raw UTC Date calculated for the prayer event.
+ * @param status - The calculation status (e.g., 'SUCCESS' or 'POLAR_NIGHT').
+ * @param timeZone - The target timezone to format the local time string.
+ * @param adjustmentMinutes - Manual minute offset to adjust the final time.
+ * @param onFallback - Optional callback triggered if timezone formatting falls back.
+ * @returns A structured TimeField containing UTC, local formatted time, and timestamp.
  */
 export function formatTimeField(
   val: Date | null,
@@ -331,7 +349,15 @@ function calculateRawTimes(
 }
 
 /**
- * Core engine orchestrator that calculates prayer times.
+ * Core engine orchestrator that calculates all daily prayer times.
+ *
+ * @remarks
+ * Coordinates the entire calculation pipeline: resolving the solar transit, applying
+ * twilight parameters, handling high-latitude fallback strategies, and structuring
+ * the output fields and metadata.
+ *
+ * @param config - The internally validated configuration object.
+ * @returns The calculated structured prayer times result.
  */
 export function calculatePrayerTimesInternal(config: ValidatedPrayerConfig): PrayerTimesResult {
   const { latitude, longitude, method, highLatitudeStrategy, adjustments } = config;
