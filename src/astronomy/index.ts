@@ -5,6 +5,8 @@ export type {
   LunarPositionResult,
 } from './types/ephemeris.js';
 export type { EventTime } from './types/phenomena.js';
+export type { JulianDateComponents, TimeArgument } from './types/time.js';
+export type { DiagnosticsConfig } from './types/diagnostics.js';
 
 export { computeSolarPosition } from './bodies/sun/SolarEphemeris.js';
 export { computeLunarPosition } from './bodies/moon/LunarEphemeris.js';
