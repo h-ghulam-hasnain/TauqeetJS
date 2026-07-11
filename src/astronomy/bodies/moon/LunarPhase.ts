@@ -3,14 +3,17 @@ import { LunarEphemeris } from './LunarPosition.js';
 import { LunarPhaseEngine } from './LunarPhaseEngine.js';
 
 /**
- * Compute instantaneous lunar phase data.
+ * Computes instantaneous lunar phase data.
  *
- * Returns only the lightweight, cache-efficient quantities:
- * - elongation: Sun-Moon angular distance (0-360°)
- * - illuminatedFraction: fraction of Moon's disk illuminated (0-1)
+ * @remarks
+ * This function returns lightweight, cache-efficient quantities including elongation
+ * (Sun-Moon angular distance) and the illuminated fraction of the Moon's disk.
+ * It does not search for specific lunar events (like New Moon).
  *
- * Note: Moon age and event-based queries (next New Moon, etc.)
- * are separate and require explicit event searches.
+ * @param j - The Julian Day.
+ * @param ut - Universal Time in hours.
+ * @param deltaT - The Delta-T correction factor in seconds.
+ * @returns An object containing the calculated elongation and illuminated fraction.
  */
 export function computeLunarPhase(
   j: number,

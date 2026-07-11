@@ -2,10 +2,14 @@ import { computeLunarPhase, dateToJulianDay, calculateDeltaT } from '../../astro
 import type { MoonPhaseResult } from '../types/MoonPhase.js';
 
 /**
- * Calculates the current moon phase, elongation, and illuminated fraction.
+ * Calculates the astronomical lunar phase, elongation, and illuminated fraction.
  *
- * @param date The date for which to compute the phase.
- * @returns An object containing elongation, illuminated fraction, and phase name.
+ * @remarks
+ * Elongation is the angular distance between the Sun and the Moon. Based on this angle,
+ * a human-readable string (e.g., 'Waxing Crescent', 'Full') is assigned.
+ *
+ * @param date - The target date to compute the phase for.
+ * @returns An object containing the phase name, elongation degrees, and illuminated fraction.
  */
 export function getMoonPhase(date: Date): MoonPhaseResult {
   const year = date.getUTCFullYear();

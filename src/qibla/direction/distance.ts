@@ -4,11 +4,11 @@ import { haversineDistance } from '../../internal/math.js';
 import { MECCA, EARTH_RADIUS_KM } from '../constants.js';
 
 /**
- * Calculates the great-circle distance from any geographic location to the Kaaba.
+ * Calculates the great-circle distance from a geographic location to the Kaaba.
  *
- * @param coordinates Observer's latitude and longitude in decimal degrees.
- * @returns           Great-circle distance to the Kaaba in kilometres.
- * @throws            RangeError if coordinates are invalid.
+ * @param coordinates - The observer's latitude and longitude in decimal degrees.
+ * @returns An object containing the shortest distance to the Kaaba in kilometres.
+ * @throws {RangeError} If the provided coordinates are out of valid bounds.
  */
 export function getQiblaDistance(coordinates: QiblaCoordinates): QiblaDistanceResult {
   validateCoordinates(coordinates.latitude, coordinates.longitude);
