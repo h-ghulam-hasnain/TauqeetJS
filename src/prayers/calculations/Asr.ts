@@ -5,15 +5,22 @@ import { tand, atand } from '../../internal/trig.js';
 import type { SolarEphemeris } from '../../internal/EphemerisService.js';
 
 /**
- * Calculates Asr time iteratively.
+ * Calculates the exact time for the Asr prayer using iterative root-finding.
  *
- * @param date The calculation date.
- * @param latitude The observer's latitude.
- * @param longitude The observer's longitude.
- * @param sf The shadow factor (1 for Shafi, 2 for Hanafi).
- * @param transitDeclination The solar declination at transit (Zuhr).
- * @param temperatureC The ambient temperature.
- * @param pressureMbar The atmospheric pressure.
+ * @remarks
+ * The time of Asr is determined by the shadow length of an object. The target shadow length
+ * is the shadow at noon (transit) plus the object's height multiplied by the shadow factor
+ * (1 for Shafi/Maliki/Hanbali/Jaafari, and 2 for Hanafi).
+ *
+ * @param date - The target date for calculation.
+ * @param latitude - Observer's latitude in decimal degrees.
+ * @param longitude - Observer's longitude in decimal degrees.
+ * @param sf - The shadow factor multiplier (usually 1 or 2).
+ * @param transitDeclination - The solar declination at solar transit.
+ * @param transitSemidiameter - The solar semidiameter at solar transit in arcminutes.
+ * @param temperatureC - Ambient temperature for atmospheric refraction adjustment.
+ * @param pressureMbar - Atmospheric pressure for refraction adjustment.
+ * @returns The calculated `IterativeSolverResult` for Asr, or null if it cannot converge.
  */
 export function calculateAsr(
   date: Date,

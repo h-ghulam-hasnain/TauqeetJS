@@ -3,7 +3,19 @@ import { computeRefraction, computeDipAngle } from '../corrections/HorizonCorrec
 import type { SolarEphemeris } from '../../internal/EphemerisService.js';
 
 /**
- * Calculates Sunrise time iteratively.
+ * Calculates the exact astronomical time of sunrise iteratively.
+ *
+ * @remarks
+ * Sunrise occurs when the upper limb of the solar disk geometrically crosses the eastern horizon,
+ * adjusted for atmospheric refraction, solar semidiameter, and observer elevation (dip angle).
+ *
+ * @param date - The target date for calculation.
+ * @param latitude - Observer's latitude in decimal degrees.
+ * @param longitude - Observer's longitude in decimal degrees.
+ * @param elevationMeters - Elevation above sea level in meters to account for horizon dip.
+ * @param temperatureC - Ambient temperature in Celsius.
+ * @param pressureMbar - Atmospheric pressure in millibars.
+ * @returns The calculated `IterativeSolverResult` for sunrise, or null if the sun does not rise.
  */
 export function calculateSunrise(
   date: Date,

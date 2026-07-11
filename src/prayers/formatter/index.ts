@@ -1,6 +1,10 @@
 import type { PrayerTimesResult, TimeField, Result } from '../types/index.js';
 import { Success, Failure } from '../types/index.js';
 
+/**
+ * Represents the shape of the formatted prayer times object.
+ * Depending on the format type requested, fields are either strings or Unix timestamps.
+ */
 export type FormattedTimes<T> = {
   [K in Exclude<keyof PrayerTimesResult, 'metadata'>]: T extends 'unix'
     ? number | null

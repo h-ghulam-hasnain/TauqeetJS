@@ -7,10 +7,15 @@
 const BASE_MONTH_LENGTHS = [30, 29, 30, 29, 30, 29, 30, 29, 30, 29, 30, 29] as const;
 
 /**
- * Returns the length of a given Hijri month in the civil calendar.
+ * Returns the number of days in a specific civil Hijri month.
  *
- * @param year  Hijri year (AH)
- * @param month Hijri month (1–12)
+ * @remarks
+ * Months in the civil calendar strictly alternate between 30 and 29 days.
+ * During leap years, the 12th month (Dhu al-Hijjah) has 30 days instead of 29.
+ *
+ * @param year - The Hijri year (AH).
+ * @param month - The Hijri month (1-12).
+ * @returns The number of days in the specified month.
  */
 export function getCivilMonthLength(year: number, month: number): number {
   if (month === 12 && isCivilLeapYear(year)) return 30;
@@ -18,10 +23,14 @@ export function getCivilMonthLength(year: number, month: number): number {
 }
 
 /**
- * Returns true when the given Hijri year is a leap year in the 30-year civil cycle.
+ * Determines whether a given Hijri year is a leap year in the 30-year civil cycle.
  *
- * In the 30-year cycle, leap years are: 2,5,7,10,13,15,18,21,24,26,29
- * (i.e. remainder of year % 30 is in that set).
+ * @remarks
+ * In the standard civil cycle, 11 leap years exist per 30-year span.
+ * The leap years are numbers 2, 5, 7, 10, 13, 15, 18, 21, 24, 26, and 29.
+ *
+ * @param year - The Hijri year (AH) to evaluate.
+ * @returns `true` if the year is a civil leap year; otherwise `false`.
  */
 export function isCivilLeapYear(year: number): boolean {
   const LEAP_REMAINDERS = new Set([2, 5, 7, 10, 13, 15, 18, 21, 24, 26, 29]);

@@ -1,14 +1,21 @@
 import { isCivilLeapYear } from './HijriMonthLength.js';
 
 /**
- * Returns the length of a Hijri year in the civil calendar (354 or 355 days).
+ * Returns the total number of days in a given civil Hijri year.
+ *
+ * @param year - The Hijri year (AH) to evaluate.
+ * @returns 355 for leap years, 354 for standard years.
  */
 export function getCivilYearLength(year: number): number {
   return isCivilLeapYear(year) ? 355 : 354;
 }
 
 /**
- * Returns the total number of civil days from epoch to the start of the given year.
+ * Calculates the total number of civil days elapsed since the Hijri epoch
+ * up to the start of the specified year.
+ *
+ * @param year - The target Hijri year (AH).
+ * @returns The total number of days before the start of the given year.
  */
 export function daysBeforeYear(year: number): number {
   const y = year - 1;

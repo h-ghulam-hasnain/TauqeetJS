@@ -21,7 +21,10 @@ export function getEpochJD(): number {
 }
 
 /**
- * Convert a JavaScript Date (UTC midnight) to an integer Julian Day Number.
+ * Converts a standard UTC midnight JavaScript `Date` to an integer Julian Day Number.
+ *
+ * @param date - The target UTC Date.
+ * @returns The corresponding Julian Day Number.
  */
 export function dateToJD(date: Date): number {
   const y = date.getUTCFullYear();
@@ -37,7 +40,10 @@ export function dateToJD(date: Date): number {
 }
 
 /**
- * Convert a Julian Day Number to a UTC midnight JavaScript Date.
+ * Converts a Julian Day Number to a standard UTC midnight JavaScript `Date`.
+ *
+ * @param jd - The Julian Day Number to convert.
+ * @returns The resulting UTC Date object.
  */
 export function jdToDate(jd: number): Date {
   // Julian day starts at noon; floor to get the calendar day
