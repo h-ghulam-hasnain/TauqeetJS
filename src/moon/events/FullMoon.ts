@@ -19,10 +19,10 @@ function eventTimeToDate(event: {
 }
 
 /**
- * Computes the date of the next Full Moon.
+ * Finds the exact Date of the immediate next Full Moon (astronomical opposition).
  *
- * @param afterDate The date after which to find the Full Moon.
- * @returns The Date object for the next Full Moon.
+ * @param afterDate - The starting date from which to search forward.
+ * @returns A `Date` object representing the exact UTC moment of the next Full Moon.
  */
 export function getNextFullMoon(afterDate: Date): Date {
   const year = afterDate.getUTCFullYear();
@@ -39,10 +39,10 @@ export function getNextFullMoon(afterDate: Date): Date {
 }
 
 /**
- * Computes the date of the previous Full Moon.
+ * Finds the exact Date of the immediate previous Full Moon (astronomical opposition).
  *
- * @param beforeDate The date before which to find the Full Moon.
- * @returns The Date object for the previous Full Moon.
+ * @param beforeDate - The starting date from which to search backward.
+ * @returns A `Date` object representing the exact UTC moment of the previous Full Moon.
  */
 export function getPreviousFullMoon(beforeDate: Date): Date {
   const year = beforeDate.getUTCFullYear();

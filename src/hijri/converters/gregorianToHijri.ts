@@ -4,11 +4,16 @@ import { HijriMethod } from '../types/HijriMethod.js';
 import { HijriEngine } from '../engine/HijriEngine.js';
 
 /**
- * Convert a Gregorian Date to a HijriDate using the specified method.
+ * Converts a standard Gregorian `Date` into a structured `HijriDate`.
  *
- * @param date     The Gregorian date to convert.
- * @param method   The calendar rule to apply (default: CIVIL).
- * @param options  Optional location for visibility-based method.
+ * @remarks
+ * This function acts as a convenient shorthand for instantiating the `HijriEngine`
+ * directly. It supports multiple calendar methods (e.g., Civil, Umm al-Qura).
+ *
+ * @param date - The Gregorian Date object to convert.
+ * @param method - The calculation method to apply (defaults to CIVIL).
+ * @param options - Optional parameters, such as location required for visibility-based methods.
+ * @returns The resulting date in the Hijri calendar.
  */
 export function toHijri(
   date: Date,

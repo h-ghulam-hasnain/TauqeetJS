@@ -1,10 +1,14 @@
 import { getMoonPhase } from './MoonPhase.js';
 
 /**
- * Returns only the illuminated fraction of the moon (0.0 to 1.0).
+ * Determines the currently illuminated fraction of the Moon's disk.
  *
- * @param date The date for which to compute the illuminated fraction.
- * @returns A number between 0 and 1.
+ * @remarks
+ * A value of 0.0 represents a completely dark New Moon, and 1.0 represents a fully illuminated Full Moon.
+ * This is a lightweight helper for UI elements or simple visibility checks.
+ *
+ * @param date - The target date to evaluate.
+ * @returns The illuminated fraction as a decimal value strictly between 0.0 and 1.0.
  */
 export function getMoonIllumination(date: Date): number {
   const phase = getMoonPhase(date);

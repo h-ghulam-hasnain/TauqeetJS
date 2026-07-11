@@ -2,9 +2,14 @@ import { LunarEventFinder } from './LunarEventFinder.js';
 import type { EventTime } from '../types/phenomena.js';
 
 /**
- * Find the next New Moon (conjunction) after the given Julian Day.
+ * Locates the exact astronomical time of the next New Moon (conjunction).
  *
- * Core capability for Hijri calendar calculations.
+ * @remarks
+ * This is a core capability heavily utilized by Hijri calendar calculation methods.
+ *
+ * @param julianDay - The starting Julian Day.
+ * @param deltaT - The Delta-T correction factor in seconds.
+ * @returns The precise `EventTime` representing the next New Moon.
  */
 export function computeNextNewMoon(julianDay: number, deltaT: number): EventTime {
   const finder = new LunarEventFinder(deltaT);
@@ -12,9 +17,14 @@ export function computeNextNewMoon(julianDay: number, deltaT: number): EventTime
 }
 
 /**
- * Find the previous New Moon (conjunction) before the given Julian Day.
+ * Locates the exact astronomical time of the previous New Moon (conjunction).
  *
- * Used for calculating Hijri epoch and moon age.
+ * @remarks
+ * Primarily used to compute the current age of the Moon.
+ *
+ * @param julianDay - The starting Julian Day.
+ * @param deltaT - The Delta-T correction factor in seconds.
+ * @returns The precise `EventTime` representing the previous New Moon.
  */
 export function computePreviousNewMoon(julianDay: number, deltaT: number): EventTime {
   const finder = new LunarEventFinder(deltaT);
@@ -22,10 +32,11 @@ export function computePreviousNewMoon(julianDay: number, deltaT: number): Event
 }
 
 /**
- * Find the next Full Moon (opposition) after the given Julian Day.
+ * Locates the exact astronomical time of the next Full Moon (opposition).
  *
- * Optional capability; included for completeness.
- * Low maintenance cost as it reuses the same binary search infrastructure.
+ * @param julianDay - The starting Julian Day.
+ * @param deltaT - The Delta-T correction factor in seconds.
+ * @returns The precise `EventTime` representing the next Full Moon.
  */
 export function computeNextFullMoon(julianDay: number, deltaT: number): EventTime {
   const finder = new LunarEventFinder(deltaT);
@@ -33,9 +44,11 @@ export function computeNextFullMoon(julianDay: number, deltaT: number): EventTim
 }
 
 /**
- * Find the previous Full Moon (opposition) before the given Julian Day.
+ * Locates the exact astronomical time of the previous Full Moon (opposition).
  *
- * Optional capability for completeness.
+ * @param julianDay - The starting Julian Day.
+ * @param deltaT - The Delta-T correction factor in seconds.
+ * @returns The precise `EventTime` representing the previous Full Moon.
  */
 export function computePreviousFullMoon(julianDay: number, deltaT: number): EventTime {
   const finder = new LunarEventFinder(deltaT);

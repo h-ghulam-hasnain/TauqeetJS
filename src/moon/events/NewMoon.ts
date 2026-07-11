@@ -19,10 +19,10 @@ function eventTimeToDate(event: {
 }
 
 /**
- * Computes the date of the next New Moon.
+ * Finds the exact Date of the immediate next New Moon (astronomical conjunction).
  *
- * @param afterDate The date after which to find the New Moon.
- * @returns The Date object for the next New Moon.
+ * @param afterDate - The starting date from which to search forward.
+ * @returns A `Date` object representing the exact UTC moment of the next New Moon.
  */
 export function getNextNewMoon(afterDate: Date): Date {
   const year = afterDate.getUTCFullYear();
@@ -39,10 +39,13 @@ export function getNextNewMoon(afterDate: Date): Date {
 }
 
 /**
- * Computes the date of the previous New Moon.
+ * Finds the exact Date of the immediate previous New Moon (astronomical conjunction).
  *
- * @param beforeDate The date before which to find the New Moon.
- * @returns The Date object for the previous New Moon.
+ * @remarks
+ * This function is heavily used as a baseline for Hijri calendar calculations and Moon age determination.
+ *
+ * @param beforeDate - The starting date from which to search backward.
+ * @returns A `Date` object representing the exact UTC moment of the previous New Moon.
  */
 export function getPreviousNewMoon(beforeDate: Date): Date {
   const year = beforeDate.getUTCFullYear();

@@ -2,10 +2,14 @@ import { computePreviousNewMoon, dateToJulianDay, calculateDeltaT } from '../../
 import type { MoonAgeResult } from '../types/MoonAge.js';
 
 /**
- * Calculates the age of the moon in days since the last New Moon.
+ * Calculates the exact age of the Moon in days since the last astronomical New Moon (conjunction).
  *
- * @param date The date for which to compute the moon age.
- * @returns An object containing age in days and the date of the previous New Moon.
+ * @remarks
+ * This function calculates the elapsed time from the immediately preceding New Moon to the provided date.
+ * The result is highly accurate, utilizing full ephemeris computations.
+ *
+ * @param date - The target date and time to evaluate the Moon's age.
+ * @returns A structured result containing the age in decimal days and the exact `Date` of the previous New Moon.
  */
 export function getMoonAge(date: Date): MoonAgeResult {
   const year = date.getUTCFullYear();
