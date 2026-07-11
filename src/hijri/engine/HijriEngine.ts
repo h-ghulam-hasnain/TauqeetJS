@@ -13,15 +13,22 @@ interface CalendarLike {
   toGregorian(hijriDate: HijriDate): Date;
 }
 
+/**
+ * Configuration options for initializing the Hijri engine.
+ */
 export interface HijriEngineOptions {
-  /** Required when method is VISIBILITY. */
+  /** Geographic location, strictly required when using the VISIBILITY method. */
   location?: HijriLocationOptions;
 }
 
 /**
- * HijriEngine — the central façade for all Hijri calendar methods.
+ * Central engine to manage conversions between Gregorian and Hijri calendars.
  *
- * Usage:
+ * @remarks
+ * Supports multiple conversion methods including standard civil, Umm al-Qura,
+ * astronomical conjunction, and precise location-based lunar visibility.
+ *
+ * @example
  * ```ts
  * const engine = new HijriEngine(HijriMethod.CIVIL);
  * const hijri = engine.toHijri(new Date());
@@ -41,21 +48,36 @@ export class HijriEngine {
     this.calendar = this.buildCalendar();
   }
 
-  /** Convert a Gregorian Date to a HijriDate. */
+  /**
+   * Converts a Gregorian Date into a HijriDate.
+   *
+   * @param date - The Gregorian Date object.
+   * @returns The corresponding HijriDate.
+   */
   toHijri(date: Date): HijriDate {
     return this.calendar.toHijri(date);
   }
 
-  /** Convert a HijriDate to a Gregorian Date. */
+  /**
+   * Converts a HijriDate back into a Gregorian Date.
+   *
+   * @param hijriDate - The HijriDate object.
+   * @returns The corresponding Gregorian Date.
+   */
   toGregorian(hijriDate: HijriDate): Date {
     return this.calendar.toGregorian(hijriDate);
   }
 
   /**
-   * Build a 2D grid (7 columns = Sun..Sat) for a Hijri month.
-   * Each cell is a HijriDate or null for padding days.
+   * Builds a 2D calendar grid (7 columns = Sunday to Saturday) for a specific Hijri month.
    *
-   * The first column of the grid is Sunday (weekday 0).
+   * @remarks
+   * Each cell contains a HijriDate object or `null` for padding days before or after
+   * the month starts/ends. The first column represents Sunday (weekday 0).
+   *
+   * @param year - The Hijri year.
+   * @param month - The Hijri month (1-12).
+   * @returns A 2D array representing the weeks of the month.
    */
   getMonthGrid(year: number, month: number): (HijriDate | null)[][] {
     const firstGregorian = this.toGregorian({ year, month, day: 1 });

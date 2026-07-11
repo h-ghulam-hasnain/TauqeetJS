@@ -11,8 +11,22 @@ export * from './formatter/index.js';
 export * from './types/index.js';
 
 /**
- * Synchronous API for calculating prayer times.
- * Throws a PrayerCalculationError if configuration validation fails.
+ * Calculates prayer times synchronously using the provided configuration.
+ *
+ * @param config - The complete configuration object for prayer times, including coordinates and calculation methods.
+ * @returns The calculated prayer times as a structured object containing all daily prayer events.
+ * @throws {PrayerCalculationError} If the provided configuration is invalid or calculation fails.
+ *
+ * @example
+ * ```typescript
+ * const times = calculatePrayerTimes({
+ *   lat: 40.7128,
+ *   long: -74.0060,
+ *   date: new Date(),
+ *   method: 'ISNA'
+ * });
+ * console.log(times.fajr.local);
+ * ```
  */
 export function calculatePrayerTimes(config: PrayerConfig): PrayerTimesResult {
   const validation = validatePrayerConfig(config);
@@ -23,9 +37,15 @@ export function calculatePrayerTimes(config: PrayerConfig): PrayerTimesResult {
 }
 
 /**
- * Asynchronous API for calculating prayer times.
- * Supports async timezone resolution via resolveTimezoneAsync hook.
- * Throws a PrayerCalculationError if configuration validation fails.
+ * Calculates prayer times asynchronously, allowing for dynamic timezone resolution.
+ *
+ * @remarks
+ * This function supports the `resolveTimezoneAsync` hook in the configuration, which is useful
+ * when coordinates must be converted to a timezone identifier via an external API.
+ *
+ * @param config - The configuration object for prayer times.
+ * @returns A promise resolving to the calculated prayer times.
+ * @throws {PrayerCalculationError} If the configuration is invalid or timezone resolution fails.
  */
 import { getVSOP87Tables } from '../astronomy/loader.js';
 
@@ -62,7 +82,10 @@ function toMessage(err: unknown): string {
 }
 
 /**
- * Legacy-compatible synchronous API. Returns a Result wrapper instead of throwing.
+ * Legacy-compatible synchronous API that returns a wrapped Result object instead of throwing.
+ *
+ * @param config - The configuration object for prayer times.
+ * @returns A `Result` object containing either the successful data or an error message.
  */
 export function getPrayerTimes(config: PrayerConfig): Result<PrayerTimesResult> {
   try {
@@ -74,7 +97,10 @@ export function getPrayerTimes(config: PrayerConfig): Result<PrayerTimesResult> 
 }
 
 /**
- * Legacy-compatible asynchronous API. Returns a Result wrapper instead of throwing.
+ * Legacy-compatible asynchronous API that returns a wrapped Result object instead of throwing.
+ *
+ * @param config - The configuration object for prayer times.
+ * @returns A promise resolving to a `Result` object with the calculation output or error.
  */
 export async function getPrayerTimesAsync(
   config: PrayerConfig

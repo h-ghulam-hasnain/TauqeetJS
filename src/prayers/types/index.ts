@@ -1,17 +1,39 @@
+/**
+ * Represents a result wrapper for operations that can either succeed or fail without throwing exceptions.
+ */
 export type Result<T> =
   | { readonly success: true; readonly data: T }
   | { readonly success: false; readonly error: string };
 
+/**
+ * Wraps successful data into a Result object.
+ *
+ * @param data - The successful calculation output.
+ * @returns A Result object marked as successful.
+ */
 export function Success<T>(data: T): Result<T> {
   return { success: true, data };
 }
 
+/**
+ * Wraps an error message into a Result object.
+ *
+ * @param error - A descriptive error message.
+ * @returns A Result object marked as failed.
+ */
 export function Failure(error: string): Result<never> {
   return { success: false, error };
 }
 
 // import { GeographicPosition } from '../../astronomy/index.js';
 
+/**
+ * Indicates the calculation state or astronomical condition for a specific prayer time.
+ *
+ * @remarks
+ * Values like 'CONTINUOUS_TWILIGHT' or 'POLAR_NIGHT' indicate that standard calculation
+ * methods failed to converge, triggering high-latitude fallback rules.
+ */
 export type PrayerStatus =
   | 'SUCCESS'
   | 'CONTINUOUS_TWILIGHT'
@@ -20,6 +42,9 @@ export type PrayerStatus =
   | 'POLAR_DAY'
   | 'REGIONAL_FALLBACK';
 
+/**
+ * Represents geographic coordinates using Degrees, Minutes, and Seconds (DMS).
+ */
 export interface DMSTuple {
   readonly degrees: number;
   readonly minutes: number;
@@ -27,13 +52,26 @@ export interface DMSTuple {
   readonly direction: 'N' | 'S' | 'E' | 'W' | 'n' | 's' | 'e' | 'w';
 }
 
+/**
+ * Accepts decimal degrees as a number, a formatted string, or a structured DMS tuple.
+ */
 export type CoordinateInput = number | string | DMSTuple;
 
+/**
+ * Specifies an elevation above sea level with its corresponding unit.
+ */
 export interface ElevationInput {
   readonly value: number;
   readonly unit: 'meters' | 'feet';
 }
 
+/**
+ * Configuration detailing how a specific calculation method determines prayer times.
+ *
+ * @remarks
+ * Standard methods (e.g., MWL, ISNA) provide built-in angles, while custom methods can
+ * specify explicit degrees or minute offsets for twilight calculations.
+ */
 export interface PrayerMethodConfig {
   readonly id: string;
   readonly name: string;
@@ -49,6 +87,24 @@ export interface PrayerMethodConfig {
   readonly isDefault?: boolean | undefined;
 }
 
+/**
+ * The core configuration object required to calculate prayer times.
+ *
+ * @remarks
+ * Includes geographic location, time, convention methods, and optional adjustments.
+ *
+ * @example
+ * ```typescript
+ * const config: PrayerConfig = {
+ *   lat: 51.5074,
+ *   long: -0.1278,
+ *   date: new Date(),
+ *   method: 'London',
+ *   madhab: 'Shafi',
+ *   highLatitudeStrategy: 'AngleBased'
+ * };
+ * ```
+ */
 export interface PrayerConfig {
   readonly lat: CoordinateInput;
   readonly long: CoordinateInput;
@@ -72,6 +128,9 @@ export interface PrayerConfig {
   readonly regionalFallbackLatitude?: number; // fallback latitude if Case 5 triggered (default 45)
 }
 
+/**
+ * Represents a resolved prayer time, including formatted strings and a status indicator.
+ */
 export interface TimeField {
   readonly utc: string | null; // ISO 8601 String ("2026-05-24T04:12:00Z")
   readonly local: string | null; // Formatted display text ("05:12 AM") using target timezone
@@ -82,6 +141,14 @@ export interface TimeField {
 export type Time = string;
 export type time = string;
 
+/**
+ * Detailed astronomical metadata generated during prayer calculations.
+ *
+ * @remarks
+ * Exposes precise ephemeris data (declination, equation of time, refraction) primarily
+ * used for debugging, logging, or advanced astronomical integrations. Only included if
+ * `withMetadata` is true in the `PrayerConfig`.
+ */
 export interface PrayerMetadata {
   readonly fajr?: {
     readonly DEC: number;
@@ -155,6 +222,9 @@ export interface PrayerMetadata {
   };
 }
 
+/**
+ * The final output object containing all daily prayer times and optional metadata.
+ */
 export interface PrayerTimesResult {
   readonly fajr: TimeField;
   readonly sunrise: TimeField;
