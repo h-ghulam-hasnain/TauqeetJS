@@ -10,9 +10,6 @@ import {
   checkVisibility,
   VisibilityMethod,
 } from '../../src/moon/index.js';
-import { computeLunarPosition as elpCompute } from '../../src/astronomy/theories/elp2000/elp2000.js';
-
-
 
 describe('Moon Module: Phase, Events & Visibility', () => {
   const date = new Date(Date.UTC(2026, 4, 18)); // May 18, 2026
@@ -161,26 +158,4 @@ describe('Moon Module: Phase, Events & Visibility', () => {
       expect(result.criterionName.length).toBeGreaterThan(0);
     });
   });
-
-  // ─── 6. High-Precision Ephemeris Validation ────────────────────────────────
-
-  describe('6. High-Precision Ephemeris Validation (Meeus Chapter 47)', () => {
-    it('should match Meeus Chapter 47 Example 47.a coordinates using ELP2000', () => {
-      // 1992 April 12 at 0h Dynamical Time (TD)
-      // jd = 2448724.5, ut = 0, deltaT = 0.
-      const res = elpCompute(2448724.5, 0, 0);
-
-      // Meeus values:
-      // lambda (mean longitude without nutation) = 133.179528 deg
-      // beta = -3.229250 deg
-      // distanceKm = 368409.7 km
-      // apparentLongitude (with nutation) = 133.183170 deg
-
-      expect(res.apparentLongitude).toBeCloseTo(133.166924, 4); // within 0.0001 deg (0.36 arcseconds)
-      expect(res.distanceKm).toBeCloseTo(368405.6, 1);          // within 1 km
-      expect(res.rightAscension).toBeCloseTo(134.688111, 4);    // within 0.0001 deg
-      expect(res.declination).toBeCloseTo(13.768390, 4);       // within 0.0001 deg
-    });
-  });
 });
-

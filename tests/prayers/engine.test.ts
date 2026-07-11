@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getPrayerTimes } from '../src/prayers/index.js';
+import { getPrayerTimes } from '../../src/prayers/index.js';
 
 describe('TauqeetJS Technical Specification & Engine Validation', () => {
   const lat = 24.8607;
