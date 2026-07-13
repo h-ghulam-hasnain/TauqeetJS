@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getSunAtQibla } from '../../src/solar-alignment/sunAtQibla.js';
+import { getSunAtQibla } from '../../../src/qibla/sun/sunAtQibla.js';
 
 describe('Solar alignment (Sun at Qibla)', () => {
   it('returns alignment fields with Date/time for a normal location', () => {
