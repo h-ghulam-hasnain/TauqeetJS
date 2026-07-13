@@ -468,17 +468,15 @@ export function calculatePrayerTimesInternal(config: ValidatedPrayerConfig): Pra
       };
     }
 
-    // 3. Dhuha Metadata
+    // 3. Dhahwa Kubra Metadata
     if (
       rawResults.dhahwaKubra.status === 'SUCCESS' &&
       result.fajr.utc !== null &&
       result.maghrib.utc !== null
     ) {
-      meta.dhuha = {
+      meta.dhahwaKubra = {
         fajrTime: result.fajr.utc,
         maghribTime: result.maghrib.utc,
-        fajrTimestamp: result.fajr.timestamp ?? new Date(result.fajr.utc).getTime(),
-        maghribTimestamp: result.maghrib.timestamp ?? new Date(result.maghrib.utc).getTime(),
       };
     }
 
