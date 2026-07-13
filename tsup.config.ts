@@ -6,8 +6,6 @@ export default defineConfig({
     'src/prayers/index.ts',            // tauqeet-js/prayers
     'src/qibla/index.ts',              // tauqeet-js/qibla
     'src/moon/index.ts',               // tauqeet-js/moon
-    'src/hijri/index.ts',              // tauqeet-js/hijri
-    'src/solar-alignment/index.ts',    // tauqeet-js/solar-alignment
     'src/astronomy/index.ts',          // tauqeet-js/astronomy
   ],
   outDir: 'dist',

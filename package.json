@@ -50,22 +50,7 @@
         "default": "./dist/moon/index.cjs"
       }
     },
-    "./hijri": {
-      "types": "./dist/hijri/index.d.ts",
-      "import": "./dist/hijri/index.js",
-      "require": {
-        "types": "./dist/hijri/index.d.cts",
-        "default": "./dist/hijri/index.cjs"
-      }
-    },
-    "./solar-alignment": {
-      "types": "./dist/solar-alignment/index.d.ts",
-      "import": "./dist/solar-alignment/index.js",
-      "require": {
-        "types": "./dist/solar-alignment/index.d.cts",
-        "default": "./dist/solar-alignment/index.cjs"
-      }
-    },
+
     "./astronomy": {
       "types": "./dist/astronomy/index.d.ts",
       "import": "./dist/astronomy/index.js",
@@ -98,7 +83,6 @@
     "prayer",
     "prayer-times",
     "qibla",
-    "hijri",
     "moon",
     "crescent",
     "astronomical",
