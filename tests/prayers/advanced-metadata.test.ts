@@ -30,9 +30,9 @@ describe('Advanced PrayerMetadata Pipeline Tests', () => {
       expect(meta?.sunrise?.refraction).toBeTypeOf('number');
       expect(meta?.sunrise?.elevationMeters).toBe(0);
 
-      expect(meta?.dhuha).toBeDefined();
-      expect(meta?.dhuha?.fajrTimestamp).toBeTypeOf('number');
-      expect(meta?.dhuha?.maghribTimestamp).toBeTypeOf('number');
+      expect(meta?.dhahwaKubra).toBeDefined();
+      expect(meta?.dhahwaKubra?.fajrTime).toBeTypeOf('string');
+      expect(meta?.dhahwaKubra?.maghribTime).toBeTypeOf('string');
 
       expect(meta?.dhuhr).toBeDefined();
       expect(meta?.dhuhr?.EOT).toBeTypeOf('number');

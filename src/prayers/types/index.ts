@@ -170,11 +170,9 @@ export interface PrayerMetadata {
     readonly refraction?: number;
     readonly iterations: number;
   };
-  readonly dhuha?: {
+  readonly dhahwaKubra?: {
     readonly fajrTime: string;
     readonly maghribTime: string;
-    readonly fajrTimestamp?: number;
-    readonly maghribTimestamp?: number;
   };
   readonly dhuhr?: {
     readonly EOT_min: number;
