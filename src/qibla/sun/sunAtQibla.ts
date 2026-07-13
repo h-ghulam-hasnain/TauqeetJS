@@ -1,10 +1,10 @@
-import type { SunAlignmentConfig, SunAtQiblaResult, SolarTimeField } from './types/index.js';
-import { validateCoordinates } from '../internal/validation.js';
-import { normalizeAngle } from '../internal/normalize.js';
-import { toDegrees, toRadians } from '../internal/math.js';
-import { getQiblaDirection } from '../qibla/index.js';
-import { computeSolarPosition, dateToJulianDay, calculateDeltaT } from '../astronomy/index.js';
-import type { SolarPositionResult } from '../astronomy/types/ephemeris.js';
+import type { SunAlignmentConfig, SunAtQiblaResult, SolarTimeField } from '../types/index.js';
+import { validateCoordinates } from '../../internal/validation.js';
+import { normalizeAngle } from '../../internal/normalize.js';
+import { toDegrees, toRadians } from '../../internal/math.js';
+import { getQiblaDirection } from '../index.js';
+import { computeSolarPosition, dateToJulianDay, calculateDeltaT } from '../../astronomy/index.js';
+import type { SolarPositionResult } from '../../astronomy/types/ephemeris.js';
 
 /**
  * Solves the PZX spherical triangle for the Polar Angle P (Hour Angle).
