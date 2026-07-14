@@ -20,7 +20,7 @@ export function decodeBase64Flat(base64: string): Float64Array {
 
 // Flat structured proxy for the previous object-based interface.
 class PackedTermProxy {
-  constructor(private data: Float64Array, private stride: number, private keys: string[]) {}
+  constructor(public data: Float64Array, public stride: number, public keys: string[]) {}
   
   get length() { return this.data.length / this.stride; }
   

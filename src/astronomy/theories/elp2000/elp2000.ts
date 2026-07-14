@@ -38,29 +38,29 @@ const dtasm = 2.0 * 0.002571881335 / (3.0 * 0.074801329518);
 const am = 0.074801329518;
 const precessionConstant = 5029.0966 - 0.0316;
 
+function evaluatePolynomialHorner(t: number, coeffs: number[], n: number): number {
+  let result = 0.0;
+  const maxDeg = Math.min(n, coeffs.length) - 1;
+  for (let j = maxDeg; j >= 0; j--) {
+    result = result * t + coeffs[j]!;
+  }
+  return result;
+}
+
 function evaluateArgumentPolynomials(t: number, n: number) {
   const elpArguments = [0.0, 0.0, 0.0, 0.0, 0.0];
   for (let i = 0; i < 5; i++) {
-    let sum = 0.0;
     const coeffs = argumentPolynomialCoefficients[i];
     if (coeffs) {
-      let tn = 1.0;
-      for (let j = 0; j < n; j++) {
-        const coeff = coeffs[j];
-        if (coeff !== undefined) {
-          sum += coeff * tn;
-        }
-        tn *= t;
-      }
+      elpArguments[i] = evaluatePolynomialHorner(t, coeffs, n);
     }
-    elpArguments[i] = sum;
   }
   return {
-    W1: elpArguments[0] ?? 0.0,
-    W2: elpArguments[1] ?? 0.0,
-    W3: elpArguments[2] ?? 0.0,
-    T: elpArguments[3] ?? 0.0,
-    OBP: elpArguments[4] ?? 0.0
+    W1: elpArguments[0]!,
+    W2: elpArguments[1]!,
+    W3: elpArguments[2]!,
+    T: elpArguments[3]!,
+    OBP: elpArguments[4]!
   };
 }
 
@@ -78,100 +78,110 @@ function evaluatePlanetaryArguments(t: number) {
   for (let i = 0; i < planetaryPolynomialCoefficients.length; i++) {
     const coeffs = planetaryPolynomialCoefficients[i];
     if (coeffs) {
-      const c0 = coeffs[0];
-      const c1 = coeffs[1];
-      if (c0 !== undefined && c1 !== undefined) {
-        planetaryArguments.push(c0 + c1 * t);
-      }
+      planetaryArguments.push(coeffs[0]! + coeffs[1]! * t);
     }
   }
   return planetaryArguments;
 }
 
-interface ELPTerm {
-  i1: number;
-  i2: number;
-  i3: number;
-  i4: number;
-  A: number;
-  B1: number;
-  B2: number;
-  B3: number;
-  B4: number;
-  B5: number;
-  B6: number;
-}
-
-function computeMainFigureSin(delArgs: { D: number; LP: number; L: number; F: number }, data: ELPTerm[]) {
+// Layout: [i1, i2, i3, i4, A, B1, B2, B3, B4, B5, B6] (Stride = 11)
+function computeMainFigureSin(delArgs: { D: number; LP: number; L: number; F: number }, data: Float64Array) {
   let sum = 0.0;
-  for (let i = 0; i < data.length; i++) {
-    const term = data[i]!;
-    const A = term.A
-      + (term.B1 + dtasm * term.B5) * (corrections.deltanp - am * corrections.deltanu)
-      + term.B2 * corrections.deltaGamma
-      + term.B3 * corrections.deltaE
-      + term.B4 * corrections.deltaep;
-    sum += A * Math.sin((term.i1 * delArgs.D + term.i2 * delArgs.LP + term.i3 * delArgs.L + term.i4 * delArgs.F) * Math.PI / 648000.0);
+  const len = data.length / 11;
+  const { D, LP, L, F } = delArgs;
+  const dnp_am_dnu = corrections.deltanp - am * corrections.deltanu;
+  const dGamma = corrections.deltaGamma;
+  const dE = corrections.deltaE;
+  const dep = corrections.deltaep;
+  const factor = Math.PI / 648000.0;
+
+  for (let r = 0; r < len; r++) {
+    const offset = r * 11;
+    const i1 = data[offset]!;
+    const i2 = data[offset + 1]!;
+    const i3 = data[offset + 2]!;
+    const i4 = data[offset + 3]!;
+    const A_coeff = data[offset + 4]!;
+    const B1 = data[offset + 5]!;
+    const B2 = data[offset + 6]!;
+    const B3 = data[offset + 7]!;
+    const B4 = data[offset + 8]!;
+    const B5 = data[offset + 9]!;
+
+    const A = A_coeff
+      + (B1 + dtasm * B5) * dnp_am_dnu
+      + B2 * dGamma
+      + B3 * dE
+      + B4 * dep;
+    sum += A * Math.sin((i1 * D + i2 * LP + i3 * L + i4 * F) * factor);
   }
   return sum;
 }
 
-function computeMainFigureCos(delArgs: { D: number; LP: number; L: number; F: number }, data: ELPTerm[]) {
+// Layout: [i1, i2, i3, i4, A, B1, B2, B3, B4, B5, B6] (Stride = 11)
+function computeMainFigureCos(delArgs: { D: number; LP: number; L: number; F: number }, data: Float64Array) {
   let sum = 0.0;
-  for (let i = 0; i < data.length; i++) {
-    const term = data[i]!;
-    const A = term.A - (2.0 / 3.0) * term.A * corrections.deltanu
-      + (term.B1 + dtasm * term.B5) * (corrections.deltanp - am * corrections.deltanu)
-      + term.B2 * corrections.deltaGamma
-      + term.B3 * corrections.deltaE
-      + term.B4 * corrections.deltaep;
-    sum += A * Math.cos((term.i1 * delArgs.D + term.i2 * delArgs.LP + term.i3 * delArgs.L + term.i4 * delArgs.F) * Math.PI / 648000.0);
+  const len = data.length / 11;
+  const { D, LP, L, F } = delArgs;
+  const dnp_am_dnu = corrections.deltanp - am * corrections.deltanu;
+  const dnu_factor = (2.0 / 3.0) * corrections.deltanu;
+  const dGamma = corrections.deltaGamma;
+  const dE = corrections.deltaE;
+  const dep = corrections.deltaep;
+  const factor = Math.PI / 648000.0;
+
+  for (let r = 0; r < len; r++) {
+    const offset = r * 11;
+    const i1 = data[offset]!;
+    const i2 = data[offset + 1]!;
+    const i3 = data[offset + 2]!;
+    const i4 = data[offset + 3]!;
+    const A_coeff = data[offset + 4]!;
+    const B1 = data[offset + 5]!;
+    const B2 = data[offset + 6]!;
+    const B3 = data[offset + 7]!;
+    const B4 = data[offset + 8]!;
+    const B5 = data[offset + 9]!;
+
+    const A = A_coeff - A_coeff * dnu_factor
+      + (B1 + dtasm * B5) * dnp_am_dnu
+      + B2 * dGamma
+      + B3 * dE
+      + B4 * dep;
+    sum += A * Math.cos((i1 * D + i2 * LP + i3 * L + i4 * F) * factor);
   }
   return sum;
 }
 
-interface NonPlanetaryTerm {
-  i1: number;
-  i2: number;
-  i3: number;
-  i4: number;
-  i5: number;
-  phi: number;
-  A: number;
-  B: number;
-}
-
-function computeNonPlanetary(precession: number, delArgs: { D: number; LP: number; L: number; F: number }, data: NonPlanetaryTerm[]) {
+// Layout: [i1, i2, i3, i4, i5, phi, A, B] (Stride = 8)
+function computeNonPlanetary(precession: number, delArgs: { D: number; LP: number; L: number; F: number }, data: Float64Array) {
   let sum = 0.0;
-  for (let i = 0; i < data.length; i++) {
-    const term = data[i]!;
-    sum += term.A * Math.sin(
-      (term.i1 * precession + term.i2 * delArgs.D + term.i3 * delArgs.LP + term.i4 * delArgs.L + term.i5 * delArgs.F) * Math.PI / 648000.0
-      + term.phi * Math.PI / 180.0
+  const len = data.length / 8;
+  const { D, LP, L, F } = delArgs;
+  const factor1 = Math.PI / 648000.0;
+  const factor2 = Math.PI / 180.0;
+
+  for (let r = 0; r < len; r++) {
+    const offset = r * 8;
+    const i1 = data[offset]!;
+    const i2 = data[offset + 1]!;
+    const i3 = data[offset + 2]!;
+    const i4 = data[offset + 3]!;
+    const i5 = data[offset + 4]!;
+    const phi = data[offset + 5]!;
+    const A = data[offset + 6]!;
+
+    sum += A * Math.sin(
+      (i1 * precession + i2 * D + i3 * LP + i4 * L + i5 * F) * factor1 + phi * factor2
     );
   }
   return sum;
 }
 
-interface PlanetaryTerm {
-  i1: number;
-  i2: number;
-  i3: number;
-  i4: number;
-  i5: number;
-  i6: number;
-  i7: number;
-  i8: number;
-  i9: number;
-  i10: number;
-  i11: number;
-  phi: number;
-  A: number;
-  B: number;
-}
-
-function computePlanetary1(planetaryArgs: number[], delArgs: { D: number; LP: number; L: number; F: number }, data: PlanetaryTerm[]) {
+// Layout: [i1, i2, i3, i4, i5, i6, i7, i8, i9, i10, i11, phi, A, B] (Stride = 14)
+function computePlanetary1(planetaryArgs: number[], delArgs: { D: number; LP: number; L: number; F: number }, data: Float64Array) {
   let sum = 0.0;
+  const len = data.length / 14;
   const p0 = planetaryArgs[0] ?? 0.0;
   const p1 = planetaryArgs[1] ?? 0.0;
   const p2 = planetaryArgs[2] ?? 0.0;
@@ -180,28 +190,38 @@ function computePlanetary1(planetaryArgs: number[], delArgs: { D: number; LP: nu
   const p5 = planetaryArgs[5] ?? 0.0;
   const p6 = planetaryArgs[6] ?? 0.0;
   const p7 = planetaryArgs[7] ?? 0.0;
-  for (let i = 0; i < data.length; i++) {
-    const term = data[i]!;
-    sum += term.A * Math.sin(
-      (term.i1 * p0
-        + term.i2 * p1
-        + term.i3 * p2
-        + term.i4 * p3
-        + term.i5 * p4
-        + term.i6 * p5
-        + term.i7 * p6
-        + term.i8 * p7
-        + term.i9 * delArgs.D
-        + term.i10 * delArgs.L
-        + term.i11 * delArgs.F) * Math.PI / 648000.0
-      + term.phi * Math.PI / 180.0
+  const { D, L, F } = delArgs;
+  const factor1 = Math.PI / 648000.0;
+  const factor2 = Math.PI / 180.0;
+
+  for (let r = 0; r < len; r++) {
+    const offset = r * 14;
+    const i1 = data[offset]!;
+    const i2 = data[offset + 1]!;
+    const i3 = data[offset + 2]!;
+    const i4 = data[offset + 3]!;
+    const i5 = data[offset + 4]!;
+    const i6 = data[offset + 5]!;
+    const i7 = data[offset + 6]!;
+    const i8 = data[offset + 7]!;
+    const i9 = data[offset + 8]!;
+    const i10 = data[offset + 9]!;
+    const i11 = data[offset + 10]!;
+    const phi = data[offset + 11]!;
+    const A = data[offset + 12]!;
+
+    sum += A * Math.sin(
+      (i1 * p0 + i2 * p1 + i3 * p2 + i4 * p3 + i5 * p4 + i6 * p5 + i7 * p6 + i8 * p7
+        + i9 * D + i10 * L + i11 * F) * factor1 + phi * factor2
     );
   }
   return sum;
 }
 
-function computePlanetary2(planetaryArgs: number[], delArgs: { D: number; LP: number; L: number; F: number }, data: PlanetaryTerm[]) {
+// Layout: [i1, i2, i3, i4, i5, i6, i7, i8, i9, i10, i11, phi, A, B] (Stride = 14)
+function computePlanetary2(planetaryArgs: number[], delArgs: { D: number; LP: number; L: number; F: number }, data: Float64Array) {
   let sum = 0.0;
+  const len = data.length / 14;
   const p0 = planetaryArgs[0] ?? 0.0;
   const p1 = planetaryArgs[1] ?? 0.0;
   const p2 = planetaryArgs[2] ?? 0.0;
@@ -209,21 +229,29 @@ function computePlanetary2(planetaryArgs: number[], delArgs: { D: number; LP: nu
   const p4 = planetaryArgs[4] ?? 0.0;
   const p5 = planetaryArgs[5] ?? 0.0;
   const p6 = planetaryArgs[6] ?? 0.0;
-  for (let i = 0; i < data.length; i++) {
-    const term = data[i]!;
-    sum += term.A * Math.sin(
-      (term.i1 * p0
-        + term.i2 * p1
-        + term.i3 * p2
-        + term.i4 * p3
-        + term.i5 * p4
-        + term.i6 * p5
-        + term.i7 * p6
-        + term.i8 * delArgs.D
-        + term.i9 * delArgs.LP
-        + term.i10 * delArgs.L
-        + term.i11 * delArgs.F) * Math.PI / 648000.0
-      + term.phi * Math.PI / 180.0
+  const { D, LP, L, F } = delArgs;
+  const factor1 = Math.PI / 648000.0;
+  const factor2 = Math.PI / 180.0;
+
+  for (let r = 0; r < len; r++) {
+    const offset = r * 14;
+    const i1 = data[offset]!;
+    const i2 = data[offset + 1]!;
+    const i3 = data[offset + 2]!;
+    const i4 = data[offset + 3]!;
+    const i5 = data[offset + 4]!;
+    const i6 = data[offset + 5]!;
+    const i7 = data[offset + 6]!;
+    const i8 = data[offset + 7]!;
+    const i9 = data[offset + 8]!;
+    const i10 = data[offset + 9]!;
+    const i11 = data[offset + 10]!;
+    const phi = data[offset + 11]!;
+    const A = data[offset + 12]!;
+
+    sum += A * Math.sin(
+      (i1 * p0 + i2 * p1 + i3 * p2 + i4 * p3 + i5 * p4 + i6 * p5 + i7 * p6
+        + i8 * D + i9 * LP + i10 * L + i11 * F) * factor1 + phi * factor2
     );
   }
   return sum;
@@ -243,57 +271,60 @@ export function elp2000SphericalOfDate(JT: number) {
   const zeta = coeff0_0 + T * (coeff0_1 + precessionConstant);
   const planetaryArgs = evaluatePlanetaryArguments(T);
 
+  // Note: Casted through `unknown` since ELP maps to PackedTermProxy structure.
+  const data = elp2000Data as unknown as Record<string, { data: Float64Array }>;
+
   // Main problem.
-  let longitude = computeMainFigureSin(delArgsFull, elp2000Data.ELP01 as unknown as ELPTerm[]);
-  let latitude = computeMainFigureSin(delArgsFull, elp2000Data.ELP02 as unknown as ELPTerm[]);
-  let distance = computeMainFigureCos(delArgsFull, elp2000Data.ELP03 as unknown as ELPTerm[]);
+  let longitude = computeMainFigureSin(delArgsFull, data.ELP01!.data);
+  let latitude = computeMainFigureSin(delArgsFull, data.ELP02!.data);
+  let distance = computeMainFigureCos(delArgsFull, data.ELP03!.data);
 
   // Earth figure perturbations.
-  longitude += computeNonPlanetary(zeta, delArgsLin, elp2000Data.ELP04 as unknown as NonPlanetaryTerm[]);
-  latitude += computeNonPlanetary(zeta, delArgsLin, elp2000Data.ELP05 as unknown as NonPlanetaryTerm[]);
-  distance += computeNonPlanetary(zeta, delArgsLin, elp2000Data.ELP06 as unknown as NonPlanetaryTerm[]);
-  longitude += computeNonPlanetary(zeta, delArgsLin, elp2000Data.ELP07 as unknown as NonPlanetaryTerm[]) * T;
-  latitude += computeNonPlanetary(zeta, delArgsLin, elp2000Data.ELP08 as unknown as NonPlanetaryTerm[]) * T;
-  distance += computeNonPlanetary(zeta, delArgsLin, elp2000Data.ELP09 as unknown as NonPlanetaryTerm[]) * T;
+  longitude += computeNonPlanetary(zeta, delArgsLin, data.ELP04!.data);
+  latitude += computeNonPlanetary(zeta, delArgsLin, data.ELP05!.data);
+  distance += computeNonPlanetary(zeta, delArgsLin, data.ELP06!.data);
+  longitude += computeNonPlanetary(zeta, delArgsLin, data.ELP07!.data) * T;
+  latitude += computeNonPlanetary(zeta, delArgsLin, data.ELP08!.data) * T;
+  distance += computeNonPlanetary(zeta, delArgsLin, data.ELP09!.data) * T;
 
   // Planetary perturbations. Table 1.
-  longitude += computePlanetary1(planetaryArgs, delArgsLin, elp2000Data.ELP10 as unknown as PlanetaryTerm[]);
-  latitude += computePlanetary1(planetaryArgs, delArgsLin, elp2000Data.ELP11 as unknown as PlanetaryTerm[]);
-  distance += computePlanetary1(planetaryArgs, delArgsLin, elp2000Data.ELP12 as unknown as PlanetaryTerm[]);
-  longitude += computePlanetary1(planetaryArgs, delArgsLin, elp2000Data.ELP13 as unknown as PlanetaryTerm[]) * T;
-  latitude += computePlanetary1(planetaryArgs, delArgsLin, elp2000Data.ELP14 as unknown as PlanetaryTerm[]) * T;
-  distance += computePlanetary1(planetaryArgs, delArgsLin, elp2000Data.ELP15 as unknown as PlanetaryTerm[]) * T;
+  longitude += computePlanetary1(planetaryArgs, delArgsLin, data.ELP10!.data);
+  latitude += computePlanetary1(planetaryArgs, delArgsLin, data.ELP11!.data);
+  distance += computePlanetary1(planetaryArgs, delArgsLin, data.ELP12!.data);
+  longitude += computePlanetary1(planetaryArgs, delArgsLin, data.ELP13!.data) * T;
+  latitude += computePlanetary1(planetaryArgs, delArgsLin, data.ELP14!.data) * T;
+  distance += computePlanetary1(planetaryArgs, delArgsLin, data.ELP15!.data) * T;
 
   // Planetary perturbations. Table 2.
-  longitude += computePlanetary2(planetaryArgs, delArgsLin, elp2000Data.ELP16 as unknown as PlanetaryTerm[]);
-  latitude += computePlanetary2(planetaryArgs, delArgsLin, elp2000Data.ELP17 as unknown as PlanetaryTerm[]);
-  distance += computePlanetary2(planetaryArgs, delArgsLin, elp2000Data.ELP18 as unknown as PlanetaryTerm[]);
-  longitude += computePlanetary2(planetaryArgs, delArgsLin, elp2000Data.ELP19 as unknown as PlanetaryTerm[]) * T;
-  latitude += computePlanetary2(planetaryArgs, delArgsLin, elp2000Data.ELP20 as unknown as PlanetaryTerm[]) * T;
-  distance += computePlanetary2(planetaryArgs, delArgsLin, elp2000Data.ELP21 as unknown as PlanetaryTerm[]) * T;
+  longitude += computePlanetary2(planetaryArgs, delArgsLin, data.ELP16!.data);
+  latitude += computePlanetary2(planetaryArgs, delArgsLin, data.ELP17!.data);
+  distance += computePlanetary2(planetaryArgs, delArgsLin, data.ELP18!.data);
+  longitude += computePlanetary2(planetaryArgs, delArgsLin, data.ELP19!.data) * T;
+  latitude += computePlanetary2(planetaryArgs, delArgsLin, data.ELP20!.data) * T;
+  distance += computePlanetary2(planetaryArgs, delArgsLin, data.ELP21!.data) * T;
 
   // Tidal effects.
-  longitude += computeNonPlanetary(0.0, delArgsLin, elp2000Data.ELP22 as unknown as NonPlanetaryTerm[]);
-  latitude += computeNonPlanetary(0.0, delArgsLin, elp2000Data.ELP23 as unknown as NonPlanetaryTerm[]);
-  distance += computeNonPlanetary(0.0, delArgsLin, elp2000Data.ELP24 as unknown as NonPlanetaryTerm[]);
-  longitude += computeNonPlanetary(0.0, delArgsLin, elp2000Data.ELP25 as unknown as NonPlanetaryTerm[]) * T;
-  latitude += computeNonPlanetary(0.0, delArgsLin, elp2000Data.ELP26 as unknown as NonPlanetaryTerm[]) * T;
-  distance += computeNonPlanetary(0.0, delArgsLin, elp2000Data.ELP27 as unknown as NonPlanetaryTerm[]) * T;
+  longitude += computeNonPlanetary(0.0, delArgsLin, data.ELP22!.data);
+  latitude += computeNonPlanetary(0.0, delArgsLin, data.ELP23!.data);
+  distance += computeNonPlanetary(0.0, delArgsLin, data.ELP24!.data);
+  longitude += computeNonPlanetary(0.0, delArgsLin, data.ELP25!.data) * T;
+  latitude += computeNonPlanetary(0.0, delArgsLin, data.ELP26!.data) * T;
+  distance += computeNonPlanetary(0.0, delArgsLin, data.ELP27!.data) * T;
 
   // Moon figure perturbations.
-  longitude += computeNonPlanetary(0.0, delArgsLin, elp2000Data.ELP28 as unknown as NonPlanetaryTerm[]);
-  latitude += computeNonPlanetary(0.0, delArgsLin, elp2000Data.ELP29 as unknown as NonPlanetaryTerm[]);
-  distance += computeNonPlanetary(0.0, delArgsLin, elp2000Data.ELP30 as unknown as NonPlanetaryTerm[]);
+  longitude += computeNonPlanetary(0.0, delArgsLin, data.ELP28!.data);
+  latitude += computeNonPlanetary(0.0, delArgsLin, data.ELP29!.data);
+  distance += computeNonPlanetary(0.0, delArgsLin, data.ELP30!.data);
 
   // Relativistic perturbation.
-  longitude += computeNonPlanetary(0.0, delArgsLin, elp2000Data.ELP31 as unknown as NonPlanetaryTerm[]);
-  latitude += computeNonPlanetary(0.0, delArgsLin, elp2000Data.ELP32 as unknown as NonPlanetaryTerm[]);
-  distance += computeNonPlanetary(0.0, delArgsLin, elp2000Data.ELP33 as unknown as NonPlanetaryTerm[]);
+  longitude += computeNonPlanetary(0.0, delArgsLin, data.ELP31!.data);
+  latitude += computeNonPlanetary(0.0, delArgsLin, data.ELP32!.data);
+  distance += computeNonPlanetary(0.0, delArgsLin, data.ELP33!.data);
 
   // Planetary perturbations (solar eccentricity).
-  longitude += computeNonPlanetary(0.0, delArgsLin, elp2000Data.ELP34 as unknown as NonPlanetaryTerm[]) * T * T;
-  latitude += computeNonPlanetary(0.0, delArgsLin, elp2000Data.ELP35 as unknown as NonPlanetaryTerm[]) * T * T;
-  distance += computeNonPlanetary(0.0, delArgsLin, elp2000Data.ELP36 as unknown as NonPlanetaryTerm[]) * T * T;
+  longitude += computeNonPlanetary(0.0, delArgsLin, data.ELP34!.data) * T * T;
+  latitude += computeNonPlanetary(0.0, delArgsLin, data.ELP35!.data) * T * T;
+  distance += computeNonPlanetary(0.0, delArgsLin, data.ELP36!.data) * T * T;
 
   longitude += elpArgumentsFull.W1;
 

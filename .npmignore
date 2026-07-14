@@ -1,38 +1,37 @@
-# Source & tests — consumers only need dist/
+# Source code
 src/
 tests/
-manual_testing/
-helpers/
-logic/
-coverage/
-
-# Config files
-tsconfig*.json
-tsup.config.ts
-vitest.config.ts
-eslint.config.js
-.prettier*
-typedoc.json
-.gitignore
-
-# Docs (README and LICENSE are explicitly included via "files")
-USAGE.md
-API.md
-MODULES.md
-CONTRIBUTING.md
-
-# Editor & OS noise
-.vscode/
-.idea/
-.DS_Store
-*.log
-
-# Generated docs & CI
-docs/
-.github/
-
-# Development & utility scripts
 bench/
+.github/
 scratch/
-scripts/
-turbo-*.cfg
+
+# Build caches
+.tsbuildinfo
+node_modules/
+dist/tsconfig.tsbuildinfo
+
+# Dev and local files
+.npmignore
+.eslintrc*
+.prettierrc*
+tsconfig.json
+tsup.config.ts
+jest.config.js
+vitest.config.ts
+.env*
+migrate-elp.js
+docs/
+helpers/
+
+# Logs and misc
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.DS_Store
+
+# Include only these directories/files
+!dist/
+!package.json
+!README.md
+!LICENSE
