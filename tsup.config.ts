@@ -16,9 +16,9 @@ export default defineConfig({
     },
   },
   splitting: false,
-  sourcemap: true,
+  sourcemap: false,
   treeshake: true,
+  minify: true,
   minifySyntax: true,
   clean: true,
 });
-
