@@ -3,15 +3,15 @@ const MAKKAH_LAT = 21.422487; // Latitude (North)
 const MAKKAH_LNG = 39.826206; // Longitude (East)
 
 // Mathematical helper functions to convert degrees and radians
-const DEG_TO_RAD_FACTOR = Math.PI / 180;
-const RAD_TO_DEG_FACTOR = 180 / Math.PI;
-const degToRad = (deg: number): number => deg * DEG_TO_RAD_FACTOR;
-const radToDeg = (rad: number): number => rad * RAD_TO_DEG_FACTOR;
+const DEG2RAD = Math.PI / 180.0;
+const RAD2DEG = 180.0 / Math.PI;
+const degToRad = (deg: number): number => deg * DEG2RAD;
+const radToDeg = (rad: number): number => rad * RAD2DEG;
 
 const MAKKAH_LAT_RAD = degToRad(MAKKAH_LAT);
 const TAN_PHI_M = Math.tan(MAKKAH_LAT_RAD);
 const SIN_PHI_M = Math.sin(MAKKAH_LAT_RAD);
-const EPSILON = 1e-4;
+const EPSILON = 1e-9;
 
 
 // Type interfaces for structured pipeline logs and execution outputs
@@ -61,7 +61,7 @@ export class QiblaDecisionPipeline {
 
     // Step 1: Calculate the difference in longitude (Delta Longitude) and normalize it to [-180, 180]
     let dLng = this.lng - MAKKAH_LNG;
-    dLng = ((dLng + 180) % 360 + 360) % 360 - 180;
+    dLng = ((dLng + 180.0) % 360.0 + 360.0) % 360.0 - 180.0;
 
     const phi = this.lat;
     const deltaLambda = dLng;
@@ -134,7 +134,7 @@ export class QiblaDecisionPipeline {
 
     // RULE 4: Exactly 90 degrees longitude difference on the Equator
     // Longitude difference is exactly 90 degrees, and latitude is exactly 0 degrees.
-    else if (absDeltaLambda === 90 && phi === 0) {
+    else if (absDeltaLambda === 90 && Math.abs(phi) < EPSILON) {
       matchedRule = 4;
       deviation = phi_M; // Deviation is exactly equal to Makkah's latitude (21.422487)
       if (deltaLambda < 0) {
@@ -148,7 +148,7 @@ export class QiblaDecisionPipeline {
 
     // RULE 5: Any other point on the Equator (not exactly 90 degrees away)
     // Latitude is 0, but longitude difference is not 90.
-    else if (phi === 0) {
+    else if (Math.abs(phi) < EPSILON) {
       matchedRule = 5;
       // Formula: cot(Deviation) = cot(Makkah_Latitude) * sin(abs_delta_longitude)
       const cot_Dev = (1 / TAN_PHI_M) * Math.sin(degToRad(absDeltaLambda));
@@ -247,7 +247,7 @@ export class QiblaDecisionPipeline {
 
 
     // Step 3: Normalize the final bearing angle to stay within [0, 360] degrees
-    bearing = (bearing % 360 + 360) % 360;
+    bearing = (bearing % 360.0 + 360.0) % 360.0;
 
     this.log("Termination", "Pipeline execution complete", { bearing, deviation, matchedRule });
 
