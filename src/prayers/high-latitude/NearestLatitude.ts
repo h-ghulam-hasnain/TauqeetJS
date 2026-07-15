@@ -6,17 +6,12 @@ import { calculateIsha } from '../calculations/Isha.js';
 export class NearestLatitudeStrategy implements HighLatitudeStrategy {
   readonly strategyName = 'NearestLatitude';
 
-  computeFajr(ctx: HighLatitudeContext): Date | null {
+  apply(ctx: Readonly<HighLatitudeContext>): Partial<Readonly<HighLatitudeContext>> {
     const sign = ctx.latitude < 0 ? -1 : 1;
     const anchorLat = sign * ctx.regionalFallbackLatitude;
 
-    const res = calculateFajr(ctx.baseDate, anchorLat, ctx.longitude, ctx.method);
-    return res ? res.time : null;
-  }
-
-  computeIsha(ctx: HighLatitudeContext): Date | null {
-    const sign = ctx.latitude < 0 ? -1 : 1;
-    const anchorLat = sign * ctx.regionalFallbackLatitude;
+    const fajrRes = calculateFajr(ctx.baseDate, anchorLat, ctx.longitude, ctx.method);
+    const fajr = fajrRes ? fajrRes.time : null;
 
     // To compute Isha, we first need Sunset and Maghrib at the anchor latitude
     const sunsetRes = calculateSunset(
@@ -38,7 +33,9 @@ export class NearestLatitudeStrategy implements HighLatitudeStrategy {
       sunsetRes
     );
 
-    const res = calculateIsha(ctx.baseDate, anchorLat, ctx.longitude, ctx.method, maghribRes);
-    return res ? res.time : null;
+    const ishaRes = calculateIsha(ctx.baseDate, anchorLat, ctx.longitude, ctx.method, maghribRes);
+    const isha = ishaRes ? ishaRes.time : null;
+
+    return { fajr, isha };
   }
 }
