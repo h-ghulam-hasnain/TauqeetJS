@@ -87,6 +87,8 @@ export interface PrayerMethodConfig {
   readonly isDefault?: boolean | undefined;
 }
 
+export type BuiltInMethodId = 'ISNA' | 'MWL' | 'Egypt' | 'Makkah' | 'Karachi' | 'Tehran' | 'Kuwait' | 'Qatar' | 'Singapore' | 'France' | 'Russia' | 'Algeria' | 'CustomHanafi15Deg' | 'India' | 'Qom' | 'Malaysia' | 'Global' | 'UK';
+
 /**
  * The core configuration object required to calculate prayer times.
  *
@@ -98,8 +100,8 @@ export interface PrayerMethodConfig {
  * const config: PrayerConfig = {
  *   lat: 51.5074,
  *   long: -0.1278,
- *   date: new Date(),
- *   method: 'London',
+ *   date: "2026-03-15",
+ *   method: 'MWL',
  *   madhab: 'Shafi',
  *   highLatitudeStrategy: 'AngleBased'
  * };
@@ -110,15 +112,15 @@ export interface PrayerConfig {
   readonly long: CoordinateInput;
   readonly timeZone?: string | number;
   readonly date?: Date | number | string;
-  readonly method?: string | PrayerMethodConfig;
+  readonly method?: BuiltInMethodId | PrayerMethodConfig;
   readonly madhab?: 'Hanafi' | 'Shafi' | 'Maliki' | 'Hanbali' | 'Jaafari' | 'Jafari';
   readonly elevation?: number | ElevationInput;
   readonly temperatureC?: number;
   readonly pressureMbar?: number;
   readonly resolveTimezoneAsync?: (lat: number, lon: number) => Promise<string> | string;
-  readonly adjustments?: Partial<
+  readonly adjustments?: Readonly<Partial<
     Record<'fajr' | 'sunrise' | 'dhahwaKubra' | 'dhuhr' | 'asr' | 'maghrib' | 'isha', number>
-  >;
+  >>;
   readonly withMetadata?: boolean;
   readonly highLatitudeStrategy?:
     | 'AngleBased'
@@ -138,8 +140,6 @@ export interface TimeField {
   readonly status: PrayerStatus;
 }
 
-export type Time = string;
-export type time = string;
 
 /**
  * Detailed astronomical metadata generated during prayer calculations.

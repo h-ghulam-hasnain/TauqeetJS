@@ -13,10 +13,11 @@ export interface HighLatitudeContext {
   readonly temperatureC: number;
   readonly pressureMbar: number;
   readonly regionalFallbackLatitude: number;
+  readonly fajr: Date | null;
+  readonly isha: Date | null;
 }
 
 export interface HighLatitudeStrategy {
   readonly strategyName: string;
-  computeFajr(ctx: HighLatitudeContext): Date | null;
-  computeIsha(ctx: HighLatitudeContext): Date | null;
+  apply(ctx: Readonly<HighLatitudeContext>): Partial<Readonly<HighLatitudeContext>>;
 }

@@ -30,30 +30,28 @@ export class MiddleOfNightStrategy implements HighLatitudeStrategy {
     return nextSunrise?.time ?? null;
   }
 
-  computeFajr(ctx: HighLatitudeContext): Date | null {
+  apply(ctx: Readonly<HighLatitudeContext>): Partial<Readonly<HighLatitudeContext>> {
     const night = getSafeNightDuration(ctx);
-    if (!night) return null;
+    if (!night) return {};
     const { safeSunrise, safeSunset, nightDurationMs } = night;
 
+    let fajr: Date | null = null;
     const nextSunrise = this.getNextSunrise(ctx);
     if (nextSunrise) {
       const diff = nextSunrise.getTime() - safeSunset.getTime();
       // Defensive check to avoid NaN, negative splits, or crossing over another day
       if (!Number.isNaN(diff) && diff > 0 && diff <= 24 * 3600000) {
-        return new Date(safeSunset.getTime() + diff / 2);
+        fajr = new Date(safeSunset.getTime() + diff / 2);
       }
     }
 
     const halfNight = nightDurationMs / 2;
-    return new Date(safeSunrise.getTime() - halfNight);
-  }
+    if (!fajr) {
+      fajr = new Date(safeSunrise.getTime() - halfNight);
+    }
 
-  computeIsha(ctx: HighLatitudeContext): Date | null {
-    const night = getSafeNightDuration(ctx);
-    if (!night) return null;
-    const { safeSunset, nightDurationMs } = night;
+    const isha = new Date(safeSunset.getTime() + halfNight);
 
-    const halfNight = nightDurationMs / 2;
-    return new Date(safeSunset.getTime() + halfNight);
+    return { fajr, isha };
   }
 }

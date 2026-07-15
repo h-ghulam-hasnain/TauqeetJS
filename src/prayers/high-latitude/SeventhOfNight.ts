@@ -4,21 +4,15 @@ import { getSafeNightDuration } from './utils.js';
 export class SeventhOfNightStrategy implements HighLatitudeStrategy {
   readonly strategyName = 'SeventhOfNight';
 
-  computeFajr(ctx: HighLatitudeContext): Date | null {
+  apply(ctx: Readonly<HighLatitudeContext>): Partial<Readonly<HighLatitudeContext>> {
     const night = getSafeNightDuration(ctx);
-    if (!night) return null;
-    const { safeSunrise, nightDurationMs } = night;
+    if (!night) return {};
+    const { safeSunrise, safeSunset, nightDurationMs } = night;
 
     const seventhNight = nightDurationMs / 7;
-    return new Date(safeSunrise.getTime() - seventhNight);
-  }
+    const fajr = new Date(safeSunrise.getTime() - seventhNight);
+    const isha = new Date(safeSunset.getTime() + seventhNight);
 
-  computeIsha(ctx: HighLatitudeContext): Date | null {
-    const night = getSafeNightDuration(ctx);
-    if (!night) return null;
-    const { safeSunset, nightDurationMs } = night;
-
-    const seventhNight = nightDurationMs / 7;
-    return new Date(safeSunset.getTime() + seventhNight);
+    return { fajr, isha };
   }
 }

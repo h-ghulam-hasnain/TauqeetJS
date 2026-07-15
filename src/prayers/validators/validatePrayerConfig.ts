@@ -26,10 +26,10 @@ export interface ValidatedPrayerConfig {
   readonly temperatureC: number;
   readonly pressureMbar: number;
   readonly resolveTimezoneAsync?: (lat: number, lon: number) => Promise<string> | string;
-  readonly adjustments: Record<
+  readonly adjustments: Readonly<Record<
     'fajr' | 'sunrise' | 'dhahwaKubra' | 'dhuhr' | 'asr' | 'maghrib' | 'isha',
     number
-  >;
+  >>;
   readonly withMetadata: boolean;
   readonly highLatitudeStrategy:
     | 'AngleBased'
@@ -83,7 +83,7 @@ function parseDate(dateInput?: Date | number | string): Date {
   if (!dateInput) return new Date();
   if (dateInput instanceof Date) {
     if (isNaN(dateInput.getTime())) throw new ConfigurationError('Invalid Date object');
-    return dateInput;
+    return new Date(dateInput.getTime());
   }
   if (typeof dateInput === 'number') {
     // If it's a UNIX timestamp in seconds (e.g. less than 10000000000), convert to ms
