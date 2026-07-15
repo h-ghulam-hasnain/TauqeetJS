@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getPrayerTimesLegacy } from '../../src/prayers/legacy.js';;
+import { getPrayerTimes } from '../../src/prayers/index.js';
 
 describe('Extended Test: Atmospheric Impact (Elevation Refraction)', () => {
   const lat = 24.8607;
@@ -7,8 +7,8 @@ describe('Extended Test: Atmospheric Impact (Elevation Refraction)', () => {
   const date = new Date(Date.UTC(2024, 3, 27));
 
   it('should shift Sunrise earlier and Maghrib later at high altitude', () => {
-    const seaLevelResult = getPrayerTimesLegacy({ lat, long, elevation: 0, date });
-    const highAltResult = getPrayerTimesLegacy({ lat, long, elevation: 4000, date }); // 4000m
+    const seaLevelResult = getPrayerTimes({ lat, long, elevation: 0, date });
+    const highAltResult = getPrayerTimes({ lat, long, elevation: 4000, date }); // 4000m
 
     expect(seaLevelResult.success).toBe(true);
     expect(highAltResult.success).toBe(true);

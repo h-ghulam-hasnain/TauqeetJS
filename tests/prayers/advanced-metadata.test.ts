@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getPrayerTimesLegacy } from '../../src/prayers/legacy.js';;
+import { getPrayerTimes } from '../../src/prayers/index.js';
 
 describe('Advanced PrayerMetadata Pipeline Tests', () => {
   const normalLat = 24.8607;
@@ -9,7 +9,7 @@ describe('Advanced PrayerMetadata Pipeline Tests', () => {
   const date = new Date(Date.UTC(2024, 3, 27)); // April 27, 2024
 
   it('should not contain metadata when withMetadata is false', () => {
-    const result = getPrayerTimesLegacy({ lat: normalLat, long: normalLong, date, withMetadata: false });
+    const result = getPrayerTimes({ lat: normalLat, long: normalLong, date, withMetadata: false });
     expect(result.success).toBe(true);
     if (result.success) {
       expect(result.data.metadata).toBeUndefined();
@@ -17,7 +17,7 @@ describe('Advanced PrayerMetadata Pipeline Tests', () => {
   });
 
   it('should collect detailed metadata on a normal day', () => {
-    const result = getPrayerTimesLegacy({ lat: normalLat, long: normalLong, date, withMetadata: true });
+    const result = getPrayerTimes({ lat: normalLat, long: normalLong, date, withMetadata: true });
     expect(result.success).toBe(true);
     if (result.success) {
       const meta = result.data.metadata;
@@ -46,7 +46,7 @@ describe('Advanced PrayerMetadata Pipeline Tests', () => {
   });
 
   it('should preserve and track the Asr Matrix (Dhuhr and Asr parameters)', () => {
-    const result = getPrayerTimesLegacy({ lat: normalLat, long: normalLong, date, withMetadata: true });
+    const result = getPrayerTimes({ lat: normalLat, long: normalLong, date, withMetadata: true });
     expect(result.success).toBe(true);
     if (result.success) {
       const meta = result.data.metadata;
@@ -66,7 +66,7 @@ describe('Advanced PrayerMetadata Pipeline Tests', () => {
   it('should apply high-latitude short-circuiting for missing/non-occurring prayers', () => {
     // Tromsø in late June has Polar Day (midnight sun) -> Sunrise/Sunset/Fajr/Isha do not mathematically occur
     const summerDate = new Date(Date.UTC(2024, 5, 21));
-    const result = getPrayerTimesLegacy({
+    const result = getPrayerTimes({
       lat: highLat,
       long: highLong,
       date: summerDate,
@@ -83,7 +83,7 @@ describe('Advanced PrayerMetadata Pipeline Tests', () => {
     }
 
     // Let's test with no fallback strategy that prevents polar day calculations
-    const resultNoFallback = getPrayerTimesLegacy({
+    const resultNoFallback = getPrayerTimes({
       lat: highLat,
       long: highLong,
       date: summerDate,
@@ -100,7 +100,7 @@ describe('Advanced PrayerMetadata Pipeline Tests', () => {
   });
 
   it('should inject high-latitude Isha/Fajr context during strategy overrides', () => {
-    const result = getPrayerTimesLegacy({
+    const result = getPrayerTimes({
       lat: highLat,
       long: highLong,
       date: new Date(Date.UTC(2024, 4, 1)), // May 1st, continuous twilight
