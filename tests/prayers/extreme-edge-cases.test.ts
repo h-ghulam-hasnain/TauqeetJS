@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getPrayerTimes } from '../../src/prayers/index.js';
+import { getPrayerTimesLegacy } from '../../src/prayers/legacy.js';;
 
 describe('Prayer Module: Extreme Edge Cases & Boundary Values', () => {
   const summerSolstice = new Date(Date.UTC(2026, 5, 21)); // June 21, 2026
@@ -8,7 +8,7 @@ describe('Prayer Module: Extreme Edge Cases & Boundary Values', () => {
 
   describe('Boundary Latitude Limits', () => {
     it('should calculate successfully for near-north-pole coordinates (e.g., 89.9° N) without throwing', () => {
-      const result = getPrayerTimes({
+      const result = getPrayerTimesLegacy({
         lat: 89.9,
         long: 0,
         date: equinox,
@@ -21,7 +21,7 @@ describe('Prayer Module: Extreme Edge Cases & Boundary Values', () => {
     });
 
     it('should calculate successfully for near-south-pole coordinates (e.g., -89.9° S) without throwing', () => {
-      const result = getPrayerTimes({
+      const result = getPrayerTimesLegacy({
         lat: -89.9,
         long: 0,
         date: equinox,
@@ -30,7 +30,7 @@ describe('Prayer Module: Extreme Edge Cases & Boundary Values', () => {
     });
 
     it('should process exact equator and prime meridian intersection [0, 0] normally', () => {
-      const result = getPrayerTimes({
+      const result = getPrayerTimesLegacy({
         lat: 0,
         long: 0,
         date: equinox,
@@ -46,7 +46,7 @@ describe('Prayer Module: Extreme Edge Cases & Boundary Values', () => {
 
   describe('Polar Astronomical Invariants (Midnight Sun and Polar Night)', () => {
     it('should return POLAR_DAY status during Summer Solstice in Tromsø, Norway', () => {
-      const result = getPrayerTimes({
+      const result = getPrayerTimesLegacy({
         lat: 69.6492,
         long: 18.9553,
         date: summerSolstice,
@@ -63,7 +63,7 @@ describe('Prayer Module: Extreme Edge Cases & Boundary Values', () => {
     });
 
     it('should handle Polar Night during Winter Solstice in Tromsø, Norway gracefully', () => {
-      const result = getPrayerTimes({
+      const result = getPrayerTimesLegacy({
         lat: 69.6492,
         long: 18.9553,
         date: winterSolstice,

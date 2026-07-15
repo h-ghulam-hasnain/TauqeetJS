@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getPrayerTimes } from '../../src/prayers/index.js';
+import { getPrayerTimesLegacy } from '../../src/prayers/legacy.js';;
 
 describe('High Latitude Adjustment Tests', () => {
   const tromso = { lat: 69.6492, long: 18.9553 };
@@ -8,7 +8,7 @@ describe('High Latitude Adjustment Tests', () => {
   const transitionalDate = new Date(Date.UTC(2024, 4, 1)); // May 1, 2024
 
   it('should return POLAR_DAY for Tromsø during Summer Solstice (Midnight Sun)', () => {
-    const result = getPrayerTimes({ ...tromso, date: summerSolstice });
+    const result = getPrayerTimesLegacy({ ...tromso, date: summerSolstice });
     expect(result.success).toBe(true);
     if (result.success) {
       expect(result.data.sunrise.status).toBe('POLAR_DAY');
@@ -16,7 +16,7 @@ describe('High Latitude Adjustment Tests', () => {
   });
 
   it('should return POLAR_NIGHT for Tromsø during Winter Solstice', () => {
-    const result = getPrayerTimes({ ...tromso, date: winterSolstice });
+    const result = getPrayerTimesLegacy({ ...tromso, date: winterSolstice });
     expect(result.success).toBe(true);
     if (result.success) {
       expect(result.data.sunrise.status).toBe('POLAR_NIGHT');
@@ -26,7 +26,7 @@ describe('High Latitude Adjustment Tests', () => {
   it('should succeed and place Fajr at Astronomical Midnight for Tromsø on May 1st (Continuous Twilight)', () => {
     // May 1st in Tromsø: sun stays above horizon at night → Isha not calculable,
     // Fajr falls back to Astronomical Midnight by default strategy.
-    const result = getPrayerTimes({ ...tromso, date: transitionalDate });
+    const result = getPrayerTimesLegacy({ ...tromso, date: transitionalDate });
     expect(result.success).toBe(true);
 
     if (result.success) {
@@ -40,7 +40,7 @@ describe('High Latitude Adjustment Tests', () => {
   });
 
   it('should succeed and calculate bounded Fajr/Isha times with MiddleOfNight strategy on May 1st', () => {
-    const result = getPrayerTimes({
+    const result = getPrayerTimesLegacy({
       ...tromso,
       date: transitionalDate,
       highLatitudeStrategy: 'MiddleOfNight',
