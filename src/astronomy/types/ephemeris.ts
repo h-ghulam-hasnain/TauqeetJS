@@ -54,43 +54,4 @@ export interface SolarPositionResult {
   readonly apparentLatitude: number;
 }
 
-/**
- * Geocentric apparent lunar position for a given instant.
- * Frame: ecliptic-of-date with IAU 1980 nutation applied + precession polynomial.
- * All angular quantities in DEGREES unless noted.
- *
- * ⚠️  semidiameter and horizontalParallax are in ARCSECONDS (not arcminutes).
- *     To convert to arcminutes: divide by 60.
- *     To convert to degrees:    divide by 3600.
- */
-export interface LunarPositionResult {
-  /** Apparent Right Ascension, ecliptic-of-date (degrees, 0–360) */
-  readonly rightAscension: number;
-  /** Apparent Declination (degrees, −90 to +90) */
-  readonly declination: number;
-  /** Greenwich Hour Angle = GAST − RA (degrees, 0–360) */
-  readonly gha: number;
-  /** Sidereal Hour Angle = 360° − RA (degrees, 0–360) */
-  readonly sha: number;
-  /**
-   * Equatorial horizontal parallax HP (ARCSECONDS).
-   * Formula: asin(6378.137 km / distanceKm) × 3600
-   * Typical range: 3218" (apogee) – 3670" (perigee)
-   * To convert to arcminutes: HP_arcsec / 60
-   */
-  readonly horizontalParallax: number;
-  /**
-   * Angular semidiameter SD (ARCSECONDS).
-   * Formula: asin(1737.4 km / distanceKm) × 3600
-   * Typical range: 877" (apogee) – 1001" (perigee)
-   * To convert to arcminutes: SD_arcsec / 60
-   */
-  readonly semidiameter: number;
-  /** Geocentric distance (kilometres) */
-  readonly distanceKm: number;
-  /** Illuminated fraction of the disk (0 = New Moon, 1 = Full Moon) */
-  readonly illuminationFraction: number;
-  /** Apparent ecliptic longitude λ + Δψ, of-date (degrees, 0–360) */
-  readonly apparentLongitude: number;
-}
 
