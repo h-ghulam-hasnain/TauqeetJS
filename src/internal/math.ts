@@ -1,11 +1,14 @@
+const DEG2RAD = Math.PI / 180.0;
+const RAD2DEG = 180.0 / Math.PI;
+
 /** Converts degrees to radians. */
 export function toRadians(deg: number): number {
-  return deg * (Math.PI / 180);
+  return deg * DEG2RAD;
 }
 
 /** Converts radians to degrees. */
 export function toDegrees(rad: number): number {
-  return rad * (180 / Math.PI);
+  return rad * RAD2DEG;
 }
 
 /**
@@ -51,6 +54,12 @@ export function sphericalLawOfCosinesBearing(
 
 /**
  * Rhumb-line (loxodromic) bearing from point 1 to point 2.
+ *
+ * @remarks
+ * Δλ is normalized to [−π, +π] to correctly handle anti-meridian crossings
+ * (e.g., from Hawaii or the Western Pacific towards Makkah). Without this
+ * normalization the bearing wraps the "long way" around the globe.
+ *
  * @returns Bearing in degrees, 0..360.
  */
 export function rhumbLineBearing(lat1: number, lon1: number, lat2: number, lon2: number): number {
@@ -58,7 +67,12 @@ export function rhumbLineBearing(lat1: number, lon1: number, lat2: number, lon2:
   const φ2 = toRadians(lat2);
 
   const Δφ = Math.log(Math.tan(Math.PI / 4 + φ2 / 2) / Math.tan(Math.PI / 4 + φ1 / 2));
-  const Δλ = toRadians(lon2 - lon1);
+
+  // Normalize Δλ to [−π, +π] so anti-meridian crossings take the shorter arc.
+  let Δλ = toRadians(lon2 - lon1);
+  if (Math.abs(Δλ) > Math.PI) {
+    Δλ = Δλ > 0 ? -(2 * Math.PI - Δλ) : (2 * Math.PI + Δλ);
+  }
 
   return ((toDegrees(Math.atan2(Δλ, Δφ)) % 360) + 360) % 360;
 }
