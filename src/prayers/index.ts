@@ -9,7 +9,8 @@ export { BUILT_IN_METHODS } from './config/methodRegistry.js';
 export * from './formatter/index.js';
 
 export * from './types/index.js';
-
+export * from './types/calendar.js';
+export { CalendarService } from './calendars/calendarService.js';
 /**
  * Calculates prayer times synchronously using the provided configuration.
  *
