@@ -59,7 +59,7 @@ export class CalendarService {
    * @param config     - User-supplied prayer configuration.
    * @returns Ordered array of daily prayer times.
    */
-  private generateDays(
+  private static generateDays(
     startDate: Date,
     daysCount: number,
     config: PrayerConfig
@@ -123,7 +123,7 @@ export class CalendarService {
    * console.log(feb.days.length); // 29 (leap year)
    * ```
    */
-  public generateMonthlyCalendar(
+  public static generateMonthlyCalendar(
     year: number,
     month: number,
     config: PrayerConfig
@@ -139,7 +139,7 @@ export class CalendarService {
     // Anchor at noon UTC to avoid any midnight DST boundary ambiguity.
     const startDate = new Date(Date.UTC(year, month - 1, 1, 12, 0, 0));
 
-    const days = this.generateDays(startDate, daysInMonth, config);
+    const days = CalendarService.generateDays(startDate, daysInMonth, config);
 
     return { year, month, days };
   }
@@ -162,10 +162,10 @@ export class CalendarService {
    * console.log(year.months.length); // 12
    * ```
    */
-  public generateAnnualCalendar(year: number, config: PrayerConfig): AnnualCalendar {
+  public static generateAnnualCalendar(year: number, config: PrayerConfig): AnnualCalendar {
     const months: MonthlyCalendar[] = [];
     for (let m = 1; m <= 12; m++) {
-      months.push(this.generateMonthlyCalendar(year, m, config));
+      months.push(CalendarService.generateMonthlyCalendar(year, m, config));
     }
     return { year, months };
   }
@@ -194,7 +194,7 @@ export class CalendarService {
    * console.log(ramadan.endDate); // "2024-04-09"
    * ```
    */
-  public generateRamadanCalendar(
+  public static generateRamadanCalendar(
     startDate: string,
     config: PrayerConfig,
     duration: number = 30
@@ -222,7 +222,7 @@ export class CalendarService {
       throw new Error(`startDate resolves to an invalid date: "${startDate}"`);
     }
 
-    const days = this.generateDays(anchorDate, duration, config);
+    const days = CalendarService.generateDays(anchorDate, duration, config);
 
     return {
       startDate,

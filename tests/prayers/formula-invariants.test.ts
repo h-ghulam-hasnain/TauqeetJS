@@ -13,6 +13,7 @@ describe('Prayer Module: Formula Invariants & Mathematical Logic', () => {
         long,
         date: baseDate,
         method: 'Karachi',
+        madhab: 'Hanafi',
       });
 
       expect(result.success).toBe(true);

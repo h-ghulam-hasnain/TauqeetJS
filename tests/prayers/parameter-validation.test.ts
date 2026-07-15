@@ -190,7 +190,7 @@ describe('Prayer Module: Parameter Validation', () => {
   });
 
   describe('Madhab and Method Scoping Validation', () => {
-    it('should default to Hanafi and Karachi if no madhab or method is specified', () => {
+    it('should default to MWL and Standard if no madhab or method is specified', () => {
       const result = getPrayerTimes({
         lat: 24.8607,
         long: 67.0011,
@@ -198,10 +198,6 @@ describe('Prayer Module: Parameter Validation', () => {
       });
       expect(result.success).toBe(true);
       if (result.success) {
-        // Karachi is 18/18
-        // Let's verify that the default is Karachi Hanafi
-        // Asr should use double shadow
-        // Let's just check the result matches standard defaults
         expect(result.data.fajr.status).toBe('SUCCESS');
       }
     });

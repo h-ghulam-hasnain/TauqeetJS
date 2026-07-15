@@ -33,13 +33,13 @@ const KHI_SHAFI_CONFIG: PrayerConfig = {
   madhab: 'Shafi',
 };
 
-const service = new CalendarService();
+
 
 // ─── generateMonthlyCalendar ──────────────────────────────────────────────────
 
 describe('CalendarService.generateMonthlyCalendar', () => {
   it('generates 29 days for February in a leap year (2024)', () => {
-    const cal = service.generateMonthlyCalendar(2024, 2, NYC_CONFIG);
+    const cal = CalendarService.generateMonthlyCalendar(2024, 2, NYC_CONFIG);
     expect(cal.year).toBe(2024);
     expect(cal.month).toBe(2);
     expect(cal.days.length).toBe(29);
@@ -48,25 +48,25 @@ describe('CalendarService.generateMonthlyCalendar', () => {
   });
 
   it('generates 28 days for February in a common year (2023)', () => {
-    const cal = service.generateMonthlyCalendar(2023, 2, NYC_CONFIG);
+    const cal = CalendarService.generateMonthlyCalendar(2023, 2, NYC_CONFIG);
     expect(cal.days.length).toBe(28);
     expect(cal.days[27]?.date).toBe('2023-02-28');
   });
 
   it('generates 31 days for January', () => {
-    const cal = service.generateMonthlyCalendar(2026, 1, NYC_CONFIG);
+    const cal = CalendarService.generateMonthlyCalendar(2026, 1, NYC_CONFIG);
     expect(cal.days.length).toBe(31);
     expect(cal.days[30]?.date).toBe('2026-01-31');
   });
 
   it('generates 30 days for April', () => {
-    const cal = service.generateMonthlyCalendar(2026, 4, NYC_CONFIG);
+    const cal = CalendarService.generateMonthlyCalendar(2026, 4, NYC_CONFIG);
     expect(cal.days.length).toBe(30);
     expect(cal.days[29]?.date).toBe('2026-04-30');
   });
 
   it('returns a valid fajr UTC string on day 1', () => {
-    const cal = service.generateMonthlyCalendar(2026, 6, NYC_CONFIG);
+    const cal = CalendarService.generateMonthlyCalendar(2026, 6, NYC_CONFIG);
     const day1 = cal.days[0];
     expect(day1).toBeDefined();
     expect(day1?.fajr).not.toBeNull();
@@ -76,16 +76,16 @@ describe('CalendarService.generateMonthlyCalendar', () => {
   });
 
   it('throws for month < 1', () => {
-    expect(() => service.generateMonthlyCalendar(2026, 0, NYC_CONFIG)).toThrow();
+    expect(() => CalendarService.generateMonthlyCalendar(2026, 0, NYC_CONFIG)).toThrow();
   });
 
   it('throws for month > 12', () => {
-    expect(() => service.generateMonthlyCalendar(2026, 13, NYC_CONFIG)).toThrow();
+    expect(() => CalendarService.generateMonthlyCalendar(2026, 13, NYC_CONFIG)).toThrow();
   });
 
   it('throws for invalid config (missing lat)', () => {
     const bad = { long: -74, timeZone: 'UTC' } as unknown as PrayerConfig;
-    expect(() => service.generateMonthlyCalendar(2026, 6, bad)).toThrow();
+    expect(() => CalendarService.generateMonthlyCalendar(2026, 6, bad)).toThrow();
   });
 });
 
@@ -93,13 +93,13 @@ describe('CalendarService.generateMonthlyCalendar', () => {
 
 describe('CalendarService.generateAnnualCalendar', () => {
   it('returns exactly 12 months', () => {
-    const cal = service.generateAnnualCalendar(2025, NYC_CONFIG);
+    const cal = CalendarService.generateAnnualCalendar(2025, NYC_CONFIG);
     expect(cal.year).toBe(2025);
     expect(cal.months.length).toBe(12);
   });
 
   it('month indices and day counts are correct for 2024 (leap)', () => {
-    const cal = service.generateAnnualCalendar(2024, NYC_CONFIG);
+    const cal = CalendarService.generateAnnualCalendar(2024, NYC_CONFIG);
     const dayCountsByMonth = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
     cal.months.forEach((m, i) => {
       expect(m.month).toBe(i + 1);
@@ -108,7 +108,7 @@ describe('CalendarService.generateAnnualCalendar', () => {
   });
 
   it('month indices and day counts are correct for 2025 (common)', () => {
-    const cal = service.generateAnnualCalendar(2025, NYC_CONFIG);
+    const cal = CalendarService.generateAnnualCalendar(2025, NYC_CONFIG);
     const dayCountsByMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
     cal.months.forEach((m, i) => {
       expect(m.month).toBe(i + 1);
@@ -117,7 +117,7 @@ describe('CalendarService.generateAnnualCalendar', () => {
   });
 
   it('first and last date strings are correct for 2026', () => {
-    const cal = service.generateAnnualCalendar(2026, NYC_CONFIG);
+    const cal = CalendarService.generateAnnualCalendar(2026, NYC_CONFIG);
     expect(cal.months[0]?.days[0]?.date).toBe('2026-01-01');
     expect(cal.months[11]?.days[30]?.date).toBe('2026-12-31');
   });
@@ -128,8 +128,8 @@ describe('CalendarService.generateAnnualCalendar', () => {
 describe('CalendarService — Madhab Asr time shift', () => {
   it('Hanafi Asr is always later than Shafi Asr on the same day and location', () => {
     // Test across a full Ramadan-length window (30 days in summer)
-    const hanafiCal = service.generateMonthlyCalendar(2026, 6, KHI_HANAFI_CONFIG);
-    const shafiCal  = service.generateMonthlyCalendar(2026, 6, KHI_SHAFI_CONFIG);
+    const hanafiCal = CalendarService.generateMonthlyCalendar(2026, 6, KHI_HANAFI_CONFIG);
+    const shafiCal  = CalendarService.generateMonthlyCalendar(2026, 6, KHI_SHAFI_CONFIG);
 
     expect(hanafiCal.days.length).toBe(shafiCal.days.length);
 
@@ -156,7 +156,7 @@ describe('CalendarService.generateRamadanCalendar', () => {
   const RAMADAN_START = '2024-03-11';
 
   it('generates 30 days by default', () => {
-    const cal = service.generateRamadanCalendar(RAMADAN_START, NYC_CONFIG);
+    const cal = CalendarService.generateRamadanCalendar(RAMADAN_START, NYC_CONFIG);
     expect(cal.startDate).toBe(RAMADAN_START);
     expect(cal.duration).toBe(30);
     expect(cal.days.length).toBe(30);
@@ -165,14 +165,14 @@ describe('CalendarService.generateRamadanCalendar', () => {
   });
 
   it('generates exactly 29 days', () => {
-    const cal = service.generateRamadanCalendar(RAMADAN_START, NYC_CONFIG, 29);
+    const cal = CalendarService.generateRamadanCalendar(RAMADAN_START, NYC_CONFIG, 29);
     expect(cal.duration).toBe(29);
     expect(cal.days.length).toBe(29);
     expect(cal.endDate).toBe('2024-04-08');
   });
 
   it('generates exactly 31 days', () => {
-    const cal = service.generateRamadanCalendar(RAMADAN_START, NYC_CONFIG, 31);
+    const cal = CalendarService.generateRamadanCalendar(RAMADAN_START, NYC_CONFIG, 31);
     expect(cal.duration).toBe(31);
     expect(cal.days.length).toBe(31);
     expect(cal.endDate).toBe('2024-04-10');
@@ -180,7 +180,7 @@ describe('CalendarService.generateRamadanCalendar', () => {
 
   it('handles a Ramadan window spanning two Gregorian months', () => {
     // Start near end of February — boundary crosses into March
-    const cal = service.generateRamadanCalendar('2024-02-15', NYC_CONFIG, 30);
+    const cal = CalendarService.generateRamadanCalendar('2024-02-15', NYC_CONFIG, 30);
     expect(cal.days[0]?.date).toBe('2024-02-15');
     // 30 days from Feb 15 lands on Mar 15
     expect(cal.endDate).toBe('2024-03-15');
@@ -193,7 +193,7 @@ describe('CalendarService.generateRamadanCalendar', () => {
   });
 
   it('all suhoor (Fajr) times are before all Iftar (Maghrib) times', () => {
-    const cal = service.generateRamadanCalendar(RAMADAN_START, KHI_SHAFI_CONFIG, 30);
+    const cal = CalendarService.generateRamadanCalendar(RAMADAN_START, KHI_SHAFI_CONFIG, 30);
     for (const day of cal.days) {
       expect(day.fajr).not.toBeNull();
       expect(day.maghrib).not.toBeNull();
@@ -205,19 +205,19 @@ describe('CalendarService.generateRamadanCalendar', () => {
 
   it('throws for duration < 29', () => {
     expect(() =>
-      service.generateRamadanCalendar(RAMADAN_START, NYC_CONFIG, 28)
+      CalendarService.generateRamadanCalendar(RAMADAN_START, NYC_CONFIG, 28)
     ).toThrow();
   });
 
   it('throws for duration > 31', () => {
     expect(() =>
-      service.generateRamadanCalendar(RAMADAN_START, NYC_CONFIG, 32)
+      CalendarService.generateRamadanCalendar(RAMADAN_START, NYC_CONFIG, 32)
     ).toThrow();
   });
 
   it('throws for a malformed startDate', () => {
     expect(() =>
-      service.generateRamadanCalendar('not-a-date', NYC_CONFIG, 30)
+      CalendarService.generateRamadanCalendar('not-a-date', NYC_CONFIG, 30)
     ).toThrow();
   });
 });

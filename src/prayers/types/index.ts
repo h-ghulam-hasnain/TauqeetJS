@@ -253,3 +253,9 @@ export interface UnifiedPrayerTimesResult {
     readonly evaluatedLatitude: number;
   };
 }
+
+export const isPolarZone = (dayType: DayType): boolean => 
+  dayType === 'POLAR_DAY' || dayType === 'POLAR_NIGHT';
+
+export const hasHighLatitudeAdjustment = (dayType: DayType): boolean => 
+  dayType === 'HIGH_LATITUDE';
