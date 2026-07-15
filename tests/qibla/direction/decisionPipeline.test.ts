@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { QiblaDecisionPipeline } from '../../src/qibla/qibla_decision';
+import { QiblaDecisionPipeline } from '../../../src/qibla/direction/decisionPipeline';
 
 describe('QiblaDecisionPipeline Mathematical Verification', () => {
 

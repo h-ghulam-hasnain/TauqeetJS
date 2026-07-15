@@ -2,7 +2,7 @@ import { solveIteratively } from '../solvers/IterativeSolver.js';
 import type { IterativeSolverResult } from '../solvers/IterativeSolver.js';
 import { computeRefraction, computeDipAngle } from '../corrections/HorizonCorrections.js';
 import type { PrayerMethodConfig } from '../types/index.js';
-import type { SolarEphemeris } from '../../internal/EphemerisService.js';
+import type { SolarEphemeris } from '../../internal/ephemerisService.js';
 
 /**
  * Calculates the exact time of Maghrib.
