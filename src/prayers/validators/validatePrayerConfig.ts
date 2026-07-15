@@ -153,7 +153,7 @@ export function validatePrayerConfig(rawConfig: PrayerConfig): ValidationResult 
     }
 
     // Safe merge filling in default values
-    const config = { ...DEFAULT_PRAYER_CONFIG, ...rawConfig } as any;
+    const config = { ...DEFAULT_PRAYER_CONFIG, ...rawConfig } as unknown as PrayerConfig;
 
     // Coordinate validation
     const lat = parseCoordinate(config.lat, true);
