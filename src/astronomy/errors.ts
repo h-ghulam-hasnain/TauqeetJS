@@ -1,5 +1,5 @@
 /**
- * Custom error thrown when an iterative astronomical search (like finding an eclipse or Moon phase)
+ * Custom error thrown when an iterative astronomical search (like finding an equinox or Moon phase)
  * fails to converge within the allowed maximum number of iterations or attempts.
  */
 export class SearchConvergenceError extends Error {

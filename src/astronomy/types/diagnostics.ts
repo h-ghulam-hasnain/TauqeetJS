@@ -2,7 +2,7 @@
  * Configuration options for detailed calculation diagnostics.
  *
  * @remarks
- * Used in long-running phenomena algorithms, such as eclipse searching,
+ * Used in long-running phenomena algorithms, such as equinox/solstice searching,
  * to log progress or cancel execution via an AbortSignal.
  *
  * @example
