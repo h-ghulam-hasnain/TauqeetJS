@@ -130,6 +130,12 @@ export type ValidationResult =
   | { success: true; config: ValidatedPrayerConfig }
   | { success: false; error: string };
 
+const DEFAULT_PRAYER_CONFIG = {
+  method: 'MWL',
+  madhab: 'Standard',
+  highLatitudeStrategy: 'MiddleOfNight'
+} as const;
+
 /**
  * Validates and normalizes user-provided prayer configuration.
  *
@@ -137,14 +143,17 @@ export type ValidationResult =
  * Ensures coordinates are within bounds, resolves timezone and method defaults,
  * normalizes elevation, and prepares the configuration for the calculation engine.
  *
- * @param config - The raw, partial configuration provided by the user.
+ * @param rawConfig - The raw, partial configuration provided by the user.
  * @returns A structured `ValidationResult` indicating success or detailing the error.
  */
-export function validatePrayerConfig(config: PrayerConfig): ValidationResult {
+export function validatePrayerConfig(rawConfig: PrayerConfig): ValidationResult {
   try {
-    if (!config) {
+    if (!rawConfig) {
       return { success: false, error: 'Configuration is required' };
     }
+
+    // Safe merge filling in default values
+    const config = { ...DEFAULT_PRAYER_CONFIG, ...rawConfig } as any;
 
     // Coordinate validation
     const lat = parseCoordinate(config.lat, true);
@@ -218,6 +227,8 @@ export function validatePrayerConfig(config: PrayerConfig): ValidationResult {
         madhab = Madhab.HANBALI;
       } else if (mStr === 'jaafari' || mStr === 'jafari') {
         madhab = Madhab.JAAFARI;
+      } else if (mStr === 'standard') {
+        madhab = Madhab.SHAFI; // Standard Asr shadow multiplier is 1 (Shafi, Maliki, Hanbali)
       } else {
         return { success: false, error: `Invalid madhab: ${config.madhab}` };
       }
