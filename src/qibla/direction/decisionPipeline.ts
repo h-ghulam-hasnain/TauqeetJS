@@ -18,7 +18,7 @@ const EPSILON = 1e-9;
 export interface PipelineLog {
   step: string;
   description: string;
-  value: any;
+  value: Record<string, unknown>;
 }
 
 export interface QiblaResult {
@@ -48,7 +48,7 @@ export class QiblaDecisionPipeline {
   }
 
   // Helper method to keep track of execution steps (Data Traceability)
-  private log(step: string, description: string, value: any): void {
+  private log(step: string, description: string, value: Record<string, unknown>): void {
     this.trace.push({ step, description, value });
   }
 
