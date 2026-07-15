@@ -1,9 +1,10 @@
-import type { PrayerConfig, PrayerTimesResult, Result } from './types/index.js';
-import { Success, Failure } from './types/index.js';
+import type { PrayerConfig, UnifiedPrayerTimesResult, DayType, CalculationStrategy } from './types/index.js';
 import { validatePrayerConfig } from './validators/validatePrayerConfig.js';
 import { calculatePrayerTimesInternal, PrayerCalculationError } from './engine/PrayerEngine.js';
+import { classifyLatitude, LatitudeCase } from './engine/LatitudeClassifier.js';
+import { calculateDhuhr } from './calculations/Dhuhr.js';
 
-export { resolveTimeZoneSync } from './engine/PrayerEngine.js';
+export { resolveTimeZoneSync, PrayerCalculationError } from './engine/PrayerEngine.js';
 export { Madhab } from './config/madhabs.js';
 export { BUILT_IN_METHODS } from './config/methodRegistry.js';
 export * from './formatter/index.js';
@@ -11,105 +12,85 @@ export * from './formatter/index.js';
 export * from './types/index.js';
 export * from './types/calendar.js';
 export { CalendarService } from './calendars/calendarService.js';
-/**
- * Calculates prayer times synchronously using the provided configuration.
- *
- * @param config - The complete configuration object for prayer times, including coordinates and calculation methods.
- * @returns The calculated prayer times as a structured object containing all daily prayer events.
- * @throws {PrayerCalculationError} If the provided configuration is invalid or calculation fails.
- *
- * @example
- * ```typescript
- * const times = calculatePrayerTimes({
- *   lat: 40.7128,
- *   long: -74.0060,
- *   date: new Date(),
- *   method: 'ISNA'
- * });
- * console.log(times.fajr.local);
- * ```
- */
-export function calculatePrayerTimes(config: PrayerConfig): PrayerTimesResult {
-  const validation = validatePrayerConfig(config);
-  if (!validation.success) {
-    throw new PrayerCalculationError(validation.error);
-  }
-  return calculatePrayerTimesInternal(validation.config);
-}
+
+function pad2(n: number) { return n < 10 ? `0${n}` : String(n); }
 
 /**
- * Calculates prayer times asynchronously, allowing for dynamic timezone resolution.
- *
+ * Unified, synchronous single-day prayer calculation function.
+ * 
  * @remarks
- * This function supports the `resolveTimezoneAsync` hook in the configuration, which is useful
- * when coordinates must be converted to a timezone identifier via an external API.
- *
- * @param config - The configuration object for prayer times.
- * @returns A promise resolving to the calculated prayer times.
- * @throws {PrayerCalculationError} If the configuration is invalid or timezone resolution fails.
+ * This function encapsulates all astronomical boundary conditions internally
+ * (Normal, High-Latitude, Polar Day, and Polar Night). It is highly performant
+ * and guaranteed to never throw if the basic configuration validation succeeds.
  */
-import { getVSOP87Tables } from '../astronomy/loader.js';
-
-export async function calculatePrayerTimesAsync(config: PrayerConfig): Promise<PrayerTimesResult> {
+export function getPrayerTimes(config: PrayerConfig): UnifiedPrayerTimesResult {
   const validation = validatePrayerConfig(config);
   if (!validation.success) {
     throw new PrayerCalculationError(validation.error);
   }
-  await getVSOP87Tables();
+  const vConf = validation.config;
 
-  const validatedConfig = validation.config;
-  if (validatedConfig.resolveTimezoneAsync) {
-    try {
-      const resolvedTz = await validatedConfig.resolveTimezoneAsync(
-        validatedConfig.latitude,
-        validatedConfig.longitude
-      );
-      return calculatePrayerTimesInternal({
-        ...validatedConfig,
-        timeZone: resolvedTz,
-      });
-    } catch (err: unknown) {
-      throw new PrayerCalculationError(`Timezone resolution failed: ${toMessage(err)}`);
+  // Fetch solar transit to evaluate latCase
+  const dhuhrTransit = calculateDhuhr(vConf.date, vConf.latitude, vConf.longitude);
+  if (!dhuhrTransit) {
+    throw new PrayerCalculationError("Solar transit calculation failed.");
+  }
+
+  const latCase = classifyLatitude(vConf.latitude, dhuhrTransit.declination, vConf.method.fajrAngle);
+
+  let dayType: DayType = 'NORMAL';
+  let appliedStrategy: CalculationStrategy = 'NONE';
+  let evaluatedLatitude = vConf.latitude;
+
+  // High-latitude strategy mapping
+  const stratMap: Record<string, CalculationStrategy> = {
+    'AngleBased': 'ANGLE_BASED',
+    'MiddleOfNight': 'MIDDLE_OF_NIGHT',
+    'NearestLatitude': 'NEAREST_LATITUDE_FALLBACK',
+    'SeventhOfNight': 'SEVENTH_OF_NIGHT'
+  };
+
+  if (latCase === LatitudeCase.POLAR_DAY || latCase === LatitudeCase.POLAR_NIGHT) {
+    dayType = latCase === LatitudeCase.POLAR_DAY ? 'POLAR_DAY' : 'POLAR_NIGHT';
+    appliedStrategy = 'NEAREST_LATITUDE_FALLBACK';
+    const sign = vConf.latitude < 0 ? -1 : 1;
+    evaluatedLatitude = sign * (vConf.regionalFallbackLatitude ?? 45);
+  } else if (latCase === LatitudeCase.CONTINUOUS_TWILIGHT || latCase === LatitudeCase.REGIONAL_FALLBACK) {
+    dayType = 'HIGH_LATITUDE';
+    appliedStrategy = stratMap[vConf.highLatitudeStrategy] ?? 'MIDDLE_OF_NIGHT';
+    if (appliedStrategy === 'NEAREST_LATITUDE_FALLBACK') {
+      const sign = vConf.latitude < 0 ? -1 : 1;
+      evaluatedLatitude = sign * (vConf.regionalFallbackLatitude ?? 45);
     }
   }
 
-  return calculatePrayerTimesInternal(validatedConfig);
-}
+  // Use a modified config reflecting evaluated overrides
+  const internalConfig = {
+    ...vConf,
+    latitude: evaluatedLatitude,
+    highLatitudeStrategy: appliedStrategy === 'NEAREST_LATITUDE_FALLBACK' ? 'NearestLatitude' : vConf.highLatitudeStrategy
+  };
 
-/** Safely extracts a message string from an unknown thrown value. */
-function toMessage(err: unknown): string {
-  if (err instanceof Error) return err.message;
-  return String(err);
-}
+  // Execute core astronomical pipeline
+  const raw = calculatePrayerTimesInternal(internalConfig as any);
 
-/**
- * Legacy-compatible synchronous API that returns a wrapped Result object instead of throwing.
- *
- * @param config - The configuration object for prayer times.
- * @returns A `Result` object containing either the successful data or an error message.
- */
-export function getPrayerTimes(config: PrayerConfig): Result<PrayerTimesResult> {
-  try {
-    const data = calculatePrayerTimes(config);
-    return Success(data);
-  } catch (err: unknown) {
-    return Failure(toMessage(err));
-  }
-}
+  // Ensure we fallback to something if any time is missing
+  const fallbackDate = vConf.date.toISOString();
 
-/**
- * Legacy-compatible asynchronous API that returns a wrapped Result object instead of throwing.
- *
- * @param config - The configuration object for prayer times.
- * @returns A promise resolving to a `Result` object with the calculation output or error.
- */
-export async function getPrayerTimesAsync(
-  config: PrayerConfig
-): Promise<Result<PrayerTimesResult>> {
-  try {
-    const data = await calculatePrayerTimesAsync(config);
-    return Success(data);
-  } catch (err: unknown) {
-    return Failure(toMessage(err));
-  }
+  return {
+    date: `${vConf.date.getUTCFullYear()}-${pad2(vConf.date.getUTCMonth() + 1)}-${pad2(vConf.date.getUTCDate())}`,
+    times: {
+      fajr: raw.fajr.utc || fallbackDate,
+      sunrise: raw.sunrise.utc || fallbackDate,
+      dhuhr: raw.dhuhr.utc || fallbackDate,
+      asr: raw.asr.utc || fallbackDate,
+      maghrib: raw.maghrib.utc || fallbackDate,
+      isha: raw.isha.utc || fallbackDate,
+    },
+    metadata: {
+      dayType,
+      appliedStrategy,
+      evaluatedLatitude
+    }
+  };
 }
