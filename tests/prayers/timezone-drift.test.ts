@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { getPrayerTimes, getPrayerTimesAsync } from '../../src/prayers/index.js';
+import { getPrayerTimes } from '../../src/prayers/index.js';
+import { getPrayerTimesAsync } from '../../src/prayers/legacy.js';;
 
 describe('Prayer Module: Timezone Resolution & Drift Verification', () => {
   const lat = 40.7128;

@@ -1,11 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { getPrayerTimes } from '../../src/prayers/index.js';
+import { getPrayerTimesLegacy } from '../../src/prayers/legacy.js';;
 
 describe('Extended Test: Location Validation', () => {
   const date = new Date(Date.UTC(2024, 3, 27));
 
   it('should handle North Pole [90, 0] gracefully via Result pattern', () => {
-    const result = getPrayerTimes({ lat: 90, long: 0, date });
+    const result = getPrayerTimesLegacy({ lat: 90, long: 0, date });
     expect(result.success).toBe(false);
     if (!result.success) {
       // It fails either input validation or astronomical calculation logic, but NEVER crashes.
@@ -14,12 +14,12 @@ describe('Extended Test: Location Validation', () => {
   });
 
   it('should handle South Pole [-90, -180] gracefully via Result pattern', () => {
-    const result = getPrayerTimes({ lat: -90, long: -180, date });
+    const result = getPrayerTimesLegacy({ lat: -90, long: -180, date });
     expect(result.success).toBe(false);
   });
 
   it('should process Equator [0, 0] normally', () => {
-    const result = getPrayerTimes({ lat: 0, long: 0, date });
+    const result = getPrayerTimesLegacy({ lat: 0, long: 0, date });
     expect(result.success).toBe(true);
     if (result.success) {
       expect(result.data.fajr).toHaveProperty('timestamp');
@@ -28,9 +28,9 @@ describe('Extended Test: Location Validation', () => {
   });
 
   it('should reject structurally invalid coordinates with a Failure Result', () => {
-    const result1 = getPrayerTimes({ lat: 100, long: 0 });
-    const result2 = getPrayerTimes({ lat: 0, long: 200 });
-    const result3 = getPrayerTimes({ lat: -100, long: -200 });
+    const result1 = getPrayerTimesLegacy({ lat: 100, long: 0 });
+    const result2 = getPrayerTimesLegacy({ lat: 0, long: 200 });
+    const result3 = getPrayerTimesLegacy({ lat: -100, long: -200 });
 
     expect(result1.success).toBe(false);
     expect(result2.success).toBe(false);
@@ -41,10 +41,10 @@ describe('Extended Test: Location Validation', () => {
   });
 
   it('should reject undefined, null, or NaN coordinates with Failure Result', () => {
-    const result1 = getPrayerTimes({ lat: undefined as any, long: 0 });
-    const result2 = getPrayerTimes({ lat: 0, long: null as any });
-    const result3 = getPrayerTimes({ lat: NaN, long: 0 });
-    const result4 = getPrayerTimes({ lat: 0, long: NaN });
+    const result1 = getPrayerTimesLegacy({ lat: undefined as any, long: 0 });
+    const result2 = getPrayerTimesLegacy({ lat: 0, long: null as any });
+    const result3 = getPrayerTimesLegacy({ lat: NaN, long: 0 });
+    const result4 = getPrayerTimesLegacy({ lat: 0, long: NaN });
 
     expect(result1.success).toBe(false);
     expect(result2.success).toBe(false);
