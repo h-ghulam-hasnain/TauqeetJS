@@ -5,7 +5,6 @@ export default defineConfig({
     'src/index.ts',                    // tauqeet-js  (all modules)
     'src/prayers/index.ts',            // tauqeet-js/prayers
     'src/qibla/index.ts',              // tauqeet-js/qibla
-    'src/astronomy/index.ts',          // tauqeet-js/astronomy
   ],
   outDir: 'dist',
   format: ['esm', 'cjs'],
