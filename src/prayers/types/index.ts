@@ -233,3 +233,23 @@ export interface PrayerTimesResult {
   readonly isha: TimeField;
   readonly metadata?: PrayerMetadata;
 }
+
+export type DayType = 'NORMAL' | 'HIGH_LATITUDE' | 'POLAR_DAY' | 'POLAR_NIGHT';
+export type CalculationStrategy = 'NONE' | 'ANGLE_BASED' | 'MIDDLE_OF_NIGHT' | 'SEVENTH_OF_NIGHT' | 'NEAREST_LATITUDE_FALLBACK';
+
+export interface UnifiedPrayerTimesResult {
+  readonly date: string; // "YYYY-MM-DD"
+  readonly times: {
+    readonly fajr: string;
+    readonly sunrise: string;
+    readonly dhuhr: string;
+    readonly asr: string;
+    readonly maghrib: string;
+    readonly isha: string;
+  };
+  readonly metadata: {
+    readonly dayType: DayType;
+    readonly appliedStrategy: CalculationStrategy;
+    readonly evaluatedLatitude: number;
+  };
+}
