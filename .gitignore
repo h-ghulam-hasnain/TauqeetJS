@@ -42,3 +42,8 @@ desktop.ini
 
 # ── Temporary Tools/Artifacts ─────────────────────────────────────
 turbo-*.cfg
+
+# tauqeet-js specific ignores
+src/**/*.js
+src/**/*.d.ts
+src/**/*.js.map

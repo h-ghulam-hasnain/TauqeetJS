@@ -1,5 +1,5 @@
-import { ephemerisService } from '../../internal/EphemerisService.js';
-import type { SolarEphemeris } from '../../internal/EphemerisService.js';
+import { ephemerisService } from '../../internal/ephemerisService.js';
+import type { SolarEphemeris } from '../../internal/ephemerisService.js';
 import { solveHourAngle } from './HourAngleSolver.js';
 import { dateToJulianDay } from '../../astronomy/time/JulianDate.js';
 

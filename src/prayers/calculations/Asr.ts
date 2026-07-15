@@ -2,7 +2,7 @@ import { solveIteratively } from '../solvers/IterativeSolver.js';
 import type { IterativeSolverResult } from '../solvers/IterativeSolver.js';
 import { computeRefraction } from '../corrections/HorizonCorrections.js';
 import { tand, atand } from '../../internal/trig.js';
-import type { SolarEphemeris } from '../../internal/EphemerisService.js';
+import type { SolarEphemeris } from '../../internal/ephemerisService.js';
 
 /**
  * Calculates the exact time for the Asr prayer using iterative root-finding.

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { getQiblaDirection } from '../../src/qibla/direction/bearing.js';
-import { MECCA } from '../../src/qibla/constants.js';
+import { getQiblaDirection } from '../../../src/qibla/direction/bearing.js';
+import { MECCA } from '../../../src/qibla/constants.js';
 
 describe('Qibla utilities', () => {
   it('returns a bearing and positive distance for a non-Mecca location', () => {
