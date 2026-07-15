@@ -42,14 +42,6 @@
         "default": "./dist/qibla/index.cjs"
       }
     },
-    "./astronomy": {
-      "types": "./dist/astronomy/index.d.ts",
-      "import": "./dist/astronomy/index.js",
-      "require": {
-        "types": "./dist/astronomy/index.d.cts",
-        "default": "./dist/astronomy/index.cjs"
-      }
-    },
     "./*": {
       "types": "./dist/*/index.d.ts",
       "import": "./dist/*/index.js",
