@@ -1,6 +1,6 @@
 import { performance } from 'node:perf_hooks';
 import { describe, expect, it } from 'vitest';
-import { getPrayerTimesLegacy } from '../../src/prayers/legacy.js';;
+import { getPrayerTimes } from '../../src/prayers/index.js';
 import type { PrayerTimesResult } from '../../src/prayers/types/index.js';
 
 type HighLatitudeStrategy = 'AngleBased' | 'MiddleOfNight' | 'SeventhOfNight' | 'NearestLatitude';
@@ -38,7 +38,7 @@ function runPrayerTimes(config: {
 }) {
   const configWithMetadata = { ...config, withMetadata: true };
   const startedAt = performance.now();
-  const result = getPrayerTimesLegacy(configWithMetadata);
+  const result = getPrayerTimes(configWithMetadata);
   const durationMs = performance.now() - startedAt;
   return { result, durationMs };
 }

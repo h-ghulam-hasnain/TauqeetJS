@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getPrayerTimesLegacy } from '../../src/prayers/legacy.js';;
+import { getPrayerTimes } from '../../src/prayers/index.js';
 
 describe('Prayer Module: Formula Invariants & Mathematical Logic', () => {
   const lat = 24.8607;
@@ -8,7 +8,7 @@ describe('Prayer Module: Formula Invariants & Mathematical Logic', () => {
 
   describe('Chronological Sequence Invariant', () => {
     it('should maintain standard chronological order for all five daily prayers + sunrise', () => {
-      const result = getPrayerTimesLegacy({
+      const result = getPrayerTimes({
         lat,
         long,
         date: baseDate,
@@ -39,7 +39,7 @@ describe('Prayer Module: Formula Invariants & Mathematical Logic', () => {
 
   describe('Solar Transit (Dhuhr / Noon) Invariant', () => {
     it('should place Dhuhr extremely close to solar noon (approx 12:00 in local timezone, corrected by longitude & EOT)', () => {
-      const result = getPrayerTimesLegacy({
+      const result = getPrayerTimes({
         lat,
         long,
         date: baseDate,
@@ -59,8 +59,8 @@ describe('Prayer Module: Formula Invariants & Mathematical Logic', () => {
 
   describe('Asr Madhab Shadow Factor Invariant', () => {
     it('should ensure Hanafi Asr (2x shadow) is strictly later than Shafi Asr (1x shadow) by > 30 minutes', () => {
-      const shafi = getPrayerTimesLegacy({ lat, long, date: baseDate, madhab: 'Shafi' });
-      const hanafi = getPrayerTimesLegacy({ lat, long, date: baseDate, madhab: 'Hanafi' });
+      const shafi = getPrayerTimes({ lat, long, date: baseDate, madhab: 'Shafi' });
+      const hanafi = getPrayerTimes({ lat, long, date: baseDate, madhab: 'Hanafi' });
 
       expect(shafi.success).toBe(true);
       expect(hanafi.success).toBe(true);
@@ -78,8 +78,8 @@ describe('Prayer Module: Formula Invariants & Mathematical Logic', () => {
 
   describe('Atmospheric Refraction & Elevation Dip Invariant', () => {
     it('should shift Sunrise earlier and Maghrib later at 3000m altitude, while keeping Dhuhr unchanged', () => {
-      const seaLevel = getPrayerTimesLegacy({ lat, long, date: baseDate, elevation: 0 });
-      const mountain = getPrayerTimesLegacy({ lat, long, date: baseDate, elevation: 3000 });
+      const seaLevel = getPrayerTimes({ lat, long, date: baseDate, elevation: 0 });
+      const mountain = getPrayerTimes({ lat, long, date: baseDate, elevation: 3000 });
 
       expect(seaLevel.success).toBe(true);
       expect(mountain.success).toBe(true);
@@ -104,8 +104,8 @@ describe('Prayer Module: Formula Invariants & Mathematical Logic', () => {
 
   describe('Manual Offsets & Adjustments Integration', () => {
     it('should shift specified times exactly by the adjustments configured in minutes', () => {
-      const noAdjust = getPrayerTimesLegacy({ lat, long, date: baseDate });
-      const adjust = getPrayerTimesLegacy({
+      const noAdjust = getPrayerTimes({ lat, long, date: baseDate });
+      const adjust = getPrayerTimes({
         lat,
         long,
         date: baseDate,
@@ -135,7 +135,7 @@ describe('Prayer Module: Formula Invariants & Mathematical Logic', () => {
 
   describe('Calculation Engine Structural Metadata', () => {
     it('should include declination (DEC), equation of time (EOT), and solver iteration counts in results when requested', () => {
-      const result = getPrayerTimesLegacy({
+      const result = getPrayerTimes({
         lat,
         long,
         date: baseDate,

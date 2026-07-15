@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getPrayerTimesLegacy } from '../../src/prayers/legacy.js';;
+import { getPrayerTimes } from '../../src/prayers/index.js';
 
 describe('TauqeetJS Technical Specification & Engine Validation', () => {
   const lat = 24.8607;
@@ -8,7 +8,7 @@ describe('TauqeetJS Technical Specification & Engine Validation', () => {
 
   describe('Core Functionality & Result Pattern', () => {
     it('should return a successful Result with correct prayer times for Karachi', () => {
-      const result = getPrayerTimesLegacy({ lat, long, date });
+      const result = getPrayerTimes({ lat, long, date });
       expect(result.success).toBe(true);
       if (result.success) {
         expect(result.data.fajr).toHaveProperty('timestamp');
@@ -18,7 +18,7 @@ describe('TauqeetJS Technical Specification & Engine Validation', () => {
     });
 
     it('should return failure for invalid latitude (100) instead of throwing exception', () => {
-      const result = getPrayerTimesLegacy({ lat: 100, long: 67 });
+      const result = getPrayerTimes({ lat: 100, long: 67 });
       expect(result.success).toBe(false);
       if (!result.success) {
         expect(result.error).toMatch(/latitude/i);
@@ -26,7 +26,7 @@ describe('TauqeetJS Technical Specification & Engine Validation', () => {
     });
 
     it('should return failure for invalid longitude (200) instead of throwing exception', () => {
-      const result = getPrayerTimesLegacy({ lat: 24, long: 200 });
+      const result = getPrayerTimes({ lat: 24, long: 200 });
       expect(result.success).toBe(false);
       if (!result.success) {
         expect(result.error).toMatch(/longitude/i);
@@ -36,8 +36,8 @@ describe('TauqeetJS Technical Specification & Engine Validation', () => {
 
   describe('Repeated Calculations Consistency', () => {
     it('should return identical results when the same date is calculated multiple times', () => {
-      const res1 = getPrayerTimesLegacy({ lat, long, date });
-      const res2 = getPrayerTimesLegacy({ lat, long, date });
+      const res1 = getPrayerTimes({ lat, long, date });
+      const res2 = getPrayerTimes({ lat, long, date });
 
       expect(res1.success).toBe(true);
       expect(res2.success).toBe(true);
@@ -52,8 +52,8 @@ describe('TauqeetJS Technical Specification & Engine Validation', () => {
 
     it('should produce different results for different dates', () => {
       const date2 = new Date(Date.UTC(2024, 3, 28));
-      const res1 = getPrayerTimesLegacy({ lat, long, date });
-      const res2 = getPrayerTimesLegacy({ lat, long, date: date2 });
+      const res1 = getPrayerTimes({ lat, long, date });
+      const res2 = getPrayerTimes({ lat, long, date: date2 });
 
       expect(res1.success).toBe(true);
       expect(res2.success).toBe(true);
@@ -66,8 +66,8 @@ describe('TauqeetJS Technical Specification & Engine Validation', () => {
 
   describe('Atmospheric & Geographic Edge Cases', () => {
     it('should shift Sunrise earlier and Maghrib later at high altitude (4000m)', () => {
-      const seaLevel = getPrayerTimesLegacy({ lat, long, elevation: 0, date });
-      const highAlt = getPrayerTimesLegacy({ lat, long, elevation: 4000, date });
+      const seaLevel = getPrayerTimes({ lat, long, elevation: 0, date });
+      const highAlt = getPrayerTimes({ lat, long, elevation: 4000, date });
 
       expect(seaLevel.success).toBe(true);
       expect(highAlt.success).toBe(true);
@@ -83,7 +83,7 @@ describe('TauqeetJS Technical Specification & Engine Validation', () => {
     });
 
     it('should handle extreme latitudes gracefully — Tromsø, Norway in Midnight Sun period', () => {
-      const result = getPrayerTimesLegacy({
+      const result = getPrayerTimes({
         lat: 69.6492,
         long: 18.9553,
         date: new Date(Date.UTC(2024, 5, 21)), // Summer solstice
@@ -95,7 +95,7 @@ describe('TauqeetJS Technical Specification & Engine Validation', () => {
     });
 
     it('should handle Polar Night gracefully — Tromsø in Winter Solstice', () => {
-      const result = getPrayerTimesLegacy({
+      const result = getPrayerTimes({
         lat: 69.6492,
         long: 18.9553,
         date: new Date(Date.UTC(2024, 11, 21)), // Winter solstice
@@ -109,7 +109,7 @@ describe('TauqeetJS Technical Specification & Engine Validation', () => {
 
   describe('Smart Defaults', () => {
     it('should succeed with minimal config — only lat/long, using all defaults', () => {
-      const result = getPrayerTimesLegacy({ lat, long });
+      const result = getPrayerTimes({ lat, long });
       expect(result.success).toBe(true);
     });
   });

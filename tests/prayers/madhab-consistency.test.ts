@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getPrayerTimesLegacy } from '../../src/prayers/legacy.js';;
+import { getPrayerTimes } from '../../src/prayers/index.js';
 
 describe('Extended Test: Madhab Consistency (Asr Calculation)', () => {
   const lat = 24.8607;
@@ -8,8 +8,8 @@ describe('Extended Test: Madhab Consistency (Asr Calculation)', () => {
 
   it('should ensure Hanafi Asr is always later than Shafi Asr', () => {
     // Shafi uses shadow factor 1 (length of shadow = length of object + noon shadow)
-    const shafiResult = getPrayerTimesLegacy({ lat, long, madhab: 'Shafi', date });
-    const hanafiResult = getPrayerTimesLegacy({ lat, long, madhab: 'Hanafi', date });
+    const shafiResult = getPrayerTimes({ lat, long, madhab: 'Shafi', date });
+    const hanafiResult = getPrayerTimes({ lat, long, madhab: 'Hanafi', date });
 
     expect(shafiResult.success).toBe(true);
     expect(hanafiResult.success).toBe(true);
