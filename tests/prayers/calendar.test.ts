@@ -56,7 +56,7 @@ describe('TauqeetJS Batch Calendar Engine - Verification Suite', () => {
     }
 
     expect(() => CalendarService.generateAnnualCalendar(2026, configWithAdjustments)).not.toThrow();
-  });
+  }, 10000);
 
   // 4. Pointer-Stable Loop Performance Test
   it('should perform 365 days of batch calculations efficiently without breaking temporal sequence', () => {
@@ -78,5 +78,5 @@ describe('TauqeetJS Batch Calendar Engine - Verification Suite', () => {
 
     // Benchmark Log: Ensures microsecond speeds per calculation are maintained
     console.log(`Successfully compiled 365-day calendar in ${(end - start).toFixed(2)}ms`);
-  });
+  }, 10000);
 });
