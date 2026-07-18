@@ -4,15 +4,15 @@ node_modules/
 # ── Build output ─────────────────────────────────────────────────
 dist/
 docs/
-helpers/
+# helpers/
 
 # ── TypeScript incremental build cache ───────────────────────────
 *.tsbuildinfo
 
 # ── Test coverage ─────────────────────────────────────────────────
 coverage/
-scripts/
-logic/
+# scripts/
+# logic/
 
 # ── Logs ─────────────────────────────────────────────────────────
 *.log
