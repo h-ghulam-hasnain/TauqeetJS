@@ -8,7 +8,7 @@ describe('prayer import isolation', () => {
       'utf8'
     );
     const ephemerisServiceSource = readFileSync(
-      new URL('../../src/internal/EphemerisService.ts', import.meta.url),
+      new URL('../../src/internal/ephemerisService.ts', import.meta.url),
       'utf8'
     );
 

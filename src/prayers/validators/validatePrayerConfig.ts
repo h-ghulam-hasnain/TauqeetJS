@@ -7,6 +7,7 @@ import type {
 import { BUILT_IN_METHODS } from '../config/methodRegistry.js';
 import { Madhab } from '../config/madhabs.js';
 import { ConfigurationError } from '../errors.js';
+import { validateCoordinates } from '../../internal/validation.js';
 
 /**
  * The normalized, internally-validated configuration object used by the prayer engine.
@@ -158,20 +159,8 @@ export function validatePrayerConfig(rawConfig: PrayerConfig): ValidationResult 
     // Coordinate validation
     const lat = parseCoordinate(config.lat, true);
     const long = parseCoordinate(config.long, false);
-
-    if (lat === undefined || lat === null || isNaN(lat)) {
-      return { success: false, error: 'Latitude is missing, null, or NaN' };
-    }
-    if (long === undefined || long === null || isNaN(long)) {
-      return { success: false, error: 'Longitude is missing, null, or NaN' };
-    }
-
-    if (lat <= -90 || lat >= 90) {
-      return { success: false, error: 'Latitude must be strictly between -90 and +90' };
-    }
-    if (long <= -180 || long >= 180) {
-      return { success: false, error: 'Longitude must be strictly between -180 and +180' };
-    }
+    
+    validateCoordinates(lat, long);
 
     // Climatic Boundaries
     const temp = config.temperatureC ?? 10;
@@ -373,6 +362,9 @@ export function validatePrayerConfig(rawConfig: PrayerConfig): ValidationResult 
       },
     };
   } catch (e: unknown) {
+    if (e instanceof Error && e.name === 'InvalidArgumentError') {
+      throw e;
+    }
     return { success: false, error: `Validation exception: ${e instanceof Error ? e.message : String(e)}` };
   }
 }
