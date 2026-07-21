@@ -1,1 +1,1 @@
-export { computeSolarPosition, computeSolarPositionSubset } from './SolarPosition.js';
+export { computeSolarPosition } from './SolarPosition.js';

@@ -3,10 +3,7 @@
   "entryPoints": [
     "src/index.ts",
     "src/prayers/index.ts",
-    "src/qibla/index.ts",
-    "src/moon/index.ts",
-    "src/hijri/index.ts",
-    "src/solar-alignment/index.ts"
+    "src/qibla/index.ts"
   ],
   "out": "docs",
   "name": "tauqeet-js",
