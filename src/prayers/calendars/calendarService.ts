@@ -2,6 +2,7 @@ import { calculatePrayerTimesInternal } from '../engine/PrayerEngine.js';
 import { validatePrayerConfig } from '../validators/validatePrayerConfig.js';
 import type { ValidatedPrayerConfig } from '../validators/validatePrayerConfig.js';
 import type { PrayerConfig } from '../types/index.js';
+import { ConfigurationError } from '../errors.js';
 import type {
   DailyPrayerTimes,
   MonthlyCalendar,
@@ -71,7 +72,7 @@ export class CalendarService {
     });
 
     if (!validation.success) {
-      throw new Error(`Invalid PrayerConfig: ${validation.error}`);
+      throw new ConfigurationError(validation.error, { details: { source: 'validatePrayerConfig' } });
     }
 
     // Mutable copy — only `date` changes on each iteration.
@@ -129,7 +130,7 @@ export class CalendarService {
     config: PrayerConfig
   ): MonthlyCalendar {
     if (!Number.isInteger(month) || month < 1 || month > 12) {
-      throw new Error(`Month must be an integer between 1 and 12, got: ${month}`);
+      throw new ConfigurationError(`Month must be an integer between 1 and 12, got: ${month}`);
     }
 
     // Date.UTC(year, month, 0) overflows into the last day of the previous month,
@@ -214,12 +215,12 @@ export class CalendarService {
       !Number.isFinite(y) || !Number.isFinite(m) || !Number.isFinite(d) ||
       m < 1 || m > 12 || d < 1 || d > 31
     ) {
-      throw new Error(`startDate must be in YYYY-MM-DD format, got: "${startDate}"`);
+      throw new ConfigurationError(`startDate must be in YYYY-MM-DD format, got: "${startDate}"`);
     }
 
     const anchorDate = new Date(Date.UTC(y, m - 1, d, 12, 0, 0));
     if (isNaN(anchorDate.getTime())) {
-      throw new Error(`startDate resolves to an invalid date: "${startDate}"`);
+      throw new ConfigurationError(`startDate resolves to an invalid date: "${startDate}"`);
     }
 
     const days = CalendarService.generateDays(anchorDate, duration, config);

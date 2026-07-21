@@ -1,9 +1,21 @@
+export interface FailureResultOptions {
+  readonly code?: string;
+  readonly details?: Record<string, unknown>;
+  readonly cause?: unknown;
+}
+
 /**
  * Represents a result wrapper for operations that can either succeed or fail without throwing exceptions.
  */
 export type Result<T> =
   | { readonly success: true; readonly data: T }
-  | { readonly success: false; readonly error: string };
+  | {
+      readonly success: false;
+      readonly error: string;
+      readonly code: string;
+      readonly details?: Record<string, unknown>;
+      readonly cause?: unknown;
+    };
 
 /**
  * Wraps successful data into a Result object.
@@ -21,8 +33,14 @@ export function Success<T>(data: T): Result<T> {
  * @param error - A descriptive error message.
  * @returns A Result object marked as failed.
  */
-export function Failure(error: string): Result<never> {
-  return { success: false, error };
+export function Failure(error: string, options: FailureResultOptions = {}): Result<never> {
+  return {
+    success: false,
+    error,
+    code: options.code ?? 'PRAYER_ERROR',
+    ...(options.details ? { details: options.details } : {}),
+    ...(options.cause !== undefined ? { cause: options.cause } : {}),
+  };
 }
 
 // import { GeographicPosition } from '../../astronomy/index.js';

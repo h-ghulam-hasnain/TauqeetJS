@@ -2,6 +2,7 @@ import type { PrayerConfig, PrayerTimesResult, Result } from './types/index.js';
 import { Success, Failure } from './types/index.js';
 import { validatePrayerConfig } from './validators/validatePrayerConfig.js';
 import { calculatePrayerTimesInternal, PrayerCalculationError } from './engine/PrayerEngine.js';
+import { ConfigurationError, PrayerError } from './errors.js';
 
 export { resolveTimeZoneSync } from './engine/PrayerEngine.js';
 export { Madhab } from './config/madhabs.js';
@@ -10,6 +11,7 @@ export * from './formatter/index.js';
 
 export * from './types/index.js';
 export * from './types/calendar.js';
+export * from './errors.js';
 export { CalendarService } from './calendars/calendarService.js';
 
 // ── New unified single-day API ────────────────────────────────────────────────
@@ -36,7 +38,7 @@ export { getUnifiedPrayerTimes } from './unifiedEngine.js';
 export function calculatePrayerTimes(config: PrayerConfig): PrayerTimesResult {
   const validation = validatePrayerConfig(config);
   if (!validation.success) {
-    throw new PrayerCalculationError(validation.error);
+    throw new ConfigurationError(validation.error, { details: { source: 'validatePrayerConfig' } });
   }
   return calculatePrayerTimesInternal(validation.config);
 }
@@ -55,7 +57,7 @@ export function calculatePrayerTimes(config: PrayerConfig): PrayerTimesResult {
 export async function calculatePrayerTimesAsync(config: PrayerConfig): Promise<PrayerTimesResult> {
   const validation = validatePrayerConfig(config);
   if (!validation.success) {
-    throw new PrayerCalculationError(validation.error);
+    throw new ConfigurationError(validation.error, { details: { source: 'validatePrayerConfig' } });
   }
   const validatedConfig = validation.config;
   if (validatedConfig.resolveTimezoneAsync) {
@@ -77,10 +79,20 @@ export async function calculatePrayerTimesAsync(config: PrayerConfig): Promise<P
   return calculatePrayerTimesInternal(validatedConfig);
 }
 
-/** Safely extracts a message string from an unknown thrown value. */
-function toMessage(err: unknown): string {
-  if (err instanceof Error) return err.message;
-  return String(err);
+function toFailureResult(err: unknown): Result<never> {
+  if (err instanceof PrayerError) {
+    return Failure(err.message, {
+      code: err.code,
+      ...(err.details ? { details: err.details } : {}),
+      ...(err.cause !== undefined ? { cause: err.cause } : {}),
+    });
+  }
+
+  if (err instanceof Error) {
+    return Failure(err.message, { code: 'PRAYER_ERROR' });
+  }
+
+  return Failure(String(err), { code: 'UNKNOWN_ERROR' });
 }
 
 /**
@@ -94,7 +106,7 @@ export function getPrayerTimes(config: PrayerConfig): Result<PrayerTimesResult> 
     const data = calculatePrayerTimes(config);
     return Success(data);
   } catch (err: unknown) {
-    return Failure(toMessage(err));
+    return toFailureResult(err);
   }
 }
 
@@ -111,6 +123,6 @@ export async function getPrayerTimesAsync(
     const data = await calculatePrayerTimesAsync(config);
     return Success(data);
   } catch (err: unknown) {
-    return Failure(toMessage(err));
+    return toFailureResult(err);
   }
 }
