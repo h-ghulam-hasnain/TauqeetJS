@@ -1,6 +1,6 @@
 # tauqeet-js
 
-A high-precision TypeScript library for Islamic astronomical calculations, covering prayer times, Qibla direction, lunar events, Hijri conversion, and solar alignment.
+A premium, enterprise-grade TypeScript engine for high-precision Islamic astronomical calculations. Exclusively specialized in highly accurate Prayer Times and Qibla direction, powered by the robust VSOP87 planetary theory.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5%2B-blue.svg)](https://www.typescriptlang.org/)
@@ -9,21 +9,20 @@ A high-precision TypeScript library for Islamic astronomical calculations, cover
 
 > Interactive reference: [https://tauqeet-js.web.app](https://tauqeet-js.web.app)
 
-tauqeet-js provides numerically precise astronomical calculations using a VSOP87-based solar ephemeris, lunar theory, and ΔT corrections. The package is modular and tree-shakeable, so Node.js and browser applications can import only the modules they need.
+tauqeet-js provides numerically precise astronomical calculations using a VSOP87-based solar ephemeris, atmospheric refraction modeling, and strict mathematical validations. Designed for mission-critical applications where accuracy and predictability are paramount, the package is extremely focused and tree-shakeable, exporting only two core modules.
 
 ---
 
-## What is tauqeet-js?
+## What makes tauqeet-js enterprise-grade?
 
-tauqeet-js is a TypeScript-first library for Islamic astronomy. It helps applications compute:
+tauqeet-js is a TypeScript-first library built specifically for platforms demanding uncompromising astronomical accuracy. It provides:
 
-- Prayer times for major prayer events such as Fajr, Sunrise, Dhuhr, Asr, Maghrib, and Isha.
-- Qibla direction and distance to Mecca.
-- Moon phase, moon age, lunar events, and visibility heuristics.
-- Hijri calendar conversions and calendar-method helpers.
-- Solar alignment events relative to the Qibla bearing.
+- **Mathematical Precision:** Utilizing the complete VSOP87 planetary theory and IAU2000B models, avoiding the approximations found in simpler libraries.
+- **Atmospheric Modeling:** Dynamic adjustment of visible twilight and sunset times based on real-time temperature and barometric pressure.
+- **Strict Validation:** Unbreakable coordinate and input boundaries that throw deterministic `InvalidArgumentError`s *before* evaluating flawed geometry.
+- **High-Latitude Resilience:** Advanced, continuous-twilight fallback strategies and intelligent polar-day/night projection mappings.
 
-The current release, v1.1.3, focuses on stable public exports, stronger validation, better diagnostics around timezone and formatting fallbacks, and measurable runtime improvements.
+The current release focuses on a hyper-optimized architecture, shipping exclusively two core domains: Prayer and Qibla.
 
 ---
 
@@ -50,9 +49,10 @@ The package ships ESM and CommonJS entry points, with per-module subpath exports
 ## Quick Start
 
 ```ts
-import { calculatePrayerTimes } from 'tauqeet-js';
+import { calculatePrayerTimes } from 'tauqeet-js/prayers';
+import { getQiblaDirection } from 'tauqeet-js/qibla';
 
-const result = calculatePrayerTimes({
+const prayerResult = calculatePrayerTimes({
   lat: 51.5074,
   long: -0.1278,
   timeZone: 'Europe/London',
@@ -60,9 +60,11 @@ const result = calculatePrayerTimes({
   madhab: 'Shafi',
 });
 
-console.log(result.fajr.local);
-console.log(result.dhuhr.local);
-console.log(result.isha.local);
+console.log('Fajr:', prayerResult.fajr.local);
+console.log('Dhuhr:', prayerResult.dhuhr.local);
+
+const qiblaResult = getQiblaDirection({ latitude: 51.5074, longitude: -0.1278 });
+console.log('Qibla Bearing:', qiblaResult.bearing);
 ```
 
 For a more resilient integration, see [API.md](API.md) and [ERROR_HANDLING.md](ERROR_HANDLING.md).
@@ -73,11 +75,8 @@ For a more resilient integration, see [API.md](API.md) and [ERROR_HANDLING.md](E
 
 | Module | What it provides |
 |---|---|
-| Prayers | Prayer-time calculations, formatting helpers, config validation, high-latitude handling |
-| Qibla | Bearing and distance to the Kaaba |
-| Moon | Phase, age, lunar events, crescent visibility heuristics |
-| Hijri | Gregorian/Hijri conversion and calendar methods |
-| Solar Alignment | Sun-at-Qibla alignment times |
+| `tauqeet-js/prayers` | Robust prayer-time calculations, timezone formatting, deep configuration validation, and high-latitude management. |
+| `tauqeet-js/qibla` | Exact great-circle bearing, rhumb-line bearing, and highly accurate geographical distances to the Kaaba. |
 
 ---
 
@@ -91,13 +90,12 @@ For a more resilient integration, see [API.md](API.md) and [ERROR_HANDLING.md](E
 
 ---
 
-## Highlights in v1.1.3
+## Highlights in the Latest Release
 
-- Per-module exports for tree-shaking: [API.md](API.md)
-- Optional fallback diagnostics for timezone and formatting issues
-- More explicit validation for custom prayer angles
-- Performance improvements in the astronomy hot path
-- Improved error handling around timezone formatting and visibility calculations
+- **Hyper-Focused Architecture:** Removed bloated lunar and calendar engines to focus exclusively on highly precise Solar/Prayer and Qibla dynamics.
+- **Enterprise-Grade Validation:** Added impenetrable boundary guards that immediately throw `InvalidArgumentError` for invalid or NaN coordinates.
+- **Strict Module Exports:** `tauqeet-js/prayers` and `tauqeet-js/qibla` are now the only entry points for optimal bundler resolution and tree-shaking.
+- **Unrivaled Astronomical Precision:** Kept the heavy VSOP87 models required for exact solar ephemeris and planetary transits.
 
 ---
 

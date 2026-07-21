@@ -6,34 +6,28 @@ This document explains the internal layout of tauqeet-js and how its public modu
 
 ```text
 Public modules
-  prayers / qibla / moon / hijri / solar-alignment
+  prayers / qibla
         │
         ▼
 Astronomy engine (private)
-  solar ephemeris / lunar theory / delta-T / Julian day
+  solar ephemeris / VSOP87 / Julian day
         │
         ▼
 Internal utilities (private)
-  math / normalize / validation
+  math / validation
 ```
 
 ## Public Modules
 
-- `prayers`: prayer-time calculations, validation, formatting, and high-latitude strategies.
-- `qibla`: great-circle and rhumb-line bearings plus distance to the Kaaba.
-- `moon`: phase, age, events, and visibility heuristics.
-- `hijri`: Gregorian/Hijri conversion and calendar methods.
-- `solar-alignment`: sun-at-Qibla alignment calculations.
+- `prayers`: high-precision prayer-time calculations, dynamic atmospheric corrections, boundary validation, formatting, and high-latitude management.
+- `qibla`: great-circle and rhumb-line bearings plus highly accurate distances to the Kaaba.
 
 ## Dependency Overview
 
 | Module | Depends on |
 |---|---|
-| `prayers` | astronomy, internal helpers |
-| `qibla` | internal helpers |
-| `moon` | astronomy |
-| `hijri` | moon/hijri calendar logic |
-| `solar-alignment` | astronomy, qibla |
+| `prayers` | VSOP87 astronomy, internal validation |
+| `qibla` | internal math and validation |
 
 ## Tree-Shaking
 

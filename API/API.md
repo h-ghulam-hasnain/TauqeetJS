@@ -2,9 +2,9 @@
 
 > Latest interactive reference: [https://tauqeet-js.web.app](https://tauqeet-js.web.app)
 
-This document covers the public API surface of tauqeet-js as shipped in v1.1.3. The module exports below are the ones available from the package entry points and the module subpath exports.
+This document covers the public API surface of tauqeet-js. The module exports below are the ones available from the package entry points and the module subpath exports. The architecture has been refined to exclusively provide enterprise-grade modules for **Prayers** and **Qibla**.
 
-For deeper usage guidance, see [ERROR_HANDLING.md](ERROR_HANDLING.md), [CONFIGURATION.md](CONFIGURATION.md), and [PERFORMANCE.md](PERFORMANCE.md).
+For deeper usage guidance, see [ERROR_HANDLING.md](ERROR_HANDLING.md) and [CONFIGURATION.md](CONFIGURATION.md).
 
 ---
 
@@ -21,7 +21,7 @@ type Result<T> =
 Used by the legacy-compatible helpers `getPrayerTimes()` and `getPrayerTimesAsync()`.
 
 ```ts
-import { getPrayerTimes } from 'tauqeet-js';
+import { getPrayerTimes } from 'tauqeet-js/prayers';
 
 const result = getPrayerTimes({
   lat: 51.5074,
@@ -47,7 +47,7 @@ function Failure(error: string): Result<never>;
 
 ## Prayers Module
 
-Import from `tauqeet-js/prayers` or the main entry point.
+Import from `tauqeet-js/prayers`.
 
 ### Functions
 
@@ -59,6 +59,7 @@ function calculatePrayerTimes(config: PrayerConfig): PrayerTimesResult;
 
 - Computes prayer times synchronously.
 - Throws `PrayerCalculationError` when validation or calculation fails.
+- Internally enforces strict coordinate boundaries via `validateCoordinates`.
 
 Basic example:
 
@@ -366,7 +367,7 @@ interface PrayerTimesResult {
 
 ## Qibla Module
 
-Import from `tauqeet-js/qibla` or the main entry point.
+Import from `tauqeet-js/qibla`.
 
 ### Functions
 
@@ -442,331 +443,7 @@ const EARTH_RADIUS_KM: 6371;
 
 ---
 
-## Moon Module
-
-Import from `tauqeet-js/moon` or the main entry point.
-
-### Functions
-
-#### getMoonPhase
-
-```ts
-function getMoonPhase(date: Date): MoonPhaseResult;
-```
-
-Basic example:
-
-```ts
-import { getMoonPhase } from 'tauqeet-js/moon';
-
-const phase = getMoonPhase(new Date());
-console.log(phase.phaseName);
-```
-
-Advanced example:
-
-```ts
-import { getMoonPhase } from 'tauqeet-js/moon';
-
-const phase = getMoonPhase(new Date('2026-07-01T12:00:00Z'));
-console.log(phase.illuminatedFraction);
-```
-
-#### getMoonAge
-
-```ts
-function getMoonAge(date: Date): MoonAgeResult;
-```
-
-#### getMoonIllumination
-
-```ts
-function getMoonIllumination(date: Date): number;
-```
-
-#### getNextNewMoon / getPreviousNewMoon / getNextFullMoon / getPreviousFullMoon
-
-```ts
-function getNextNewMoon(afterDate: Date): Date;
-function getPreviousNewMoon(beforeDate: Date): Date;
-function getNextFullMoon(afterDate: Date): Date;
-function getPreviousFullMoon(beforeDate: Date): Date;
-```
-
-Basic example:
-
-```ts
-import { getNextNewMoon, getPreviousFullMoon } from 'tauqeet-js/moon';
-
-console.log(getNextNewMoon(new Date()));
-console.log(getPreviousFullMoon(new Date()));
-```
-
-Advanced example:
-
-```ts
-import { getNextNewMoon } from 'tauqeet-js/moon';
-
-const nextNewMoon = getNextNewMoon(new Date('2026-01-01T00:00:00Z'));
-console.log(nextNewMoon.toISOString());
-```
-
-#### checkVisibility
-
-```ts
-function checkVisibility(params: CheckVisibilityParams): VisibilityResult;
-```
-
-#### checkMultipleCriteria
-
-```ts
-function checkMultipleCriteria(params: Omit<CheckVisibilityParams, 'method'>): VisibilityResult[];
-```
-
-#### getSunset
-
-```ts
-function getSunset(date: Date, latitude: number, longitude: number): Date | null;
-```
-
-### Types
-
-```ts
-interface MoonPhaseResult {
-  phase?: number;
-  elongation: number;
-  illuminatedFraction: number;
-  phaseAngle?: number;
-  phaseName?: string;
-}
-```
-
-```ts
-interface MoonAgeResult {
-  ageDays: number;
-  previousNewMoon: Date;
-}
-```
-
-```ts
-interface MoonEventResult {
-  date: Date;
-  type: 'new' | 'full';
-}
-```
-
-```ts
-interface VisibilityInput {
-  sunset: Date;
-  moonset?: Date;
-  moonAltitudeAtSunset: number;
-  moonAzimuthAtSunset: number;
-  elongation: number;
-  moonAgeHours: number;
-  arcv?: number;
-  arcl?: number;
-}
-```
-
-```ts
-interface VisibilityResult {
-  criterionName: string;
-  visible: boolean;
-  confidence?: number;
-  category?: string;
-  details?: Record<string, unknown>;
-}
-```
-
-```ts
-enum VisibilityMethod {
-  ODEH = 'odeh',
-  YALLOP = 'yallop',
-  HMNAO = 'hmnao',
-}
-```
-
-```ts
-interface CheckVisibilityParams {
-  date: Date;
-  latitude: number;
-  longitude: number;
-  elevation?: number;
-  method: VisibilityMethod;
-}
-```
-
-### Visibility criterion classes
-
-```ts
-class OdehCriterion implements VisibilityCriterion;
-class YallopCriterion implements VisibilityCriterion;
-class HMNAOCriterion implements VisibilityCriterion;
-```
-
----
-
-## Hijri Module
-
-Import from `tauqeet-js/hijri` or the main entry point.
-
-### Functions
-
-#### toHijri
-
-```ts
-function toHijri(date: Date, method: HijriMethod = HijriMethod.CIVIL, options?: { location?: HijriLocationOptions }): HijriDate;
-```
-
-Basic example:
-
-```ts
-import { toHijri, HijriMethod } from 'tauqeet-js/hijri';
-
-const hijri = toHijri(new Date(), HijriMethod.CIVIL);
-console.log(hijri);
-```
-
-Advanced example:
-
-```ts
-import { toHijri, HijriMethod } from 'tauqeet-js/hijri';
-
-const hijri = toHijri(new Date(), HijriMethod.VISIBILITY, {
-  location: { latitude: 21.4225, longitude: 39.8262 },
-});
-```
-
-#### toGregorian
-
-```ts
-function toGregorian(hijriDate: HijriDate, method: HijriMethod = HijriMethod.CIVIL, options?: { location?: HijriLocationOptions }): Date;
-```
-
-#### HijriEngine
-
-```ts
-class HijriEngine {
-  constructor(method?: HijriMethod, options?: HijriEngineOptions);
-  toHijri(date: Date): HijriDate;
-  toGregorian(hijriDate: HijriDate): Date;
-  getMonthGrid(year: number, month: number): (HijriDate | null)[][];
-}
-```
-
-### Types
-
-```ts
-interface HijriDate { year: number; month: number; day: number; }
-interface HijriCalendarResult { hijriDate: HijriDate; gregorianDate: string; method: string; }
-interface HijriLocationOptions { latitude: number; longitude: number; elevation?: number; }
-interface HijriEngineOptions { location?: HijriLocationOptions; }
-```
-
-```ts
-enum HijriMethod {
-  CIVIL = 'civil',
-  CONJUNCTION = 'conjunction',
-  VISIBILITY = 'visibility',
-  UMM_AL_QURA = 'ummAlQura',
-}
-```
-
-### Calendar classes
-
-```ts
-class CivilCalendar {}
-class ConjunctionCalendar {}
-class VisibilityCalendar {}
-class UmmAlQuraCalendar {}
-```
-
-### Helper functions
-
-```ts
-function getCivilMonthLength(year: number, month: number): number;
-function isCivilLeapYear(year: number): boolean;
-function getCivilYearLength(year: number): number;
-```
-
-### Constants
-
-```ts
-const HIJRI_MONTH_NAMES: readonly string[];
-const HIJRI_EPOCH_JD: number;
-```
-
----
-
-## Solar Alignment Module
-
-Import from `tauqeet-js/solar-alignment` or the main entry point.
-
-### Function
-
-#### getSunAtQibla
-
-```ts
-function getSunAtQibla(config: SunAlignmentConfig): SunAtQiblaResult;
-```
-
-Basic example:
-
-```ts
-import { getSunAtQibla } from 'tauqeet-js/solar-alignment';
-
-const result = getSunAtQibla({
-  latitude: 21.4225,
-  longitude: 39.8262,
-  date: new Date('2026-07-01T00:00:00Z'),
-});
-
-console.log(result.qiblaAlignment?.time.toISOString());
-```
-
-Advanced example:
-
-```ts
-import { getSunAtQibla } from 'tauqeet-js/solar-alignment';
-
-const result = getSunAtQibla({
-  latitude: 31.5,
-  longitude: 74.35,
-  timeZone: 'Asia/Karachi',
-});
-```
-
-### Types
-
-```ts
-interface SunAlignmentConfig {
-  readonly latitude: number;
-  readonly longitude: number;
-  readonly date?: Date;
-  readonly timeZone?: string | number;
-}
-```
-
-```ts
-interface SolarTimeField {
-  readonly time: Date;
-  readonly local: string;
-}
-```
-
-```ts
-interface SunAtQiblaResult {
-  readonly qiblaAlignment: SolarTimeField | null;
-  readonly antiQiblaAlignment: SolarTimeField | null;
-  readonly rightPerpendicularAlignment: SolarTimeField | null;
-  readonly leftPerpendicularAlignment: SolarTimeField | null;
-}
-```
-
----
-
 ## Notes
 
-- The library validates coordinate and date input in the prayer and Qibla paths. See [CONFIGURATION.md](CONFIGURATION.md).
-- For runtime and memory behaviour, see [PERFORMANCE.md](PERFORMANCE.md).
+- The library validates coordinate and date input extremely strictly via `validateCoordinates` which acts as a robust firewall.
 - For error-handling patterns, see [ERROR_HANDLING.md](ERROR_HANDLING.md).

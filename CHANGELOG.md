@@ -2,7 +2,17 @@
 
 All notable changes to tauqeet-js are documented here.
 
-## Unreleased
+## Unreleased (v2.0.0 / Major Refactor)
+
+### Breaking Changes (Scope Reduction)
+- **Total removal of Moon Visibility and Eclipse Search modules.** The package is now hyper-focused on solar ephemeris, specifically catering only to Prayer and Qibla calculations.
+- **Removed Hijri and Solar Alignment modules** to further eliminate bloated dependencies and reduce bundle footprint.
+- **Package Exports:** The library now strictly enforces a dual-entry point architecture. You can *only* import from `tauqeet-js/prayers` and `tauqeet-js/qibla`. The root `index.ts` export has been removed.
+
+### Changed
+- **Strict Coordinate Validation:** All geographic inputs are now gated by a strict `validateCoordinates()` helper.
+- **Error Handling:** Invalid coordinate boundaries (e.g. latitudes `> 90` or `<= -90`) instantly throw a domain-specific `InvalidArgumentError` instead of returning a failed `Result` pattern, guaranteeing fail-fast predictability.
+- **Build configuration:** Updated `package.json` and `tsup.config.ts` to explicitly purge legacy `main`, `module`, and `types` directives in favor of exact subpath exports.
 
 ## 1.1.3 — 2026-07-09
 
