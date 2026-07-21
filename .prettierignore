@@ -1,7 +1,0 @@
-dist/
-node_modules/
-helpers/
-scripts/
-logic/
-package-lock.json
-*.md
