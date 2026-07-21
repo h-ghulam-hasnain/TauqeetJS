@@ -2,7 +2,6 @@ import { defineConfig } from 'tsup';
 
 export default defineConfig({
   entry: [
-    'src/index.ts',                    // tauqeet-js  (all modules)
     'src/prayers/index.ts',            // tauqeet-js/prayers
     'src/qibla/index.ts',              // tauqeet-js/qibla
   ],
