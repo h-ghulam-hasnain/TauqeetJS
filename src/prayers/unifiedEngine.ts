@@ -8,6 +8,7 @@ import { validatePrayerConfig } from './validators/validatePrayerConfig.js';
 import { calculatePrayerTimesInternal } from './engine/PrayerEngine.js';
 import { classifyLatitude, LatitudeCase } from './engine/LatitudeClassifier.js';
 import { calculateDhuhr } from './calculations/Dhuhr.js';
+import { ConfigurationError, PrayerCalculationError } from './errors.js';
 
 /** Zero-pad to 2 digits. */
 const p2 = (n: number) => String(n).padStart(2, '0');
@@ -70,14 +71,16 @@ export function getUnifiedPrayerTimes(config: PrayerConfig): UnifiedPrayerTimesR
   // ── Step A: Validate & compile config ────────────────────────────────────────
   const validation = validatePrayerConfig(config);
   if (!validation.success) {
-    throw new Error(`Invalid PrayerConfig: ${validation.error}`);
+    throw new ConfigurationError(validation.error, { details: { source: 'validatePrayerConfig' } });
   }
   const vConf = validation.config;
 
   // ── Step B: Polar Gate — classify astronomical boundary ─────────────────────
   const dhuhrTransit = calculateDhuhr(vConf.date, vConf.latitude, vConf.longitude);
   if (!dhuhrTransit) {
-    throw new Error('Solar transit calculation failed for the given date and coordinates.');
+    throw new PrayerCalculationError('Solar transit calculation failed for the given date and coordinates.', {
+      details: { source: 'calculateDhuhr' },
+    });
   }
 
   const latCase = classifyLatitude(

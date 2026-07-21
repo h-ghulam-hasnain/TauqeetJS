@@ -12,16 +12,9 @@ import { calculateAstronomicalMidnight } from '../calculations/AstronomicalMidni
 import type { IterativeSolverResult } from '../solvers/IterativeSolver.js';
 import { computeRefraction } from '../corrections/HorizonCorrections.js';
 import { tand, atand } from '../../internal/trig.js';
+import { PrayerCalculationError } from '../errors.js';
 
-/**
- * Custom error thrown when a prayer calculation fails due to invalid parameters or unconverged calculations.
- */
-export class PrayerCalculationError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'PrayerCalculationError';
-  }
-}
+export { PrayerCalculationError } from '../errors.js';
 
 /**
  * Synchronously resolves the target timezone for prayer calculations.
