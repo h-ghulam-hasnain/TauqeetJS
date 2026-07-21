@@ -1,6 +1,6 @@
 # Prayer Configuration Deep Dive
 
-This guide documents the prayer configuration model in tauqeet-js and the options available to customise calculations for different regions, madhhabs, and latitude conditions.
+This guide documents the strict prayer configuration model in tauqeet-js and the deep customization options available for resolving calculations across different regions, madhhabs, and extreme latitude environments. Our configuration parser enforces rigorous boundaries to ensure calculations run on deterministic, mathematically sound foundations.
 
 For the public function signatures, see [API.md](API.md). For error handling patterns, see [ERROR_HANDLING.md](ERROR_HANDLING.md).
 

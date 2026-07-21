@@ -1,6 +1,6 @@
 # Error Handling Guide
 
-This guide documents the error-model used by tauqeet-js in v1.1.3. The library combines typed `Error` subclasses, validation failures, and the `Result<T>` wrapper pattern so applications can choose between throwing and safe, non-throwing flows.
+This guide documents the error-model used by tauqeet-js. The library combines typed `Error` subclasses, rigorous pre-computation validation layers, and the `Result<T>` wrapper pattern so applications can choose between throwing and safe, non-throwing flows.
 
 For usage patterns, see [API.md](API.md) and [CONFIGURATION.md](CONFIGURATION.md).
 
@@ -64,39 +64,9 @@ class InvalidArgumentError extends Error {
 }
 ```
 
-Used by the astronomy layer for invalid numeric input such as invalid ranges or argument combinations.
+Used exclusively by the core internal components to form an impenetrable validation boundary. If an invalid latitude (e.g. `> 90`), longitude (e.g. `<= -180`), or structurally broken argument is provided, this error is thrown immediately, bypassing heavy mathematical work.
 
-### SearchConvergenceError
 
-```ts
-class SearchConvergenceError extends Error {
-  constructor(message: string);
-}
-```
-
-Used by event-searching routines when an iterative search does not converge in the allowed window.
-
-### OperationAbortedError
-
-```ts
-class OperationAbortedError extends Error {
-  constructor(message?: string);
-}
-```
-
-Used when an astronomical or search operation is interrupted or aborted.
-
-### HijriConfigurationError
-
-```ts
-class HijriConfigurationError extends Error {
-  constructor(message: string);
-}
-```
-
-Raised by Hijri calendar helpers when a visibility-based calendar is requested without the required location context.
-
----
 
 ## Result Pattern
 
@@ -176,12 +146,7 @@ When `Intl` formatting is unavailable or a timezone name is not recognized, the 
 
 | Error type | Typical cause | Recommended recovery |
 |---|---|---|
-| `PrayerCalculationError` | Validation failure, failed solver, timezone error | Catch and present a user-facing message; switch to safe `getPrayerTimes()` wrappers if you prefer non-throwing flows |
-| `ConfigurationError` | Bad date, invalid coordinates, unsupported config shape | Validate inputs before calling the API |
-| `InvalidArgumentError` | Invalid astronomy input or numeric range | Check the input values and constrain them to the documented range |
-| `SearchConvergenceError` | Iterative search failed to converge | Retry with a wider search window or a different method |
-| `OperationAbortedError` | User or caller aborted the operation | Treat as a canceled workflow and avoid surfacing as a hard failure |
-| `HijriConfigurationError` | Visibility-based Hijri conversion without location | Provide latitude/longitude before constructing the calendar |
+| `InvalidArgumentError` | Invalid coordinates or extreme range boundaries | The core system expects inputs to be within safe geographic boundaries before calculating |
 
 ---
 

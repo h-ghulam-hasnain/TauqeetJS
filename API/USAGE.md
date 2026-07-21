@@ -1,11 +1,11 @@
-﻿# Usage Guide
+# Usage Guide
 
 This guide provides practical examples for the most common tauqeet-js workflows.
 
 ## Quick Start
 
 ```ts
-import { calculatePrayerTimes } from 'tauqeet-js';
+import { calculatePrayerTimes } from 'tauqeet-js/prayers';
 
 const prayerTimes = calculatePrayerTimes({
   lat: 51.5074,
@@ -34,7 +34,7 @@ const result = calculatePrayerTimes({
 ### Safe Result Pattern
 
 ```ts
-import { getPrayerTimes } from 'tauqeet-js';
+import { getPrayerTimes } from 'tauqeet-js/prayers';
 
 const safeResult = getPrayerTimes({
   lat: 24.8607,
@@ -52,34 +52,16 @@ if (safeResult.success) {
 ## Qibla Direction
 
 ```ts
-import { getQiblaDirection } from 'tauqeet-js';
+import { getQiblaDirection } from 'tauqeet-js/qibla';
 
-const direction = getQiblaDirection({ lat: 33.6844, lon: 73.0479 });
+const direction = getQiblaDirection({ latitude: 33.6844, longitude: 73.0479 });
 console.log(direction.bearing);
-```
-
-## Moon and Visibility
-
-```ts
-import { getMoonPhase, getMoonIllumination, checkVisibility } from 'tauqeet-js';
-
-const phase = getMoonPhase(new Date());
-const illumination = getMoonIllumination(new Date());
-```
-
-## Hijri Calendar
-
-```ts
-import { toHijri, HijriMethod } from 'tauqeet-js';
-
-const hijri = toHijri(new Date(), HijriMethod.CIVIL);
-console.log(hijri.year, hijri.month, hijri.day);
 ```
 
 ## High-Latitude Locations
 
 ```ts
-import { calculatePrayerTimes } from 'tauqeet-js';
+import { calculatePrayerTimes } from 'tauqeet-js/prayers';
 
 const result = calculatePrayerTimes({
   lat: 59.9139,

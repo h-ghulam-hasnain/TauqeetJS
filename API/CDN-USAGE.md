@@ -23,13 +23,8 @@ tauqeet-js can be used directly in browser applications via modern ESM CDNs. The
   </head>
   <body>
     <script type="module">
-      import {
-        calculatePrayerTimes,
-        getQiblaDirection,
-        getMoonPhase,
-        toHijri,
-        HijriMethod,
-      } from 'https://esm.sh/tauqeet-js@1.1.3';
+      import { calculatePrayerTimes } from 'https://esm.sh/tauqeet-js@1.1.3/prayers';
+      import { getQiblaDirection } from 'https://esm.sh/tauqeet-js@1.1.3/qibla';
 
       const prayerTimes = calculatePrayerTimes({
         lat: 51.5074,
@@ -37,7 +32,10 @@ tauqeet-js can be used directly in browser applications via modern ESM CDNs. The
         timeZone: 'Europe/London',
       });
 
-      console.log(prayerTimes.fajr.local);
+      console.log('Fajr:', prayerTimes.fajr.local);
+
+      const qibla = getQiblaDirection({ latitude: 51.5074, longitude: -0.1278 });
+      console.log('Qibla:', qibla.bearing);
     </script>
   </body>
 </html>
@@ -56,4 +54,4 @@ tauqeet-js can be used directly in browser applications via modern ESM CDNs. The
 
 - `esm.sh` is the most reliable ESM CDN for this package.
 - `jsDelivr` works well for the published ESM build.
-- For production apps that need low startup overhead, prefer subpath imports and cache the computed results where appropriate.
+- For production apps demanding uncompromising astronomical accuracy, always prefer subpath imports (e.g., `/prayers` or `/qibla`) to strictly limit payload size and take full advantage of tree-shaking.
