@@ -10,7 +10,6 @@ inspiration/
 *.tsbuildinfo
 
 # ── Test coverage ─────────────────────────────────────────────────
-coverage/
 scripts/
 logic/
 

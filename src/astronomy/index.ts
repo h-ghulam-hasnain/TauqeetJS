@@ -10,4 +10,3 @@ export type { DiagnosticsConfig } from './types/diagnostics.js';
 export { computeSolarPosition } from './bodies/sun/SolarEphemeris.js';
 export { dateToJulianDay, julianDayToDate, timeArguments } from './time/JulianDate.js';
 export { calculateDeltaT } from './time/DeltaT.js';
-export { computeSeasons, searchSeasonEvent, type SeasonInfo } from './phenomena/Seasons.js';

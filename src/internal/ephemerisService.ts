@@ -1,4 +1,4 @@
-import { computeSolarPositionSubset } from '../astronomy/bodies/sun/SolarEphemeris.js';
+import { computeSolarPosition } from '../astronomy/bodies/sun/SolarEphemeris.js';
 import { calculateDeltaT } from '../astronomy/time/DeltaT.js';
 import { dateToJulianDay } from '../astronomy/time/JulianDate.js';
 import { ChebyshevInterpolator } from './interpolation.js';
@@ -63,7 +63,7 @@ export class EphemerisService {
     for (let k = 1; k <= n; k++) {
       const nodeNormalized = Math.cos(((2 * k - 1) / (2 * n)) * Math.PI);
       const h = ((b - a) / 2) * nodeNormalized + (a + b) / 2;
-      const pos = computeSolarPositionSubset(jdStart, h, deltaT);
+      const pos = computeSolarPosition(jdStart, h, deltaT);
       declinationSamples.push(pos.declination);
       eotSamples.push(pos.equationOfTime);
       sdSamples.push(pos.semidiameter);
@@ -85,8 +85,6 @@ export class EphemerisService {
   /**
    * Evaluates solar ephemeris at a given UTC hour on a specific prayer day.
    *
-   * @param utcHours   The UTC hour to evaluate (may be negative or >24 during
-   *                   iterative solver convergence — will be clamped internally).
    * @param baseDateJd The Julian Day of the prayer day's midnight (anchor).
    *                   If omitted, falls back to deriving the JD from `date`.
    * @param date       Fallback Date object used only when baseDateJd is absent.
