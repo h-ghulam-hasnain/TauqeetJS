@@ -1,4 +1,4 @@
-import { calculatePrayerTimes } from '../../dist/index.js';
+import { calculatePrayerTimes } from '../../dist/prayers/index.js';
 
 // console.log(`\n=============================================================`);
 // console.log(`🧪 TEST 1: PRAYER TIMES WITH DEFAULT VALUES`);
@@ -23,6 +23,8 @@ const config = {
 
   lat: 31.39965,
   long: 73.02003,
+
+  madhab: 'Hanafi',
 
   // Topographical and climatic corrections
   // elevation: { value: 0, unit: 'meters' },
