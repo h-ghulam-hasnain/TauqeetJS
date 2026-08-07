@@ -25,6 +25,7 @@ const config = {
   long: 73.02003,
 
   madhab: 'Hanafi',
+  method: 'Karachi',
 
   // Topographical and climatic corrections
   // elevation: { value: 0, unit: 'meters' },
@@ -49,8 +50,8 @@ try {
     console.log(`   ${key.padEnd(15)}: ${value.local} (UTC: ${value.utc}) [Status: ${value.status}]`);
   }
 
-  // console.log(`\nMetadata (Astronomical details):`);
-  // console.log(JSON.stringify(times.metadata, null, 2));
+  console.log(`\nMetadata (Astronomical details):`);
+  console.log(JSON.stringify(times.metadata, null, 2));
 
 } catch (err) {
   console.error(`Calculation Failed:`, err);

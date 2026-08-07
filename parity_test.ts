@@ -30,8 +30,8 @@ for (const loc of locations) {
     try {
       const times = calculatePrayerTimes({
         date: date,
-        latitude: loc.lat,
-        longitude: loc.lng,
+        lat: loc.lat,
+        long: loc.lng,
         timeZone: 0,
         method: 'MWL',
         madhab: 'Shafi',
